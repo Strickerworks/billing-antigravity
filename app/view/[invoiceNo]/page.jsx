@@ -45,46 +45,34 @@ export default function ViewInvoice() {
   };
 
   const inWords = (num) => {
-  const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
-    "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen",
-    "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-
-  const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
-
-  const twoDigits = (n) => {
-    if (n < 20) return a[n];
-    return b[Math.floor(n / 10)] + (n % 10 ? " " + a[n % 10] : "");
+    const a = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+      "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen",
+      "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+    const b = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    const twoDigits = (n) => {
+      if (n < 20) return a[n];
+      return b[Math.floor(n / 10)] + (n % 10 ? " " + a[n % 10] : "");
+    };
+    if (num === 0) return "Zero Rupees Only";
+    if (num > 99999999) return "Overflow";
+    let str = "";
+    const crore = Math.floor(num / 10000000);
+    num %= 10000000;
+    const lakh = Math.floor(num / 100000);
+    num %= 100000;
+    const thousand = Math.floor(num / 1000);
+    num %= 1000;
+    const hundred = Math.floor(num / 100);
+    num %= 100;
+    if (crore) str += twoDigits(crore) + " Crore ";
+    if (lakh) str += twoDigits(lakh) + " Lakh ";
+    if (thousand) str += twoDigits(thousand) + " Thousand ";
+    if (hundred) str += a[hundred] + " Hundred ";
+    if (num) {
+      str += (str !== "" ? "and " : "") + twoDigits(num) + " ";
+    }
+    return str.trim() + " Rupees Only";
   };
-
-  if (num === 0) return "Zero Rupees Only";
-  if (num > 99999999) return "Overflow";
-
-  let str = "";
-
-  const crore = Math.floor(num / 10000000);
-  num %= 10000000;
-
-  const lakh = Math.floor(num / 100000);
-  num %= 100000;
-
-  const thousand = Math.floor(num / 1000);
-  num %= 1000;
-
-  const hundred = Math.floor(num / 100);
-  num %= 100;
-
-  if (crore) str += twoDigits(crore) + " Crore ";
-  if (lakh) str += twoDigits(lakh) + " Lakh ";
-  if (thousand) str += twoDigits(thousand) + " Thousand ";
-  if (hundred) str += a[hundred] + " Hundred ";
-
-  if (num) {
-    str += (str !== "" ? "and " : "") + twoDigits(num) + " ";
-  }
-
-  return str.trim() + " Rupees Only";
-  };
-
 
   const generateAndShowPDF = () => {
     if (!fetchedData) return;
