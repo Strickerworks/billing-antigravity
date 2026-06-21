@@ -2,10 +2,7 @@
   "crons": [
     {
       "path": "/api/keepalive",
-      "schedule": "0 0 * * *",
-      "headers": {
-        "Authorization": "Bearer heritage_billing_keepalive_secret_2026"
-      }
+      "schedule": "0 0 * * *"
     }
   ]
 }
