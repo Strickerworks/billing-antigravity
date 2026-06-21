@@ -1,38 +1,44 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/utils/supabase/client";
 // import html2pdf from "html2pdf.js";
+import { useParams } from "next/navigation";
 
 export default function ViewInvoice() {
-  const [invoiceNo, setInvoiceNo] = useState("");
+  const params = useParams();
+  const invoiceParam = params.invoiceNo;
+  const [invoiceNo, setInvoiceNo] = useState(invoiceParam || "");
   const [fetchedData, setFetchedData] = useState(null);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleFetch = async () => {
-    if (!invoiceNo) {
-      setErrorMsg("Please enter an invoice number.");
+  useEffect(() => {
+    if (invoiceParam) {
+      handleFetch(invoiceParam);
+    }
+  }, [invoiceParam]);
+
+  const handleFetch = async (invNo) => {
+    const invNumber = invNo || invoiceNo;
+    if (!invNumber) {
+      alert("Please enter an Invoice Number");
       return;
     }
 
     setLoading(true);
-    setErrorMsg("");
     setFetchedData(null);
-    setPdfUrl(null);
 
     const { data, error } = await supabase
       .from("billdata")
       .select("*")
-      .eq("invoice_no", invoiceNo)
+      .eq("invoice_no", invNumber)
       .single();
 
     if (error) {
-      console.error("Fetch error:", error);
-      setErrorMsg("Invoice not found.");
+      console.error("Error fetching invoice:", error);
+      alert("Invoice not found.");
     } else {
       setFetchedData(data);
-      generateAndShowPDF(data);
     }
 
     setLoading(false);
@@ -68,40 +74,46 @@ export default function ViewInvoice() {
     return str.trim() + " Rupees Only";
   };
 
+  const generateAndShowPDF = () => {
+    if (!fetchedData) return;
 
-  const generateAndShowPDF = (data) => {
     const {
       bill_date, invoice_no, customer_name, customer_gst,
       cgst_percentage, sgst_percentage, igst_percentage, payment_account,
-      table_total, cgst_total, sgst_total, igst_total,
-      grand_total, content, additional_charges
-    } = data;
+      table_total, cgst_total, sgst_total, igst_total, final_total,
+      additional_total, grand_total, content, additional_charges
+    } = fetchedData;
     const html2pdf = require("html2pdf.js");
-    let brandTitle = "", bankDetails = "", brandEmail = "";
+    let brandTitle = "";
+    let bankDetails = "";
+    let brandEmail = "";
+
     if (payment_account === "Bank of India - THE HERITAGE TRAVEL") {
       brandTitle = "THE HERITAGE TRAVEL";
       bankDetails = "BANK:-BANK OF INDIA / ACCOUNT NO:- 900920110000444 / IFSC:- BKID0009009 / BRANCH:- GULMOHAR BRANCH, BHOPAL";
-      brandEmail = "THEHERITAGETRAVEL@GMAIL.COM";
+      brandEmail = "THEHERITAGETRAVEL@GMAIL.COM"
     } else if (payment_account === "ICICI Bank - THE HERITAGE GROUP") {
       brandTitle = "THE HERITAGE GROUP";
       bankDetails = "BANK:-ICICI BANK / ACCOUNT NO:- 234105000312 / IFSC:- ICIC0002341 / BRANCH:- GULMOHAR BRANCH, BHOPAL";
-      brandEmail = "THEHERITAGEGROUPS@GMAIL.COM";
+      brandEmail = "THEHERITAGEGROUPS@GMAIL.COM"
     }
 
-    const contentRows = content.map((item) => `
+    const contentRows = content.map(item => `
       <tr>
         <td style="border:1px solid black; padding:5px;">${item.sno}</td>
         <td style="border:1px solid black; padding:5px;">${item.description.replace(/\n/g, "<br>")}</td>
         <td style="border:1px solid black; padding:5px;">${item.unit}</td>
         <td style="border:1px solid black; padding:5px;">${item.rate}</td>
         <td style="border:1px solid black; padding:5px;">${item.amount}</td>
-      </tr>`).join("");
+      </tr>
+    `).join("");
 
-    const additionalRows = additional_charges.map((item) => `
+    const additionalRows = additional_charges.map(item => `
       <tr>
         <td style="text-align:right; padding:4px;">${item.description}</td>
         <td style="text-align:right; padding:4px;">₹${item.amount}</td>
-      </tr>`).join("");
+      </tr>
+    `).join("");
 
     const template = `
       <div style="position:relative; min-height:290mm; padding:20px; font-family:'Times New Roman', serif; font-size:15px;">
@@ -135,20 +147,15 @@ export default function ViewInvoice() {
 
         <table style="width:100%; margin-top:10px; font-size:13px;">
           <tr><td style="text-align:right;"><strong>Amount:</strong></td><td style="text-align:right;">₹${table_total}</td></tr>
-          ${
-            igst_percentage > 0
-              ? `<tr><td style="text-align:right;">IGST (${igst_percentage}%):</td><td style="text-align:right;">₹${igst_total}</td></tr>`
-              : `
-                <tr><td style="text-align:right;">CGST (${cgst_percentage}%):</td><td style="text-align:right;">₹${cgst_total}</td></tr>
-                <tr><td style="text-align:right;">SGST (${sgst_percentage}%):</td><td style="text-align:right;">₹${sgst_total}</td></tr>
-              `
-          }
+          ${igst_percentage > 0
+        ? `<tr><td style="text-align:right;">IGST (${igst_percentage}%):</td><td style="text-align:right;">₹${igst_total}</td></tr>`
+        : `<tr><td style="text-align:right;">CGST (${cgst_percentage}%):</td><td style="text-align:right;">₹${cgst_total}</td></tr>
+             <tr><td style="text-align:right;">SGST (${sgst_percentage}%):</td><td style="text-align:right;">₹${sgst_total}</td></tr>`}
           ${additionalRows}
           <tr><td style="text-align:right;"><strong>Net Payable:</strong></td><td style="text-align:right;">₹${grand_total}</td></tr>
         </table>
 
         <div style="margin-top:10px;"><strong>In Words:</strong> ${inWords(Math.round(grand_total)).toUpperCase()} ONLY.</div>
-
         <div style="text-align:right; margin:30px 0px; font-size:14px;"><strong>${brandTitle}</strong></div>
 
         <div style="position:absolute; bottom:20px; left:20px; right:20px; font-size:12px;">
@@ -161,59 +168,73 @@ export default function ViewInvoice() {
     const container = document.createElement("div");
     container.innerHTML = template;
 
-    html2pdf().from(container).set({
-      margin: 5,
-      image: { type: "jpeg", quality: 1 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    }).outputPdf("blob").then((pdfBlob) => {
-      const url = URL.createObjectURL(pdfBlob);
-      setPdfUrl(url);
-    });
+    html2pdf()
+      .from(container)
+      .set({
+        margin: 5,
+        image: { type: "jpeg", quality: 1 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      })
+      .outputPdf("blob")
+      .then((pdfBlob) => {
+        const url = URL.createObjectURL(pdfBlob);
+        setPdfUrl(url);
+      });
   };
 
+  useEffect(() => {
+    if (fetchedData) generateAndShowPDF();
+  }, [fetchedData]);
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 p-6 flex flex-col items-center space-y-8">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold tracking-wide text-indigo-700">
-          📄 View Invoice
-        </h1>
-        <p className="text-gray-500 text-sm">
-          Enter an invoice number to instantly view the PDF.
+    <div className="page-content">
+      <div className="page-header">
+        <h1 className="page-title">View Invoice</h1>
+        <p className="page-subtitle">
+          {invoiceParam ? `Previewing Invoice #${invoiceParam}` : "Enter an invoice number to preview the PDF."}
         </p>
       </div>
 
-      <div className="w-full max-w-2xl bg-white border border-gray-200 rounded-2xl p-6 space-y-4 shadow hover:shadow-md transition">
-        <div className="flex gap-3">
-          <input
-            type="text"
-            value={invoiceNo}
-            onChange={(e) => setInvoiceNo(e.target.value)}
-            placeholder="Enter Invoice Number"
-            className="flex-1 border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-          <button
-            onClick={handleFetch}
-            className="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-          >
-            {loading ? "Fetching..." : "Fetch"}
-          </button>
-        </div>
-
-        {errorMsg && (
-          <div className="text-red-500 text-sm">{errorMsg}</div>
-        )}
-      </div>
-
-      {pdfUrl && (
-        <div className="w-full max-w-5xl border border-gray-300 rounded overflow-hidden shadow mt-6">
-          <iframe src={pdfUrl} className="w-full h-[700px]" />
+      {!invoiceParam && (
+        <div className="card fade-in" style={{ maxWidth: 460, marginBottom: "1.5rem" }}>
+          <p className="card-title">Find Invoice</p>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <input
+              type="number"
+              value={invoiceNo}
+              onChange={(e) => setInvoiceNo(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleFetch()}
+              placeholder="Enter invoice number"
+              className="form-input"
+            />
+            <button
+              onClick={() => handleFetch()}
+              disabled={loading}
+              className="btn btn-primary"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              {loading ? "Loading..." : "Preview"}
+            </button>
+          </div>
+          {errorMsg && (
+            <p style={{ fontSize: "0.8rem", color: "#dc2626", marginTop: "0.6rem", marginBottom: 0 }}>{errorMsg}</p>
+          )}
         </div>
       )}
 
-      <div className="text-gray-400 text-xs pt-8">
-        © 2025 The Heritage Travels Billing System
-      </div>
+      {loading && (
+        <div className="empty-state">
+          <div className="empty-state-icon">⏳</div>
+          <div className="empty-state-text">Generating preview...</div>
+        </div>
+      )}
+
+      {pdfUrl && (
+        <div className="card fade-in" style={{ padding: 0, overflow: "hidden" }}>
+          <iframe src={pdfUrl} className="invoice-iframe" title="Invoice Preview" />
+        </div>
+      )}
     </div>
   );
 }

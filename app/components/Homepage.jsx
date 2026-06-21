@@ -1,90 +1,99 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { Car, FilePlus, Printer } from "lucide-react";
+
+const actions = [
+  {
+    href: "/admin/add-invoice",
+    icon: "＋",
+    label: "New Invoice",
+    description: "Create a fresh invoice from scratch",
+  },
+  {
+    href: "/admin/fetch",
+    icon: "≡",
+    label: "All Invoices",
+    description: "Browse and search all saved invoices",
+  },
+  {
+    href: "/admin/edit",
+    icon: "✎",
+    label: "Edit Invoice",
+    description: "Modify an existing invoice by number",
+  },
+  {
+    href: "/admin/duplicate",
+    icon: "⎘",
+    label: "Duplicate",
+    description: "Copy an invoice with a new number",
+  },
+  {
+    href: "/admin/view",
+    icon: "◉",
+    label: "View Invoice",
+    description: "Preview invoice as PDF in browser",
+  },
+  {
+    href: "/admin/print",
+    icon: "↓",
+    label: "Download PDF",
+    description: "Download invoice as a PDF file",
+  },
+];
 
 export default function Homepage() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col items-center p-6 space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="flex items-center justify-center space-x-2">
-          <Car className="w-10 h-10 text-indigo-600" />
-          <h1 className="text-3xl font-bold tracking-wide">
-            Billing Pro — Car Rental Invoicing
-          </h1>
+    <div className="page-content" style={{ maxWidth: 860 }}>
+      {/* Hero */}
+      <div style={{ padding: "2.5rem 0 2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
+          <div style={{
+            width: 40, height: 40, background: "#2c2c2c", borderRadius: 10,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "white", fontSize: 18, fontWeight: 700
+          }}>H</div>
+          <div>
+            <h1 style={{ fontSize: "1.375rem", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", color: "#1a1d23" }}>
+              Heritage Invoice
+            </h1>
+            <p style={{ fontSize: "0.8rem", color: "#9ca3af", margin: 0 }}>
+              The Heritage Group
+            </p>
+          </div>
         </div>
-        <p className="text-gray-500 text-sm">
-          Create, manage and print your invoices easily.
+        <p style={{ fontSize: "0.9rem", color: "#6b7280", margin: "1rem 0 0", maxWidth: 460, lineHeight: 1.6 }}>
+          A professional invoicing platform for managing tax invoices, generating PDFs and tracking billing records.
         </p>
       </div>
 
-      {/* Main Action Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
-        {/* Create Invoice Card */}
-        <div className="border border-gray-200 rounded-2xl p-6 space-y-4 bg-white shadow hover:shadow-md transition">
-          <h2 className="text-xl font-semibold flex items-center gap-2 text-indigo-700">
-            <FilePlus className="w-5 h-5" /> Create Invoice
-          </h2>
-          <p className="text-gray-500 text-sm">
-            Start a new invoice or update existing ones.
-          </p>
-          <div className="flex flex-col space-y-2">
-            <Link
-              href="/add-invoice"
-              className="border border-indigo-600 text-indigo-700 rounded px-4 py-2 text-center hover:bg-indigo-600 hover:text-white transition"
-            >
-              ➕ New Invoice
-            </Link>
-            <Link
-              href="/edit"
-              className="border border-indigo-600 text-indigo-700 rounded px-4 py-2 text-center hover:bg-indigo-600 hover:text-white transition"
-            >
-              ✏️ Edit Invoice
-            </Link>
-            <Link
-              href="/duplicate"
-              className="border border-indigo-600 text-indigo-700 rounded px-4 py-2 text-center hover:bg-indigo-600 hover:text-white transition"
-            >
-              📑 Duplicate Invoice
-            </Link>
-          </div>
-        </div>
+      <hr className="divider" />
 
-        {/* Manage Invoices Card */}
-        <div className="border border-gray-200 rounded-2xl p-6 space-y-4 bg-white shadow hover:shadow-md transition">
-          <h2 className="text-xl font-semibold flex items-center gap-2 text-indigo-700">
-            <Printer className="w-5 h-5" /> Manage Invoices
-          </h2>
-          <p className="text-gray-500 text-sm">
-            View, fetch, or print your invoices.
-          </p>
-          <div className="flex flex-col space-y-2">
-            <Link
-              href="/fetch"
-              className="border border-indigo-600 text-indigo-700 rounded px-4 py-2 text-center hover:bg-indigo-600 hover:text-white transition"
-            >
-              🔍 Fetch All Invoices
-            </Link>
-            <Link
-              href="/view"
-              className="border border-indigo-600 text-indigo-700 rounded px-4 py-2 text-center hover:bg-indigo-600 hover:text-white transition"
-            >
-              📄 View Invoice
-            </Link>
-            <Link
-              href="/print"
-              className="border border-indigo-600 text-indigo-700 rounded px-4 py-2 text-center hover:bg-indigo-600 hover:text-white transition"
-            >
-              🖨️ Print Invoice
-            </Link>
-          </div>
-        </div>
+      {/* Action Grid */}
+      <p className="section-title" style={{ marginBottom: "1rem" }}>Quick Actions</p>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+        gap: "0.875rem",
+      }}>
+      {actions.map((action) => (
+          <Link
+            key={action.href}
+            href={action.href}
+            className="action-card fade-in"
+          >
+              <div className="action-card-icon">
+                {action.icon}
+              </div>
+              <div>
+                <div className="action-card-label">{action.label}</div>
+                <div className="action-card-desc">{action.description}</div>
+              </div>
+          </Link>
+        ))}
       </div>
 
-      {/* Footer */}
-      <div className="text-gray-400 text-xs pt-8">
-        © 2025 The Heritage Travels Billing System
+      <div className="footer">
+        © 2025 The Heritage Group · All rights reserved
       </div>
     </div>
   );
