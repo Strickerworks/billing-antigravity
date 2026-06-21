@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/admin/edit", label: "Edit" },
   { href: "/admin/duplicate", label: "Duplicate" },
   { href: "/admin/print", label: "Download" },
+  { href: "/admin/recycle-bin", label: "Recycle Bin" },
 ];
 
 export default function Navbar() {

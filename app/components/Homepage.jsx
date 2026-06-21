@@ -39,6 +39,12 @@ const actions = [
     label: "Download PDF",
     description: "Download invoice as a PDF file",
   },
+  {
+    href: "/admin/recycle-bin",
+    icon: "🗑",
+    label: "Recycle Bin",
+    description: "Recover or permanently delete archived invoices",
+  },
 ];
 
 export default function Homepage() {
