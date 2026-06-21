@@ -1,72 +1,53 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
-export default function RecycleBin() {
+export default function FetchInvoice() {
   const [invoices, setInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { role } = useParams();
+  const isAdmin = role === "admin";
 
   useEffect(() => {
-    fetchArchivedInvoices();
+    fetchAllInvoices();
   }, []);
 
-  const fetchArchivedInvoices = async () => {
+  const fetchAllInvoices = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("billdata")
       .select("*")
-      .eq("active_status", "inactive")
+      .eq("active_status", "active")
       .order("created_at", { ascending: false });
 
     if (error) {
-      console.error("Error fetching archived invoices:", error);
-      alert("Could not load archived invoices.");
+      console.error("Error fetching invoices:", error);
+      alert("Could not load invoices.");
     } else {
-      setInvoices(data || []);
+      setInvoices(data);
     }
     setLoading(false);
   };
 
-  const handleRecover = async (invoice_no) => {
-    if (!confirm(`Are you sure you want to recover invoice #${invoice_no}?`)) {
+  const handleDelete = async (invoice_no) => {
+    if (!confirm(`Are you sure you want to move invoice #${invoice_no} to the Recycle Bin?`)) {
       return;
     }
     setLoading(true);
     const { error } = await supabase
       .from("billdata")
-      .update({ active_status: "active" })
+      .update({ active_status: "inactive" })
       .eq("invoice_no", invoice_no);
 
     if (error) {
-      console.error("Error recovering invoice:", error);
-      alert("Failed to recover invoice.");
+      console.error("Error soft-deleting invoice:", error);
+      alert("Failed to delete invoice.");
       setLoading(false);
     } else {
-      alert("Invoice recovered successfully!");
-      fetchArchivedInvoices();
-    }
-  };
-
-  const handlePermanentDelete = async (invoice_no) => {
-    if (!confirm(`WARNING: Are you sure you want to PERMANENTLY delete invoice #${invoice_no}? This action cannot be undone.`)) {
-      return;
-    }
-    setLoading(true);
-    const { error } = await supabase
-      .from("billdata")
-      .delete()
-      .eq("invoice_no", invoice_no);
-
-    if (error) {
-      console.error("Error permanently deleting invoice:", error);
-      alert("Failed to delete invoice permanently.");
-      setLoading(false);
-    } else {
-      alert("Invoice permanently deleted.");
-      fetchArchivedInvoices();
+      fetchAllInvoices();
     }
   };
 
@@ -78,6 +59,14 @@ export default function RecycleBin() {
       invoice.customer_gst?.toLowerCase().includes(term)
     );
   });
+
+  const handleView = (invoice_no) => {
+    router.push(`/${role}/view/${invoice_no}`);
+  };
+
+  const handleEdit = (invoice_no) => {
+    router.push(`/${role}/edit?invoice=${invoice_no}`);
+  };
 
   const formatDate = (isoDate) => {
     if (!isoDate) return "—";
@@ -92,16 +81,16 @@ export default function RecycleBin() {
       <div className="page-header">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <h1 className="page-title">Recycle Bin</h1>
+            <h1 className="page-title">All Invoices</h1>
             <p className="page-subtitle">
-              {loading ? "Loading..." : `${filteredInvoices.length} archived invoice${filteredInvoices.length !== 1 ? "s" : ""}${searchTerm ? " found" : ""}`}
+              {loading ? "Loading..." : `${filteredInvoices.length} invoice${filteredInvoices.length !== 1 ? "s" : ""}${searchTerm ? " found" : " total"}`}
             </p>
           </div>
           <button
-            onClick={() => router.push("/admin")}
-            className="btn btn-secondary"
+            onClick={() => router.push(`/${role}/add-invoice`)}
+            className="btn btn-primary"
           >
-            ← Back to Dashboard
+            + New Invoice
           </button>
         </div>
       </div>
@@ -114,7 +103,7 @@ export default function RecycleBin() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search archived invoices..."
+            placeholder="Search by invoice number, customer name, or GST..."
             className="form-input"
             style={{ paddingLeft: "2.25rem" }}
           />
@@ -126,14 +115,14 @@ export default function RecycleBin() {
         {loading ? (
           <div className="empty-state">
             <div className="empty-state-icon">⏳</div>
-            <div className="empty-state-text">Loading archives...</div>
+            <div className="empty-state-text">Loading invoices...</div>
           </div>
         ) : filteredInvoices.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-state-icon">🗑</div>
-            <div className="empty-state-text">Recycle Bin is empty</div>
+            <div className="empty-state-icon">📄</div>
+            <div className="empty-state-text">No invoices found</div>
             <div className="empty-state-sub">
-              {searchTerm ? "Try a different search term." : "Deleted invoices will appear here for recovery."}
+              {searchTerm ? "Try a different search term." : "Create your first invoice to get started."}
             </div>
           </div>
         ) : (
@@ -164,18 +153,26 @@ export default function RecycleBin() {
                     <td style={{ textAlign: "center" }}>
                       <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
                         <button
-                          onClick={() => handleRecover(inv.invoice_no)}
+                          onClick={() => handleView(inv.invoice_no)}
                           className="btn btn-sm btn-secondary"
                         >
-                          Recover
+                          View
                         </button>
                         <button
-                          onClick={() => handlePermanentDelete(inv.invoice_no)}
+                          onClick={() => handleEdit(inv.invoice_no)}
                           className="btn btn-sm btn-outline"
-                          style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)" }}
                         >
-                          Delete permanently
+                          Edit
                         </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDelete(inv.invoice_no)}
+                            className="btn btn-sm btn-outline"
+                            style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)" }}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

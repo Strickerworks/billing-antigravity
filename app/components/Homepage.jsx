@@ -1,53 +1,74 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-
-const actions = [
-  {
-    href: "/admin/add-invoice",
-    icon: "＋",
-    label: "New Invoice",
-    description: "Create a fresh invoice from scratch",
-  },
-  {
-    href: "/admin/fetch",
-    icon: "≡",
-    label: "All Invoices",
-    description: "Browse and search all saved invoices",
-  },
-  {
-    href: "/admin/edit",
-    icon: "✎",
-    label: "Edit Invoice",
-    description: "Modify an existing invoice by number",
-  },
-  {
-    href: "/admin/duplicate",
-    icon: "⎘",
-    label: "Duplicate",
-    description: "Copy an invoice with a new number",
-  },
-  {
-    href: "/admin/view",
-    icon: "◉",
-    label: "View Invoice",
-    description: "Preview invoice as PDF in browser",
-  },
-  {
-    href: "/admin/print",
-    icon: "↓",
-    label: "Download PDF",
-    description: "Download invoice as a PDF file",
-  },
-  {
-    href: "/admin/recycle-bin",
-    icon: "🗑",
-    label: "Recycle Bin",
-    description: "Recover or permanently delete archived invoices",
-  },
-];
+import { usePathname } from "next/navigation";
 
 export default function Homepage() {
+  const pathname = usePathname();
+  const isStaff = pathname.startsWith("/staff");
+  const prefix = isStaff ? "/staff" : "/admin";
+
+  const actions = [
+    {
+      href: `${prefix}/add-invoice`,
+      icon: "＋",
+      label: "New Invoice",
+      description: "Create a fresh invoice from scratch",
+    },
+    {
+      href: `${prefix}/fetch`,
+      icon: "≡",
+      label: "All Invoices",
+      description: "Browse and search all saved invoices",
+    },
+    {
+      href: `${prefix}/edit`,
+      icon: "✎",
+      label: "Edit Invoice",
+      description: "Modify an existing invoice by number",
+    },
+    {
+      href: `${prefix}/duplicate`,
+      icon: "⎘",
+      label: "Duplicate",
+      description: "Copy an invoice with a new number",
+    },
+    {
+      href: `${prefix}/view`,
+      icon: "◉",
+      label: "View Invoice",
+      description: "Preview invoice as PDF in browser",
+    },
+    {
+      href: `${prefix}/print`,
+      icon: "↓",
+      label: "Download PDF",
+      description: "Download invoice as a PDF file",
+    },
+  ];
+
+  if (!isStaff) {
+    actions.push({
+      href: "/admin/recycle-bin",
+      icon: "🗑",
+      label: "Recycle Bin",
+      description: "Recover or permanently delete archived invoices",
+    });
+    actions.push({
+      href: "/admin/requests",
+      icon: "✉",
+      label: "Approval Requests",
+      description: "Review and approve/reject staff billing updates",
+    });
+  } else {
+    actions.push({
+      href: "/staff/requests",
+      icon: "✉",
+      label: "Request Status",
+      description: "Track status of your submitted change requests",
+    });
+  }
+
   return (
     <div className="page-content" style={{ maxWidth: 860 }}>
       {/* Hero */}

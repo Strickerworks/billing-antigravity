@@ -3,19 +3,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
-const navLinks = [
-  { href: "/admin", label: "Home" },
-  { href: "/admin/add-invoice", label: "New Invoice" },
-  { href: "/admin/fetch", label: "All Invoices" },
-  { href: "/admin/edit", label: "Edit" },
-  { href: "/admin/duplicate", label: "Duplicate" },
-  { href: "/admin/print", label: "Download" },
-  { href: "/admin/recycle-bin", label: "Recycle Bin" },
-];
-
 export default function Navbar() {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const isStaff = pathname.startsWith("/staff");
+  const prefix = isStaff ? "/staff" : "/admin";
+
+  const navLinks = [
+    { href: `${prefix}`, label: "Home" },
+    { href: `${prefix}/add-invoice`, label: "New Invoice" },
+    { href: `${prefix}/fetch`, label: "All Invoices" },
+    { href: `${prefix}/edit`, label: "Edit" },
+    { href: `${prefix}/duplicate`, label: "Duplicate" },
+    { href: `${prefix}/print`, label: "Download" },
+    { href: `${prefix}/requests`, label: "Requests" },
+  ];
+
+  if (!isStaff) {
+    navLinks.push({ href: "/admin/recycle-bin", label: "Recycle Bin" });
+  }
 
   // Close drawer on route change
   useEffect(() => {
@@ -35,7 +42,7 @@ export default function Navbar() {
   return (
     <>
       <nav className="navbar">
-        <Link href="/admin" className="navbar-brand">
+        <Link href={prefix} className="navbar-brand">
           <div className="navbar-brand-icon">H</div>
           <span className="navbar-brand-text">Heritage Invoice</span>
         </Link>

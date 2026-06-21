@@ -1,10 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/utils/supabase/client";
 
 export default function Information({ initialData = null, mode = "default" }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isStaff = pathname.startsWith("/staff");
+  const prefix = isStaff ? "/staff" : "/admin";
 
   const [billDate, setBillDate] = useState("");
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -136,12 +139,23 @@ export default function Information({ initialData = null, mode = "default" }) {
     };
 
     let result;
-    if (mode === "duplicate") {
-      result = await supabase.from("billdata").insert([bill]);
-    } else if (initialData) {
-      result = await supabase.from("billdata").update(bill).eq("invoice_no", parseInt(invoiceNo, 10));
+    if (isStaff) {
+      const reqType = mode === "duplicate" ? "duplicate" : initialData ? "update" : "create";
+      result = await supabase.from("billing_requests").insert([{
+        invoice_no: parseInt(invoiceNo, 10),
+        request_type: reqType,
+        status: "pending",
+        requested_by: "staff",
+        data: bill
+      }]);
     } else {
-      result = await supabase.from("billdata").insert([bill]);
+      if (mode === "duplicate") {
+        result = await supabase.from("billdata").insert([bill]);
+      } else if (initialData) {
+        result = await supabase.from("billdata").update(bill).eq("invoice_no", parseInt(invoiceNo, 10));
+      } else {
+        result = await supabase.from("billdata").insert([bill]);
+      }
     }
 
     setSaving(false);
@@ -150,8 +164,12 @@ export default function Information({ initialData = null, mode = "default" }) {
       alert("Error saving invoice: " + error.message);
       console.error(error);
     } else {
-      alert("Invoice saved successfully!");
-      router.push("/admin");
+      if (isStaff) {
+        alert("Change request submitted successfully! It is pending administrator approval.");
+      } else {
+        alert("Invoice saved successfully!");
+      }
+      router.push(prefix);
     }
   };
 
@@ -452,7 +470,7 @@ export default function Information({ initialData = null, mode = "default" }) {
             {saving ? "Saving..." : (initialData && mode !== "duplicate") ? "Update Invoice" : "Save Invoice"}
           </button>
           <button
-            onClick={() => router.push("/admin")}
+            onClick={() => router.push(prefix)}
             className="btn btn-outline"
           >
             Cancel
