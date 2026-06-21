@@ -420,8 +420,8 @@ export default function Information({ initialData = null, mode = "default" }) {
       </div>
 
       {/* Totals */}
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "flex-start" }}>
-        <div className="card" style={{ flex: 1, minWidth: 260 }}>
+      <div className="totals-wrapper">
+        <div className="card totals-card">
           <p className="card-title">Summary</p>
           <div className="totals-row">
             <span>Subtotal</span>
@@ -461,7 +461,7 @@ export default function Information({ initialData = null, mode = "default" }) {
           </div>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", minWidth: 200 }}>
+        <div className="totals-actions">
           <button
             onClick={handleSaveInvoice}
             disabled={saving}

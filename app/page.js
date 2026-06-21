@@ -4,23 +4,8 @@ import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      minHeight: "100vh",
-      backgroundColor: "#0b0c0e",
-      color: "#ffffff",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-    }}>
-      <div style={{
-        padding: "2.5rem 3.5rem",
-        border: "1px solid #22252e",
-        borderRadius: "12px",
-        backgroundColor: "#14161b",
-        textAlign: "center",
-        boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)"
-      }}>
+    <div className="landing-container">
+      <div className="landing-card">
         <div style={{
           width: "40px",
           height: "40px",

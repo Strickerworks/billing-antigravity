@@ -233,6 +233,32 @@ export default function RequestsPage() {
 
   return (
     <div className="page-content" style={{ position: "relative" }}>
+      {/* Responsive stylesheet for the requests layout */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .requests-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 1.25rem;
+          align-items: start;
+        }
+        @media (min-width: 869px) {
+          .requests-grid.has-sidebar {
+            grid-template-columns: 1fr 400px;
+          }
+        }
+        
+        .comparison-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.5rem;
+        }
+        @media (max-width: 480px) {
+          .comparison-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}} />
+
       {/* Header */}
       <div className="page-header">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
@@ -265,7 +291,7 @@ export default function RequestsPage() {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: selectedRequest ? "1fr 400px" : "1fr", gap: "1.25rem", alignItems: "start" }}>
+      <div className={`requests-grid ${selectedRequest ? "has-sidebar" : ""}`}>
         {/* Main Requests Table */}
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           {loading ? (
@@ -406,7 +432,7 @@ export default function RequestsPage() {
                   <p style={{ fontWeight: 600, color: "#4b5563", margin: "0 0 0.35rem", fontSize: "0.78rem" }}>
                     Items Comparison:
                   </p>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                  <div className="comparison-grid">
                     <div>
                       <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 600 }}>Original:</span>
                       <div style={{ maxHeight: "160px", overflowY: "auto", background: "#f9fafb", borderRadius: "6px", padding: "0.4rem", border: "1px solid #e5e7eb", fontSize: "0.72rem" }}>
