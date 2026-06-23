@@ -92,7 +92,12 @@ export default function CarKmPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
-      <div style={{ padding: "1.5rem 0 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ paddingTop: "1rem" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          <Link href={`/${role}/cars/${carId}`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+            ← Back to Profile
+          </Link>
+        </div>
         <div>
           <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "#111827" }}>
             {car?.name} ({car?.registration_name})
@@ -101,9 +106,6 @@ export default function CarKmPage() {
             {isAdmin ? "Log Odometer Directly" : "Request Odometer Log"}
           </p>
         </div>
-        <Link href={`/${role}/cars/${carId}`} className="btn btn-secondary" style={{ fontSize: "0.8rem", background: "#111827", color: "#ffffff", borderColor: "#111827" }}>
-          ← Back to Profile
-        </Link>
       </div>
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />

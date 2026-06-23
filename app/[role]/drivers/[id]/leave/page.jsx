@@ -100,8 +100,12 @@ export default function LogDriverLeavePage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
-      {/* breadcrumbs removed as per request */}
-      <div style={{ padding: "1.5rem 0 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ paddingTop: "1rem" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          <Link href={`/${role}/drivers/${driverId}`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+            ← Back to Profile
+          </Link>
+        </div>
         <div>
           <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "#111827" }}>
             {driver?.name}
@@ -110,9 +114,6 @@ export default function LogDriverLeavePage() {
             {isAdmin ? "Log Leave Directly" : "Request Leave Record"}
           </p>
         </div>
-        <Link href={`/${role}/drivers/${driverId}`} className="btn btn-secondary" style={{ fontSize: "0.8rem", background: "#111827", color: "#ffffff", borderColor: "#111827" }}>
-          ← Back to Profile
-        </Link>
       </div>
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
