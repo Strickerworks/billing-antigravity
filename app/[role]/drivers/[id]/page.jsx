@@ -12,6 +12,8 @@ export default function DriverDetailPage() {
 
   const [driver, setDriver] = useState(null);
   const [vehicleHistory, setVehicleHistory] = useState([]);
+  const [paymentsHistory, setPaymentsHistory] = useState([]);
+  const [pendingPayments, setPendingPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,6 +26,14 @@ export default function DriverDetailPage() {
   const [editAddress, setEditAddress] = useState("");
   const [editLicenseNumber, setEditLicenseNumber] = useState("");
   const [editDateOfJoining, setEditDateOfJoining] = useState("");
+  const [editSalary, setEditSalary] = useState("0");
+
+  // Payment Log Form state
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentDate, setPaymentDate] = useState("");
+  const [paymentType, setPaymentType] = useState("salary_paid"); // 'salary_paid', 'deduction', 'advance'
+  const [paymentComment, setPaymentComment] = useState("");
 
   useEffect(() => {
     if (driverId) {
@@ -52,6 +62,7 @@ export default function DriverDetailPage() {
       setEditAddress(driverData.address || "");
       setEditLicenseNumber(driverData.license_number || "");
       setEditDateOfJoining(driverData.date_of_joining || "");
+      setEditSalary(driverData.salary?.toString() || "0");
 
       // 2. Get assigned vehicle history
       const { data: historyList } = await supabase
@@ -61,6 +72,24 @@ export default function DriverDetailPage() {
         .order("assigned_at", { ascending: false });
 
       setVehicleHistory(historyList || []);
+
+      // 3. Get driver payments logs
+      const { data: payHistory } = await supabase
+        .from("driver_payments")
+        .select("*")
+        .eq("driver_id", driverId)
+        .order("payment_date", { ascending: false });
+      setPaymentsHistory(payHistory || []);
+
+      // 4. Get pending fleet requests for payments
+      const { data: allPending } = await supabase
+        .from("fleet_requests")
+        .select("*")
+        .eq("status", "pending");
+      const driverPending = (allPending || []).filter(
+        (req) => req.payload && req.payload.driver_id === driverId
+      );
+      setPendingPayments(driverPending);
 
     } catch (err) {
       console.error("Error loading driver details:", err);
@@ -84,7 +113,8 @@ export default function DriverDetailPage() {
       aadhar_number: editAadharNumber.trim() || null,
       address: editAddress.trim() || null,
       license_number: editLicenseNumber.trim() || null,
-      date_of_joining: editDateOfJoining || null
+      date_of_joining: editDateOfJoining || null,
+      salary: parseFloat(editSalary) || 0
     };
 
     try {
@@ -98,7 +128,8 @@ export default function DriverDetailPage() {
             aadhar_number: payload.aadhar_number,
             address: payload.address,
             license_number: payload.license_number,
-            date_of_joining: payload.date_of_joining
+            date_of_joining: payload.date_of_joining,
+            salary: payload.salary
           })
           .eq("id", driverId);
 
@@ -123,6 +154,62 @@ export default function DriverDetailPage() {
     setSubmitting(false);
   };
 
+  const handlePaymentSubmit = async (e) => {
+    e.preventDefault();
+    if (!paymentAmount || !paymentDate) {
+      alert("Please fill amount and date.");
+      return;
+    }
+    setSubmitting(true);
+
+    const payload = {
+      driver_id: driverId,
+      amount: parseFloat(paymentAmount),
+      type: paymentType,
+      payment_date: paymentDate,
+      comment: paymentComment.trim()
+    };
+
+    try {
+      if (isAdmin) {
+        const { error } = await supabase.from("driver_payments").insert([payload]);
+        if (error) throw error;
+
+        // Auto raise expense ticket for Salary Paid or Advance
+        if (paymentType === "salary_paid" || paymentType === "advance") {
+          const category = "Driver Payment";
+          const label = paymentType === "salary_paid" ? "Salary Payment" : "Salary Advance";
+          await supabase.from("expense_reports").insert([{
+            amount: payload.amount,
+            category,
+            comment: `[Driver: ${driver.name}] ${label}: ${payload.comment || "Paid"}`,
+            status: "pending",
+            requested_by: "admin"
+          }]);
+        }
+        alert("Payment activity logged successfully and expense ticket created.");
+      } else {
+        const { error } = await supabase.from("fleet_requests").insert([{
+          request_type: "log_driver_payment",
+          payload,
+          requested_by: "staff",
+          status: "pending"
+        }]);
+        if (error) throw error;
+        alert("Payment request submitted to Admin for approval.");
+      }
+
+      setPaymentAmount("");
+      setPaymentDate("");
+      setPaymentComment("");
+      setShowPaymentForm(false);
+      fetchDriverDetails();
+    } catch (err) {
+      alert(err.message || "Failed to log payment activity");
+    }
+    setSubmitting(false);
+  };
+
   if (loading && !driver) {
     return <div className="page-content">Loading driver profile...</div>;
   }
@@ -131,8 +218,33 @@ export default function DriverDetailPage() {
     return <div className="page-content">Driver not found. <Link href={`/${role}/drivers`}>Back to Registry</Link></div>;
   }
 
+  // Monthly balance calculations
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+
+  const thisMonthPayments = paymentsHistory.filter((p) => {
+    const pDate = new Date(p.payment_date);
+    return pDate.getFullYear() === currentYear && pDate.getMonth() === currentMonth;
+  });
+
+  const totalPaid = thisMonthPayments
+    .filter((p) => p.type === "salary_paid")
+    .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+  const totalDeductions = thisMonthPayments
+    .filter((p) => p.type === "deduction")
+    .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+  const totalAdvances = thisMonthPayments
+    .filter((p) => p.type === "advance")
+    .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+  const baseSalary = parseFloat(driver.salary || 0);
+  const leftoverBalance = baseSalary - (totalPaid + totalDeductions + totalAdvances);
+
   return (
-    <div className="page-content" style={{ maxWidth: 860, paddingBottom: "3rem" }}>
+    <div className="page-content" style={{ maxWidth: 900, paddingBottom: "3rem" }}>
       {/* Breadcrumb */}
       <div style={{ padding: "1.5rem 0 1rem" }}>
         <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.5rem" }}>
@@ -151,6 +263,9 @@ export default function DriverDetailPage() {
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button onClick={() => setShowPaymentForm(!showPaymentForm)} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#10b981", borderColor: "#10b981" }}>
+              💵 Log Payment
+            </button>
             <button onClick={() => setShowEditModal(true)} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
               ✎ Edit Profile
             </button>
@@ -163,49 +278,204 @@ export default function DriverDetailPage() {
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
+      {/* Salary & Balance Summary Banner */}
+      <div className="card" style={{
+        padding: "1.25rem",
+        background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+        border: "1px solid #bbf7d0",
+        borderRadius: "8px",
+        marginBottom: "1.5rem"
+      }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "1rem" }}>
+          <div>
+            <div style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>Monthly Base Salary</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#166534", marginTop: "0.25rem" }}>₹{baseSalary.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>Salary Paid</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#166534", marginTop: "0.25rem" }}>₹{totalPaid.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.7rem", color: "#b45309", fontWeight: 700, textTransform: "uppercase" }}>Advances Taken</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#92400e", marginTop: "0.25rem" }}>₹{totalAdvances.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: "0.7rem", color: "#b91c1c", fontWeight: 700, textTransform: "uppercase" }}>Deductions</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#991b1b", marginTop: "0.25rem" }}>₹{totalDeductions.toLocaleString()}</div>
+          </div>
+          <div style={{ borderLeft: "1px solid #bbf7d0", paddingLeft: "1rem" }}>
+            <div style={{ fontSize: "0.7rem", color: "#1e40af", fontWeight: 700, textTransform: "uppercase" }}>Leftover Balance</div>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: leftoverBalance >= 0 ? "#1e3a8a" : "#b91c1c", marginTop: "0.25rem" }}>
+              ₹{leftoverBalance.toLocaleString()}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Pending payments warning indicator for Staff */}
+      {pendingPayments.length > 0 && (
+        <div style={{
+          padding: "1rem",
+          background: "#fffbeb",
+          border: "1px solid #fef3c7",
+          borderRadius: "8px",
+          marginBottom: "1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem"
+        }}>
+          <div style={{ fontWeight: 700, color: "#92400e", fontSize: "0.85rem" }}>
+            ⚠️ {pendingPayments.length} Pending Payment Request(s) Awaiting Approval:
+          </div>
+          <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#b45309" }}>
+            {pendingPayments.map((req) => (
+              <li key={req.id}>
+                <strong>{req.payload.type?.replace("_", " ").toUpperCase()}</strong> of <strong>₹{req.payload.amount?.toLocaleString()}</strong> requested on {new Date(req.created_at).toLocaleDateString()}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Log Payment Form */}
+      {showPaymentForm && (
+        <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "1.5rem" }}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>
+            {isAdmin ? "Log Salary/Payment Activity Directly" : "Request Salary/Payment Activity"}
+          </h2>
+          <form onSubmit={handlePaymentSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+            <div className="form-group">
+              <label className="form-label">Amount (₹)</label>
+              <input type="number" className="form-input" placeholder="Enter amount" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Payment Date</label>
+              <input type="date" className="form-input" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Activity Type</label>
+              <select className="form-input" value={paymentType} onChange={(e) => setPaymentType(e.target.value)} required>
+                <option value="salary_paid">Salary Paid</option>
+                <option value="advance">Advance Taken</option>
+                <option value="deduction">Deduction</option>
+              </select>
+            </div>
+
+            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+              <label className="form-label">Remarks / Description</label>
+              <input type="text" className="form-input" placeholder="Details (e.g. June Month Salary, Advance for trip)" value={paymentComment} onChange={(e) => setPaymentComment(e.target.value)} />
+            </div>
+
+            <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <button type="button" onClick={() => setShowPaymentForm(false)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
+              <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#10b981", borderColor: "#10b981" }}>
+                {submitting ? "Processing..." : isAdmin ? "Save Record" : "Submit Request"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: "2rem" }}>
         {/* Left Card: Full profile details */}
-        <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Profile Information</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-            <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Full Name</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.name}</div>
-            </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+          <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Profile Information</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Full Name</span>
+                <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.name}</div>
+              </div>
 
-            <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Phone Number</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.phone}</div>
-            </div>
+              <div>
+                <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Phone Number</span>
+                <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.phone}</div>
+              </div>
 
-            <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Date of Birth</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>
-                {driver.dob ? new Date(driver.dob).toLocaleDateString() : "Not Provided"}
+              <div>
+                <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Date of Birth</span>
+                <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>
+                  {driver.dob ? new Date(driver.dob).toLocaleDateString() : "Not Provided"}
+                </div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Aadhar Card</span>
+                <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.aadhar_number || "Not Provided"}</div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>License Number</span>
+                <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.license_number || "Not Provided"}</div>
+              </div>
+
+              <div>
+                <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Date of Joining</span>
+                <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>
+                  {driver.date_of_joining ? new Date(driver.date_of_joining).toLocaleDateString() : "Not Provided"}
+                </div>
+              </div>
+
+              <div style={{ gridColumn: "1 / -1" }}>
+                <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Permanent Address</span>
+                <div style={{ fontSize: "0.95rem", color: "#374151", fontWeight: 600, marginTop: "0.25rem", whiteSpace: "pre-line" }}>{driver.address || "Not Provided"}</div>
               </div>
             </div>
+          </div>
 
-            <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Aadhar Card</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.aadhar_number || "Not Provided"}</div>
-            </div>
+          {/* Payment & Advances Ledger */}
+          <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Payment & Advances History</h2>
+            {paymentsHistory.length === 0 ? (
+              <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>No payments logs recorded.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {paymentsHistory.map((p) => {
+                  let badgeColor = "#047857";
+                  let bgBadge = "#d1fae5";
+                  let label = "Salary Paid";
 
-            <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>License Number</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.license_number || "Not Provided"}</div>
-            </div>
+                  if (p.type === "advance") {
+                    badgeColor = "#b45309";
+                    bgBadge = "#fef3c7";
+                    label = "Advance Taken";
+                  } else if (p.type === "deduction") {
+                    badgeColor = "#b91c1c";
+                    bgBadge = "#fee2e2";
+                    label = "Deduction";
+                  }
 
-            <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Date of Joining</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>
-                {driver.date_of_joining ? new Date(driver.date_of_joining).toLocaleDateString() : "Not Provided"}
+                  return (
+                    <div key={p.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.6rem" }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>
+                            ₹{parseFloat(p.amount).toLocaleString()}
+                          </span>
+                          <span style={{
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                            color: badgeColor,
+                            background: bgBadge,
+                            padding: "0.15rem 0.4rem",
+                            borderRadius: "4px",
+                            textTransform: "uppercase"
+                          }}>{label}</span>
+                        </div>
+                        <div style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "0.15rem" }}>
+                          {p.comment || "No comment"}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: "0.8rem", color: "#9ca3af", textAlign: "right" }}>
+                        <div>Log Date: {new Date(p.payment_date).toLocaleDateString()}</div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-
-            <div style={{ gridColumn: "1 / -1" }}>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Permanent Address</span>
-              <div style={{ fontSize: "0.95rem", color: "#374151", fontWeight: 600, marginTop: "0.25rem", whiteSpace: "pre-line" }}>{driver.address || "Not Provided"}</div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -278,6 +548,11 @@ export default function DriverDetailPage() {
               <div className="form-group">
                 <label className="form-label">Date of Joining</label>
                 <input type="date" className="form-input" value={editDateOfJoining} onChange={(e) => setEditDateOfJoining(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Base Salary (₹)</label>
+                <input type="number" className="form-input" value={editSalary} onChange={(e) => setEditSalary(e.target.value)} />
               </div>
 
               <div className="form-group" style={{ gridColumn: "1 / -1" }}>

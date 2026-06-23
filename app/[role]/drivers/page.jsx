@@ -22,6 +22,7 @@ export default function DriversPage() {
   const [address, setAddress] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [dateOfJoining, setDateOfJoining] = useState("");
+  const [salary, setSalary] = useState("0");
 
   useEffect(() => {
     fetchDriversAndAssignments();
@@ -81,7 +82,8 @@ export default function DriversPage() {
       aadhar_number: aadharNumber.trim() || null,
       address: address.trim() || null,
       license_number: licenseNumber.trim() || null,
-      date_of_joining: dateOfJoining || null
+      date_of_joining: dateOfJoining || null,
+      salary: parseFloat(salary) || 0
     };
 
     if (isAdmin) {
@@ -118,6 +120,7 @@ export default function DriversPage() {
     setAddress("");
     setLicenseNumber("");
     setDateOfJoining("");
+    setSalary("0");
   };
 
   const handleDeleteDriver = async (driverId, driverName) => {
@@ -184,6 +187,11 @@ export default function DriversPage() {
             <input type="date" className="form-input" value={dateOfJoining} onChange={(e) => setDateOfJoining(e.target.value)} />
           </div>
 
+          <div className="form-group">
+            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Monthly Base Salary (₹)</label>
+            <input type="number" className="form-input" placeholder="e.g. 25000" value={salary} onChange={(e) => setSalary(e.target.value)} />
+          </div>
+
           <div className="form-group" style={{ gridColumn: "1 / -1" }}>
             <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Home Address</label>
             <textarea className="form-input" rows="2" placeholder="Residential permanent address" value={address} onChange={(e) => setAddress(e.target.value)} />
@@ -248,6 +256,7 @@ export default function DriversPage() {
                       <div style={{ fontSize: "1.5rem" }}>👤</div>
                       <div>
                         <div style={{ fontWeight: 700, color: "#111827", fontSize: "1rem" }}>{driver.name}</div>
+                        <div style={{ fontSize: "0.85rem", color: "#374151" }}>💰 Salary: ₹{parseFloat(driver.salary || 0).toLocaleString()} / month</div>
                         <div style={{ fontSize: "0.8rem", color: "#6b7280" }}>📞 {driver.phone}</div>
                       </div>
                     </div>

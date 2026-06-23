@@ -182,6 +182,29 @@ export default function FleetRequestsPage() {
           driver_id: payload.driver_id
         }]);
         if (error) throw error;
+      } else if (req.request_type === "log_driver_payment") {
+        const { error } = await supabase.from("driver_payments").insert([{
+          driver_id: payload.driver_id,
+          amount: payload.amount,
+          type: payload.type,
+          payment_date: payload.payment_date,
+          comment: payload.comment
+        }]);
+        if (error) throw error;
+
+        // Auto raise expense ticket if salary_paid or advance
+        if (payload.type === "salary_paid" || payload.type === "advance") {
+          const { data: driverObj } = await supabase.from("drivers").select("name").eq("id", payload.driver_id).single();
+          const driverName = driverObj ? driverObj.name : `ID:${payload.driver_id}`;
+          const label = payload.type === "salary_paid" ? "Salary Payment" : "Salary Advance";
+          await supabase.from("expense_reports").insert([{
+            amount: payload.amount,
+            category: "Driver Payment",
+            comment: `[Driver: ${driverName}] ${label}: ${payload.comment || "Paid"}`,
+            status: "pending",
+            requested_by: req.requested_by || "staff"
+          }]);
+        }
       }
 
       // Mark request as approved
@@ -289,6 +312,8 @@ export default function FleetRequestsPage() {
         return `Misc cost: ₹${parseFloat(p.amount).toLocaleString()} [Reason: ${p.comment}]`;
       case "assign_driver":
         return `Assign Driver Assignment: Driver ID ${p.driver_id}`;
+      case "log_driver_payment":
+        return `Driver Payment Log: ${p.type?.replace("_", " ").toUpperCase()} of ₹${parseFloat(p.amount).toLocaleString()} on ${p.payment_date} [Comment: ${p.comment || 'None'}]`;
       default:
         return JSON.stringify(p);
     }
@@ -652,6 +677,53 @@ export default function FleetRequestsPage() {
                       value={editPayload.comment || ""}
                       onChange={(e) => setEditPayload({ ...editPayload, comment: e.target.value })}
                       required
+                    />
+                  </div>
+                </>
+              )}
+
+              {editingRequest.request_type === "log_driver_payment" && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Amount (₹)</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={editPayload.amount || ""}
+                      onChange={(e) => setEditPayload({ ...editPayload, amount: parseFloat(e.target.value) })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Payment Date</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={editPayload.payment_date || ""}
+                      onChange={(e) => setEditPayload({ ...editPayload, payment_date: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Activity Type</label>
+                    <select
+                      className="form-input"
+                      value={editPayload.type || "salary_paid"}
+                      onChange={(e) => setEditPayload({ ...editPayload, type: e.target.value })}
+                      required
+                    >
+                      <option value="salary_paid">Salary Paid</option>
+                      <option value="advance">Advance Taken</option>
+                      <option value="deduction">Deduction</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Comment</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={editPayload.comment || ""}
+                      onChange={(e) => setEditPayload({ ...editPayload, comment: e.target.value })}
                     />
                   </div>
                 </>
