@@ -160,6 +160,22 @@ export default function CarDetailPage() {
     setLoading(false);
   };
 
+  const handleDeleteCar = async () => {
+    if (!confirm(`Are you sure you want to delete vehicle ${car?.registration_name} permanently?`)) {
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("cars").delete().eq("id", carId);
+      if (error) throw error;
+      alert("Vehicle profile deleted successfully.");
+      router.push(`/${role}/cars`);
+    } catch (err) {
+      alert("Failed to delete vehicle: " + err.message);
+    }
+    setSubmitting(false);
+  };
+
   const handleLogSubmit = async (e, type) => {
     e.preventDefault();
     setSubmitting(true);
@@ -322,6 +338,21 @@ export default function CarDetailPage() {
             <Link href={`/${role}/cars/${car.id}/expenses`} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#1f2937", border: "1px solid #1f2937" }}>
               💳 Expense Ledger
             </Link>
+            {isAdmin && (
+              <button
+                onClick={handleDeleteCar}
+                className="btn btn-secondary"
+                disabled={submitting}
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#b91c1c",
+                  border: "1px solid #fee2e2",
+                  background: "#fef2f2"
+                }}
+              >
+                🗑 Delete Vehicle
+              </button>
+            )}
             <Link href={`/${role}/cars`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
               ➔ Fleet Registry
             </Link>
