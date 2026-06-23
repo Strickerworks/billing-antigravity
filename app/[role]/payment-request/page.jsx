@@ -17,6 +17,10 @@ export default function PaymentRequestsHistoryPage() {
   const [editComment, setEditComment] = useState("");
   const [updating, setUpdating] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
+
   const router = useRouter();
   const { role } = useParams();
   const isAdmin = role === "admin";
@@ -24,42 +28,57 @@ export default function PaymentRequestsHistoryPage() {
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [currentPage]);
 
   const fetchRequests = async () => {
     setLoading(true);
-    // 1. Fetch payment request items
-    let query = supabase
-      .from("payment_acknowledgement_requests")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const from = (currentPage - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
 
-    if (!isAdmin) {
-      query = query.eq("requested_by", "staff");
-    }
+    try {
+      // 1. Fetch payment request items with range selection
+      let query = supabase
+        .from("payment_acknowledgement_requests")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false });
 
-    const { data: requestsData, error: requestsError } = await query;
-    
-    // 2. Fetch payments received from billdata
-    const { data: receivedData, error: receivedError } = await supabase
-      .from("billdata")
-      .select("grand_total")
-      .eq("active_status", "active")
-      .eq("payment_status", "Received");
+      if (!isAdmin) {
+        query = query.eq("requested_by", "staff");
+      }
 
-    if (requestsError || receivedError) {
-      console.error("Error fetching payment requests:", requestsError || receivedError);
-      alert("Failed to load payment requests.");
-    } else {
-      setRequests(requestsData || []);
+      const { data: requestsData, error: requestsError, count } = await query.range(from, to);
+      
+      // 2. Fetch payments received from billdata (KPI total)
+      const { data: receivedData, error: receivedError } = await supabase
+        .from("billdata")
+        .select("grand_total")
+        .eq("active_status", "active")
+        .eq("payment_status", "Received");
 
-      // Calculate pending count from fetched list
-      const pending = (requestsData || []).filter(r => r.status === "pending");
-      setPendingCount(pending.length);
+      // 3. Fetch pending requests count (KPI pending count)
+      let pendingQuery = supabase
+        .from("payment_acknowledgement_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
 
-      // Calculate total approved payment received
-      const totalAmt = (receivedData || []).reduce((sum, item) => sum + parseFloat(item.grand_total || 0), 0);
-      setTotalReceivedAmount(totalAmt);
+      if (!isAdmin) {
+        pendingQuery = pendingQuery.eq("requested_by", "staff");
+      }
+      const { count: pendingHeadCount } = await pendingQuery;
+
+      if (requestsError || receivedError) {
+        console.error("Error fetching payment requests:", requestsError || receivedError);
+        alert("Failed to load payment requests.");
+      } else {
+        setRequests(requestsData || []);
+        setTotalCount(count || 0);
+        setPendingCount(pendingHeadCount || 0);
+
+        const totalAmt = (receivedData || []).reduce((sum, item) => sum + parseFloat(item.grand_total || 0), 0);
+        setTotalReceivedAmount(totalAmt);
+      }
+    } catch (err) {
+      console.error(err);
     }
     setLoading(false);
   };
@@ -70,7 +89,6 @@ export default function PaymentRequestsHistoryPage() {
     }
     setLoading(true);
 
-    // 1. Update billdata to Received
     const { error: saveError } = await supabase
       .from("billdata")
       .update({
@@ -87,7 +105,6 @@ export default function PaymentRequestsHistoryPage() {
       return;
     }
 
-    // 2. Update request status to approved
     const { error: updateError } = await supabase
       .from("payment_acknowledgement_requests")
       .update({ status: "approved" })
@@ -155,7 +172,6 @@ export default function PaymentRequestsHistoryPage() {
     }
     setLoading(true);
 
-    // 1. If it was approved, reset billdata payment fields
     if (req.status === "approved") {
       const { error: resetError } = await supabase
         .from("billdata")
@@ -174,7 +190,6 @@ export default function PaymentRequestsHistoryPage() {
       }
     }
 
-    // 2. Set request status back to pending
     const { error: updateError } = await supabase
       .from("payment_acknowledgement_requests")
       .update({ status: "pending" })
@@ -372,113 +387,140 @@ export default function PaymentRequestsHistoryPage() {
       </div>
 
       {/* History table */}
-      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        <div style={{ padding: "1.25rem 1.5rem 0" }}>
-          <p className="card-title">Payment Acknowledger Logs</p>
-        </div>
-        {loading ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">⏳</div>
-            <div className="empty-state-text">Loading requests...</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          <div style={{ padding: "1.25rem 1.5rem 0" }}>
+            <p className="card-title">Payment Acknowledger Logs</p>
           </div>
-        ) : requests.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-state-icon">💳</div>
-            <div className="empty-state-text">No payment requests found</div>
-            <div className="empty-state-sub">
-              No payment acknowledgement requests have been raised yet. Submit one from the dashboard!
+          {loading ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">⏳</div>
+              <div className="empty-state-text">Loading requests...</div>
             </div>
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Invoice No.</th>
-                  <th>Payment Mode</th>
-                  <th>Status</th>
-                  <th>Comment</th>
-                  <th>Submitted By</th>
-                  <th>Submitted At</th>
-                  <th style={{ textAlign: "center" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((req) => (
-                  <tr key={req.id} className="fade-in">
-                    <td>
-                      <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{req.invoice_no}</span>
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{req.payment_mode}</td>
-                    <td>
-                      <span style={getStatusStyle(req.status)}>{req.status}</span>
-                    </td>
-                    <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {req.comment || "—"}
-                    </td>
-                    <td style={{ textTransform: "capitalize", fontWeight: 500 }}>{req.requested_by}</td>
-                    <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
-                    <td style={{ textAlign: "center" }}>
-                      {/* Admin actions */}
-                      {isAdmin && (
-                        req.status === "pending" ? (
-                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
-                            <button onClick={() => handleApprove(req)} className="btn btn-sm btn-primary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleReject(req)}
-                              className="btn btn-sm btn-outline"
-                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        ) : (
-                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
-                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{req.status}</span>
-                            <button
-                              onClick={() => handleRevert(req)}
-                              className="btn btn-sm btn-outline"
-                              style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
-                            >
-                              Revert
-                            </button>
-                            <button
-                              onClick={() => handleDelete(req)}
-                              className="btn btn-sm btn-outline"
-                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.1)", padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        )
-                      )}
-
-                      {/* Staff actions */}
-                      {isStaff && (
-                        req.status === "pending" ? (
-                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
-                            <button onClick={() => openEditModal(req)} className="btn btn-sm btn-outline" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(req)}
-                              className="btn btn-sm btn-outline"
-                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>Processed</span>
-                        )
-                      )}
-                    </td>
+          ) : requests.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">💳</div>
+              <div className="empty-state-text">No payment requests found</div>
+              <div className="empty-state-sub">
+                No payment acknowledgement requests have been raised yet. Submit one from the dashboard!
+              </div>
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Invoice No.</th>
+                    <th>Payment Mode</th>
+                    <th>Status</th>
+                    <th>Comment</th>
+                    <th>Submitted By</th>
+                    <th>Submitted At</th>
+                    <th style={{ textAlign: "center" }}>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {requests.map((req) => (
+                    <tr key={req.id} className="fade-in">
+                      <td>
+                        <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{req.invoice_no}</span>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>{req.payment_mode}</td>
+                      <td>
+                        <span style={getStatusStyle(req.status)}>{req.status}</span>
+                      </td>
+                      <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {req.comment || "—"}
+                      </td>
+                      <td style={{ textTransform: "capitalize", fontWeight: 500 }}>{req.requested_by}</td>
+                      <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
+                      <td style={{ textAlign: "center" }}>
+                        {/* Admin actions */}
+                        {isAdmin && (
+                          req.status === "pending" ? (
+                            <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
+                              <button onClick={() => handleApprove(req)} className="btn btn-sm btn-primary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
+                                Approve
+                              </button>
+                              <button
+                                onClick={() => handleReject(req)}
+                                className="btn btn-sm btn-outline"
+                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
+                              <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{req.status}</span>
+                              <button
+                                onClick={() => handleRevert(req)}
+                                className="btn btn-sm btn-outline"
+                                style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                              >
+                                Revert
+                              </button>
+                              <button
+                                onClick={() => handleDelete(req)}
+                                className="btn btn-sm btn-outline"
+                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.1)", padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          )
+                        )}
+
+                        {/* Staff actions */}
+                        {isStaff && (
+                          req.status === "pending" ? (
+                            <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
+                              <button onClick={() => openEditModal(req)} className="btn btn-sm btn-outline" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDelete(req)}
+                                className="btn btn-sm btn-outline"
+                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>Processed</span>
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination Controls */}
+        {!loading && totalCount > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 0.5rem" }}>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1 || loading}
+              className="btn btn-secondary"
+              style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+            >
+              ◀ Previous
+            </button>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#4b5563" }}>
+              Page {currentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => (prev * itemsPerPage < totalCount ? prev + 1 : prev))}
+              disabled={currentPage * itemsPerPage >= totalCount || loading}
+              className="btn btn-secondary"
+              style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+            >
+              Next ▶
+            </button>
           </div>
         )}
       </div>

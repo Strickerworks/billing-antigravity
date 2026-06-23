@@ -11,6 +11,9 @@ export default function RequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState(null); // For detail preview sidebar
   const [originalInvoice, setOriginalInvoice] = useState(null); // For diff comparison
   const [loadingOriginal, setLoadingOriginal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -24,7 +27,7 @@ export default function RequestsPage() {
 
   useEffect(() => {
     fetchRequests();
-  }, [filterStatus]);
+  }, [filterStatus, currentPage]);
 
   useEffect(() => {
     if (selectedRequest && selectedRequest.request_type === "update") {
@@ -36,29 +39,41 @@ export default function RequestsPage() {
 
   const fetchRequests = async () => {
     setLoading(true);
-    let query = supabase
-      .from("billing_requests")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const from = (currentPage - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
 
-    if (filterStatus !== "all") {
-      query = query.eq("status", filterStatus);
-    }
+    try {
+      let query = supabase
+        .from("billing_requests")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false });
 
-    // Staff should only see their own requests
-    if (!isAdmin) {
-      query = query.eq("requested_by", "staff");
-    }
+      if (filterStatus !== "all") {
+        query = query.eq("status", filterStatus);
+      }
 
-    const { data, error } = await query;
+      if (!isAdmin) {
+        query = query.eq("requested_by", "staff");
+      }
 
-    if (error) {
-      console.error("Error fetching requests:", error);
-      alert("Failed to load requests.");
-    } else {
-      setRequests(data || []);
+      const { data, error, count } = await query.range(from, to);
+
+      if (error) {
+        console.error("Error fetching requests:", error);
+        alert("Failed to load requests.");
+      } else {
+        setRequests(data || []);
+        setTotalCount(count || 0);
+      }
+    } catch (err) {
+      console.error(err);
     }
     setLoading(false);
+  };
+
+  const handleFilterStatusChange = (status) => {
+    setFilterStatus(status);
+    setCurrentPage(1);
   };
 
   const fetchOriginalInvoice = async (invoiceNo) => {
@@ -84,7 +99,6 @@ export default function RequestsPage() {
     }
     setLoading(true);
 
-    // 1. Write the payload data into the main 'billdata' table
     const { error: saveError } = await supabase
       .from("billdata")
       .upsert([req.data]);
@@ -96,7 +110,6 @@ export default function RequestsPage() {
       return;
     }
 
-    // 2. Mark the change request status as 'approved'
     const { error: updateError } = await supabase
       .from("billing_requests")
       .update({ status: "approved" })
@@ -369,7 +382,6 @@ export default function RequestsPage() {
   };
 
   const diffs = getDifferences();
-  const itemsChanged = diffs.some((d) => d.itemsChanged);
 
   return (
     <div className="page-content" style={{ position: "relative" }}>
@@ -422,7 +434,7 @@ export default function RequestsPage() {
         {["pending", "approved", "rejected", "all"].map((status) => (
           <button
             key={status}
-            onClick={() => setFilterStatus(status)}
+            onClick={() => handleFilterStatusChange(status)}
             className={`btn btn-sm ${filterStatus === status ? "btn-primary" : "btn-outline"}`}
             style={{ textTransform: "capitalize" }}
           >
@@ -433,98 +445,125 @@ export default function RequestsPage() {
 
       <div className={`requests-grid ${selectedRequest ? "has-sidebar" : ""}`}>
         {/* Main Requests Table */}
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          {loading ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">⏳</div>
-              <div className="empty-state-text">Loading requests...</div>
-            </div>
-          ) : requests.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">✉</div>
-              <div className="empty-state-text">No invoice requests found</div>
-              <div className="empty-state-sub">No invoice requests are currently pending.</div>
-            </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Invoice No</th>
-                    <th>Customer</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Submitted At</th>
-                    <th style={{ textAlign: "center" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests.map((req) => (
-                    <tr
-                      key={req.id}
-                      className="fade-in"
-                      style={selectedRequest?.id === req.id ? { backgroundColor: "#f9fafb" } : {}}
-                    >
-                      <td>
-                        <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{req.invoice_no}</span>
-                      </td>
-                      <td style={{ fontWeight: 500 }}>{req.data?.customer_name || "—"}</td>
-                      <td>
-                        <span style={getTypeStyle(req.request_type)}>{req.request_type}</span>
-                      </td>
-                      <td>
-                        <span style={getStatusStyle(req.status)}>{req.status}</span>
-                      </td>
-                      <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
-                      <td style={{ textAlign: "center" }}>
-                        <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
-                          <button onClick={() => setSelectedRequest(req)} className="btn btn-sm btn-secondary">
-                            Details
-                          </button>
-
-                          {isAdmin && req.status === "pending" && (
-                            <>
-                              <button
-                                onClick={() => handleApprove(req)}
-                                className="btn btn-sm btn-primary"
-                                style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                              >
-                                Approve
-                              </button>
-                              <button
-                                onClick={() => handleReject(req)}
-                                className="btn btn-sm btn-outline"
-                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-
-                          {!isAdmin && req.status === "pending" && (
-                            <>
-                              <button
-                                onClick={() => openEditModal(req)}
-                                className="btn btn-sm btn-outline"
-                                style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(req)}
-                                className="btn btn-sm btn-outline"
-                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                              >
-                                Cancel
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+            {loading ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">⏳</div>
+                <div className="empty-state-text">Loading requests...</div>
+              </div>
+            ) : requests.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">✉</div>
+                <div className="empty-state-text">No invoice requests found</div>
+                <div className="empty-state-sub">No invoice requests are currently pending.</div>
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice No</th>
+                      <th>Customer</th>
+                      <th>Type</th>
+                      <th>Status</th>
+                      <th>Submitted At</th>
+                      <th style={{ textAlign: "center" }}>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {requests.map((req) => (
+                      <tr
+                        key={req.id}
+                        className="fade-in"
+                        style={selectedRequest?.id === req.id ? { backgroundColor: "#f9fafb" } : {}}
+                      >
+                        <td>
+                          <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{req.invoice_no}</span>
+                        </td>
+                        <td style={{ fontWeight: 500 }}>{req.data?.customer_name || "—"}</td>
+                        <td>
+                          <span style={getTypeStyle(req.request_type)}>{req.request_type}</span>
+                        </td>
+                        <td>
+                          <span style={getStatusStyle(req.status)}>{req.status}</span>
+                        </td>
+                        <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
+                        <td style={{ textAlign: "center" }}>
+                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
+                            <button onClick={() => setSelectedRequest(req)} className="btn btn-sm btn-secondary">
+                              Details
+                            </button>
+
+                            {isAdmin && req.status === "pending" && (
+                              <>
+                                <button
+                                  onClick={() => handleApprove(req)}
+                                  className="btn btn-sm btn-primary"
+                                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleReject(req)}
+                                  className="btn btn-sm btn-outline"
+                                  style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+
+                            {!isAdmin && req.status === "pending" && (
+                              <>
+                                <button
+                                  onClick={() => openEditModal(req)}
+                                  className="btn btn-sm btn-outline"
+                                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(req)}
+                                  className="btn btn-sm btn-outline"
+                                  style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {!loading && totalCount > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 0.5rem" }}>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1 || loading}
+                className="btn btn-secondary"
+                style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+              >
+                ◀ Previous
+              </button>
+              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#4b5563" }}>
+                Page {currentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => (prev * itemsPerPage < totalCount ? prev + 1 : prev))}
+                disabled={currentPage * itemsPerPage >= totalCount || loading}
+                className="btn btn-secondary"
+                style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+              >
+                Next ▶
+              </button>
             </div>
           )}
         </div>

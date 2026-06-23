@@ -12,6 +12,9 @@ export default function ExpensesPage() {
   
   // Tab for Admin: 'queue' or 'self'
   const [adminTab, setAdminTab] = useState("queue");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   const router = useRouter();
   const { role } = useParams();
@@ -19,34 +22,63 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [adminTab, currentPage]);
 
   const fetchExpenses = async () => {
     setLoading(true);
-    let query = supabase.from("expense_reports").select("*").order("created_at", { ascending: false });
-    
-    // Staff should only see requests submitted by staff
-    if (!isAdmin) {
-      query = query.eq("requested_by", "staff");
-    }
+    const from = (currentPage - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
 
-    const { data, error } = await query;
-    if (error) {
-      console.error("Error fetching expenses:", error);
-      alert("Failed to load expenses.");
-    } else {
-      const allExpenses = data || [];
-      setExpenses(allExpenses);
+    try {
+      let query = supabase.from("expense_reports").select("*", { count: "exact" }).order("created_at", { ascending: false });
+      
+      // Filter list query
+      if (!isAdmin) {
+        query = query.eq("requested_by", "staff");
+      } else {
+        if (adminTab === "self") {
+          query = query.eq("requested_by", "admin");
+        } else {
+          query = query.neq("requested_by", "admin");
+        }
+      }
 
-      // Calculate stats based on fetched list (filtered by role already)
-      const approved = allExpenses.filter(e => e.status === "approved");
-      const totalAmt = approved.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+      const { data, error, count } = await query.range(from, to);
+      if (error) {
+        console.error("Error fetching expenses:", error);
+        alert("Failed to load expenses.");
+      } else {
+        setExpenses(data || []);
+        setTotalCount(count || 0);
+      }
+
+      // Fetch global metrics
+      let approvedQuery = supabase.from("expense_reports").select("amount").eq("status", "approved");
+      let pendingQuery = supabase.from("expense_reports").select("*", { count: "exact", head: true }).eq("status", "pending");
+
+      if (!isAdmin) {
+        approvedQuery = approvedQuery.eq("requested_by", "staff");
+        pendingQuery = pendingQuery.eq("requested_by", "staff");
+      }
+
+      const [ { data: approvedData }, { count: pendingHeadCount } ] = await Promise.all([
+        approvedQuery,
+        pendingQuery
+      ]);
+
+      const totalAmt = (approvedData || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
       setTotalApprovedAmount(totalAmt);
+      setPendingCount(pendingHeadCount || 0);
 
-      const pending = allExpenses.filter(e => e.status === "pending");
-      setPendingCount(pending.length);
+    } catch (err) {
+      console.error(err);
     }
     setLoading(false);
+  };
+
+  const handleTabChange = (tab) => {
+    setAdminTab(tab);
+    setCurrentPage(1);
   };
 
   const handleApprove = async (exp) => {
@@ -191,9 +223,6 @@ export default function ExpensesPage() {
     }
   };
 
-  // Self submitted expenses for admin
-  const selfExpenses = expenses.filter(e => e.requested_by === "admin");
-
   return (
     <div className="page-content">
       {/* Header */}
@@ -259,37 +288,36 @@ export default function ExpensesPage() {
       {isAdmin && (
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
           <button
-            onClick={() => setAdminTab("queue")}
+            onClick={() => handleTabChange("queue")}
             className={`btn ${adminTab === "queue" ? "btn-primary" : "btn-outline"}`}
           >
-            📋 Team Expense Queue ({expenses.length - selfExpenses.length})
+            📋 Team Expense Queue
           </button>
           <button
-            onClick={() => setAdminTab("self")}
+            onClick={() => handleTabChange("self")}
             className={`btn ${adminTab === "self" ? "btn-primary" : "btn-outline"}`}
           >
-            💸 My Expense Submissions ({selfExpenses.length})
+            💸 My Expense Submissions
           </button>
         </div>
       )}
 
       {/* Render list depending on role and tabs */}
-      {(!isAdmin || adminTab === "self") ? (
-        /* Staff History or Admin Self submissions list */
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         <div className="card" style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ padding: "1.25rem 1.5rem 0" }}>
-            <p className="card-title">Expense History</p>
+            <p className="card-title">{(!isAdmin || adminTab === "self") ? "Expense History" : "All Team Expense Submissions"}</p>
           </div>
           {loading ? (
             <div className="empty-state">
               <div className="empty-state-icon">⏳</div>
               <div className="empty-state-text">Loading expenses...</div>
             </div>
-          ) : (isAdmin ? selfExpenses : expenses).length === 0 ? (
+          ) : expenses.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">💸</div>
               <div className="empty-state-text">No expenses found</div>
-              <div className="empty-state-sub">No expense reports have been submitted yet. Add one from the dashboard!</div>
+              <div className="empty-state-sub">No expense reports are logged under this view.</div>
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -300,122 +328,70 @@ export default function ExpensesPage() {
                     <th>Category</th>
                     <th>Amount</th>
                     <th>Status</th>
+                    {isAdmin && adminTab === "queue" && <th>Submitted By</th>}
                     <th>Comment</th>
                     <th>Submitted At</th>
                     <th style={{ textAlign: "center" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(isAdmin ? selfExpenses : expenses).map((exp) => (
+                  {expenses.map((exp) => (
                     <tr key={exp.id} className="fade-in">
                       <td><span style={{ fontWeight: 600, color: "#1a1d23" }}>#{exp.id}</span></td>
                       <td style={{ fontWeight: 600 }}>{exp.category}</td>
                       <td style={{ fontWeight: 600, color: "#1a1d23" }}>{fmt(exp.amount)}</td>
                       <td><span style={getStatusStyle(exp.status)}>{exp.status}</span></td>
-                      <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{exp.comment || "—"}</td>
-                      <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(exp.created_at)}</td>
-                      <td style={{ textAlign: "center" }}>
-                        {exp.status === "pending" ? (
-                          <button
-                            onClick={() => handleDelete(exp)}
-                            className="btn btn-sm btn-outline"
-                            style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                          >
-                            Cancel
-                          </button>
-                        ) : (
-                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
-                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{exp.status}</span>
-                            <button
-                              onClick={() => handleRevert(exp)}
-                              className="btn btn-sm btn-outline"
-                              style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
-                            >
-                              Revert
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Admin Queue View tab */
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ padding: "1.25rem 1.5rem 0" }}>
-            <p className="card-title">All Team Expense Submissions</p>
-          </div>
-          {loading ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">⏳</div>
-              <div className="empty-state-text">Loading expenses...</div>
-            </div>
-          ) : expenses.filter(e => e.requested_by !== "admin").length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">💸</div>
-              <div className="empty-state-text">No team expenses found</div>
-              <div className="empty-state-sub">No team member expense submissions exist.</div>
-            </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Category</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Submitted By</th>
-                    <th>Comment</th>
-                    <th>Submitted At</th>
-                    <th style={{ textAlign: "center" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expenses.filter(e => e.requested_by !== "admin").map((exp) => (
-                    <tr key={exp.id} className="fade-in">
-                      <td><span style={{ fontWeight: 600, color: "#1a1d23" }}>#{exp.id}</span></td>
-                      <td style={{ fontWeight: 600 }}>{exp.category}</td>
-                      <td style={{ fontWeight: 600, color: "#1a1d23" }}>{fmt(exp.amount)}</td>
-                      <td><span style={getStatusStyle(exp.status)}>{exp.status}</span></td>
-                      <td style={{ textTransform: "capitalize", fontWeight: 500 }}>{exp.requested_by}</td>
+                      {isAdmin && adminTab === "queue" && <td style={{ textTransform: "capitalize", fontWeight: 500 }}>{exp.requested_by}</td>}
                       <td style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{exp.comment || "—"}</td>
                       <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(exp.created_at)}</td>
                       <td style={{ textAlign: "center" }}>
                         {exp.status === "pending" ? (
                           <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
-                            <button onClick={() => handleApprove(exp)} className="btn btn-sm btn-primary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => handleReject(exp)}
-                              className="btn btn-sm btn-outline"
-                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                            >
-                              Reject
-                            </button>
+                            {isAdmin && adminTab === "queue" && (
+                              <>
+                                <button onClick={() => handleApprove(exp)} className="btn btn-sm btn-primary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleReject(exp)}
+                                  className="btn btn-sm btn-outline"
+                                  style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
+                            {(!isAdmin || adminTab === "self") && (
+                              <button
+                                onClick={() => handleDelete(exp)}
+                                className="btn btn-sm btn-outline"
+                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                              >
+                                Cancel
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
                             <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{exp.status}</span>
-                            <button
-                              onClick={() => handleRevert(exp)}
-                              className="btn btn-sm btn-outline"
-                              style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
-                            >
-                              Revert
-                            </button>
-                            <button
-                              onClick={() => handleDelete(exp)}
-                              className="btn btn-sm btn-outline"
-                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.1)", padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
-                            >
-                              Delete
-                            </button>
+                            {isAdmin && (
+                              <>
+                                <button
+                                  onClick={() => handleRevert(exp)}
+                                  className="btn btn-sm btn-outline"
+                                  style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                                >
+                                  Revert
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(exp)}
+                                  className="btn btn-sm btn-outline"
+                                  style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.1)", padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                                >
+                                  Delete
+                                </button>
+                              </>
+                            )}
                           </div>
                         )}
                       </td>
@@ -426,7 +402,32 @@ export default function ExpensesPage() {
             </div>
           )}
         </div>
-      )}
+
+        {/* Pagination Controls */}
+        {!loading && totalCount > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 0.5rem" }}>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1 || loading}
+              className="btn btn-secondary"
+              style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+            >
+              ◀ Previous
+            </button>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#4b5563" }}>
+              Page {currentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => (prev * itemsPerPage < totalCount ? prev + 1 : prev))}
+              disabled={currentPage * itemsPerPage >= totalCount || loading}
+              className="btn btn-secondary"
+              style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+            >
+              Next ▶
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

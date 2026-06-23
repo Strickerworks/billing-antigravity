@@ -8,36 +8,64 @@ export default function FetchInvoice() {
   const [paymentRequests, setPaymentRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
+
   const router = useRouter();
   const { role } = useParams();
   const isAdmin = role === "admin";
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage, searchTerm]);
 
   const fetchData = async () => {
     setLoading(true);
-    // Fetch invoices
-    const { data: invoicesData, error: invoicesError } = await supabase
-      .from("billdata")
-      .select("*")
-      .eq("active_status", "active")
-      .order("created_at", { ascending: false });
+    const from = (currentPage - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
 
-    // Fetch payment requests
-    const { data: reqsData, error: reqsError } = await supabase
-      .from("payment_acknowledgement_requests")
-      .select("*");
+    try {
+      // Fetch invoices with pagination range selection
+      let query = supabase
+        .from("billdata")
+        .select("*", { count: "exact" })
+        .eq("active_status", "active")
+        .order("created_at", { ascending: false });
 
-    if (invoicesError || reqsError) {
-      console.error("Error fetching data:", invoicesError || reqsError);
-      alert("Could not load invoices.");
-    } else {
-      setInvoices(invoicesData || []);
-      setPaymentRequests(reqsData || []);
+      if (searchTerm.trim()) {
+        const term = searchTerm.trim();
+        if (!isNaN(term)) {
+          query = query.eq("invoice_no", parseInt(term));
+        } else {
+          query = query.or(`customer_name.ilike.%${term}%,customer_gst.ilike.%${term}%`);
+        }
+      }
+
+      const { data: invoicesData, error: invoicesError, count } = await query.range(from, to);
+
+      // Fetch payment requests (usually small dataset, fetched for status tags lookup)
+      const { data: reqsData, error: reqsError } = await supabase
+        .from("payment_acknowledgement_requests")
+        .select("*");
+
+      if (invoicesError || reqsError) {
+        console.error("Error fetching data:", invoicesError || reqsError);
+        alert("Could not load invoices.");
+      } else {
+        setInvoices(invoicesData || []);
+        setTotalCount(count || 0);
+        setPaymentRequests(reqsData || []);
+      }
+    } catch (err) {
+      console.error(err);
     }
     setLoading(false);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
   };
 
   const handleDelete = async (invoice_no) => {
@@ -60,12 +88,10 @@ export default function FetchInvoice() {
   };
 
   const getInvoicePaymentStatus = (invoice) => {
-    // If invoice says received, it is received
     if (invoice.payment_status === "Received") {
       return { label: "Received", style: { backgroundColor: "#111111", color: "#ffffff" } };
     }
 
-    // Otherwise check if there is a pending request
     const pendingReq = paymentRequests.find(
       (r) => r.invoice_no === invoice.invoice_no && r.status === "pending"
     );
@@ -73,18 +99,8 @@ export default function FetchInvoice() {
       return { label: "Pending Approval", style: { backgroundColor: "#f59e0b", color: "#ffffff" } };
     }
 
-    // Default
     return { label: "Not Received", style: { backgroundColor: "#e5e7eb", color: "#6b7280" } };
   };
-
-  const filteredInvoices = invoices.filter((invoice) => {
-    const term = searchTerm.toLowerCase();
-    return (
-      String(invoice.invoice_no || "").toLowerCase().includes(term) ||
-      invoice.customer_name?.toLowerCase().includes(term) ||
-      invoice.customer_gst?.toLowerCase().includes(term)
-    );
-  });
 
   const handleView = (invoice_no) => {
     router.push(`/${role}/view/${invoice_no}`);
@@ -112,7 +128,7 @@ export default function FetchInvoice() {
             <p className="page-subtitle">
               {loading
                 ? "Loading..."
-                : `${filteredInvoices.length} invoice${filteredInvoices.length !== 1 ? "s" : ""}${
+                : `${totalCount} invoice${totalCount !== 1 ? "s" : ""}${
                     searchTerm ? " found" : " total"
                   }`}
             </p>
@@ -130,7 +146,7 @@ export default function FetchInvoice() {
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             placeholder="Search by invoice number, customer name, or GST..."
             className="form-input"
             style={{ paddingLeft: "2.25rem" }}
@@ -145,7 +161,7 @@ export default function FetchInvoice() {
             <div className="empty-state-icon">⏳</div>
             <div className="empty-state-text">Loading invoices...</div>
           </div>
-        ) : filteredInvoices.length === 0 ? (
+        ) : invoices.length === 0 ? (
           <div className="empty-state">
             <div className="empty-state-icon">📄</div>
             <div className="empty-state-text">No invoices found</div>
@@ -168,7 +184,7 @@ export default function FetchInvoice() {
                 </tr>
               </thead>
               <tbody>
-                {filteredInvoices.map((inv) => {
+                {invoices.map((inv) => {
                   const pStatus = getInvoicePaymentStatus(inv);
                   return (
                     <tr key={inv.invoice_no} className="fade-in">
@@ -224,6 +240,31 @@ export default function FetchInvoice() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {!loading && totalCount > 0 && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "1rem", padding: "0 0.5rem" }}>
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1 || loading}
+            className="btn btn-secondary"
+            style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+          >
+            ◀ Previous
+          </button>
+          <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#4b5563" }}>
+            Page {currentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
+          </span>
+          <button
+            onClick={() => setCurrentPage(prev => (prev * itemsPerPage < totalCount ? prev + 1 : prev))}
+            disabled={currentPage * itemsPerPage >= totalCount || loading}
+            className="btn btn-secondary"
+            style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+          >
+            Next ▶
+          </button>
+        </div>
+      )}
     </div>
   );
 }

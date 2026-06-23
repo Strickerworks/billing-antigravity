@@ -8,6 +8,9 @@ export default function AuditLogPage() {
   const [filterType, setFilterType] = useState("all"); // all, bill_pass, payment, expense
   const [loading, setLoading] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   const router = useRouter();
   const { role } = useParams();
@@ -15,29 +18,46 @@ export default function AuditLogPage() {
 
   useEffect(() => {
     fetchLogs();
-  }, [filterType]);
+  }, [filterType, currentPage]);
 
   const fetchLogs = async () => {
     setLoading(true);
-    let query = supabase.from("audit_logs").select("*").order("submitted_at", { ascending: false });
+    const from = (currentPage - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
 
-    const { data, error } = await query;
-    if (error) {
-      console.error("Error fetching audit logs:", error);
-      alert("Failed to load audit logs.");
-    } else {
-      let filteredData = data || [];
+    try {
+      let query = supabase
+        .from("audit_logs")
+        .select("*", { count: "exact" })
+        .order("submitted_at", { ascending: false });
+
       if (filterType !== "all") {
-        filteredData = filteredData.filter((log) => {
-          if (filterType === "bill_pass") return log.request_type.startsWith("bill_pass_");
-          if (filterType === "payment") return log.request_type === "payment_acknowledgement";
-          if (filterType === "expense") return log.request_type === "expense_report";
-          return true;
-        });
+        if (filterType === "bill_pass") {
+          query = query.like("request_type", "bill_pass_%");
+        } else if (filterType === "payment") {
+          query = query.eq("request_type", "payment_acknowledgement");
+        } else if (filterType === "expense") {
+          query = query.eq("request_type", "expense_report");
+        }
       }
-      setLogs(filteredData);
+
+      const { data, error, count } = await query.range(from, to);
+      if (error) {
+        console.error("Error fetching audit logs:", error);
+        alert("Failed to load audit logs.");
+      } else {
+        setLogs(data || []);
+        setTotalCount(count || 0);
+      }
+    } catch (err) {
+      console.error(err);
     }
     setLoading(false);
+  };
+
+  const handleFilterChange = (type) => {
+    setFilterType(type);
+    setCurrentPage(1);
   };
 
   const handleDeleteLog = async (logId) => {
@@ -145,7 +165,7 @@ export default function AuditLogPage() {
         ].map((type) => (
           <button
             key={type.id}
-            onClick={() => setFilterType(type.id)}
+            onClick={() => handleFilterChange(type.id)}
             className={`btn btn-sm ${filterType === type.id ? "btn-primary" : "btn-outline"}`}
           >
             {type.label}
@@ -155,75 +175,102 @@ export default function AuditLogPage() {
 
       <div className={`audit-grid ${selectedLog ? "has-sidebar" : ""}`}>
         {/* Main Log Table */}
-        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-          {loading ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">⏳</div>
-              <div className="empty-state-text">Loading logs...</div>
-            </div>
-          ) : logs.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📜</div>
-              <div className="empty-state-text">No audit history found</div>
-              <div className="empty-state-sub">History of requests will display here as they are processed.</div>
-            </div>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th>Submitted By</th>
-                    <th>Submitted At</th>
-                    <th>Action/Status</th>
-                    <th>Processed By</th>
-                    <th style={{ textAlign: "center" }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log) => (
-                    <tr
-                      key={log.id}
-                      className="fade-in"
-                      style={selectedLog?.id === log.id ? { backgroundColor: "#f9fafb" } : {}}
-                    >
-                      <td style={{ fontWeight: 600 }}>{getRequestTypeLabel(log.request_type)}</td>
-                      <td>
-                        <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{log.submitted_by}</span>
-                      </td>
-                      <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(log.submitted_at)}</td>
-                      <td>
-                        <span style={getStatusBadgeStyle(log.status)}>{log.status}</span>
-                      </td>
-                      <td>
-                        {log.action_by ? (
-                          <span style={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                            {log.action_by} <span style={{ color: "#9ca3af", fontSize: "0.75rem" }}>({formatDate(log.action_at)})</span>
-                          </span>
-                        ) : (
-                          <span style={{ color: "#9ca3af" }}>—</span>
-                        )}
-                      </td>
-                      <td>
-                        <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
-                          <button onClick={() => setSelectedLog(log)} className="btn btn-sm btn-secondary">
-                            View
-                          </button>
-                          {isAdmin && (
-                            <button
-                              onClick={() => handleDeleteLog(log.id)}
-                              className="btn btn-sm btn-outline"
-                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)" }}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </td>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+            {loading ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">⏳</div>
+                <div className="empty-state-text">Loading logs...</div>
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">📜</div>
+                <div className="empty-state-text">No audit history found</div>
+                <div className="empty-state-sub">History of requests will display here as they are processed.</div>
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Submitted By</th>
+                      <th>Submitted At</th>
+                      <th>Action/Status</th>
+                      <th>Processed By</th>
+                      <th style={{ textAlign: "center" }}>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {logs.map((log) => (
+                      <tr
+                        key={log.id}
+                        className="fade-in"
+                        style={selectedLog?.id === log.id ? { backgroundColor: "#f9fafb" } : {}}
+                      >
+                        <td style={{ fontWeight: 600 }}>{getRequestTypeLabel(log.request_type)}</td>
+                        <td>
+                          <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{log.submitted_by}</span>
+                        </td>
+                        <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(log.submitted_at)}</td>
+                        <td>
+                          <span style={getStatusBadgeStyle(log.status)}>{log.status}</span>
+                        </td>
+                        <td>
+                          {log.action_by ? (
+                            <span style={{ fontSize: "0.82rem", fontWeight: 500 }}>
+                              {log.action_by} <span style={{ color: "#9ca3af", fontSize: "0.75rem" }}>({formatDate(log.action_at)})</span>
+                            </span>
+                          ) : (
+                            <span style={{ color: "#9ca3af" }}>—</span>
+                          )}
+                        </td>
+                        <td>
+                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
+                            <button onClick={() => setSelectedLog(log)} className="btn btn-sm btn-secondary">
+                              View
+                            </button>
+                            {isAdmin && (
+                              <button
+                                onClick={() => handleDeleteLog(log.id)}
+                                className="btn btn-sm btn-outline"
+                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)" }}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {!loading && totalCount > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 0.5rem" }}>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1 || loading}
+                className="btn btn-secondary"
+                style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+              >
+                ◀ Previous
+              </button>
+              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#4b5563" }}>
+                Page {currentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => (prev * itemsPerPage < totalCount ? prev + 1 : prev))}
+                disabled={currentPage * itemsPerPage >= totalCount || loading}
+                className="btn btn-secondary"
+                style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+              >
+                Next ▶
+              </button>
             </div>
           )}
         </div>

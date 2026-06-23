@@ -12,28 +12,40 @@ export default function FleetRequestsPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
+
   // Edit Modal State
   const [editingRequest, setEditingRequest] = useState(null);
   const [editPayload, setEditPayload] = useState({});
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [currentPage]);
 
   const fetchRequests = async () => {
     setLoading(true);
-    let query = supabase.from("fleet_requests").select("*").order("created_at", { ascending: false });
-    
-    if (!isAdmin) {
-      query = query.eq("requested_by", "staff");
-    }
+    const from = (currentPage - 1) * itemsPerPage;
+    const to = from + itemsPerPage - 1;
 
-    const { data, error } = await query;
-    if (error) {
-      console.error("Error fetching requests:", error);
-      alert("Failed to load requests.");
-    } else {
-      setRequests(data || []);
+    try {
+      let query = supabase.from("fleet_requests").select("*", { count: "exact" }).order("created_at", { ascending: false });
+      
+      if (!isAdmin) {
+        query = query.eq("requested_by", "staff");
+      }
+
+      const { data, error, count } = await query.range(from, to);
+      if (error) {
+        console.error("Error fetching requests:", error);
+        alert("Failed to load requests.");
+      } else {
+        setRequests(data || []);
+        setTotalCount(count || 0);
+      }
+    } catch (err) {
+      console.error(err);
     }
     setLoading(false);
   };
@@ -344,119 +356,144 @@ export default function FleetRequestsPage() {
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
-      {loading ? (
-        <div style={{ color: "#6b7280" }}>Loading queue...</div>
-      ) : requests.length === 0 ? (
-        <div style={{
-          padding: "3rem",
-          background: "#f9fafb",
-          borderRadius: "8px",
-          border: "1px dashed #e5e7eb",
-          textAlign: "center",
-          color: "#6b7280",
-          fontSize: "0.9rem"
-        }}>
-          No requests in queue.
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {requests.map((req) => (
-            <div
-              key={req.id}
-              className="card"
-              style={{
-                padding: "1.25rem",
-                background: "#ffffff",
-                border: "1px solid #e5e7eb",
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.75rem"
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <span style={{
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    color: "#4b5563",
-                    background: "#f3f4f6",
-                    padding: "0.25rem 0.5rem",
-                    borderRadius: "4px",
-                    letterSpacing: "0.02em"
-                  }}>
-                    {req.request_type.replace("_", " ")}
-                  </span>
-                  <div style={{ fontWeight: 600, color: "#111827", fontSize: "1rem", marginTop: "0.5rem" }}>
-                    {renderPayloadSummary(req)}
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.25rem" }}>
-                    Requested by: <span style={{ fontWeight: 600, color: "#4b5563" }}>{req.requested_by}</span> on {new Date(req.created_at).toLocaleString()}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <span style={{
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    padding: "0.25rem 0.5rem",
-                    borderRadius: "4px",
-                    color: req.status === "pending" ? "#92400e" : req.status === "approved" ? "#166534" : "#991b1b",
-                    background: req.status === "pending" ? "#fffbeb" : req.status === "approved" ? "#f0fdf4" : "#fef2f2"
-                  }}>
-                    {req.status.toUpperCase()}
-                  </span>
-
-                  {/* Actions */}
-                  <div style={{ display: "flex", gap: "0.35rem" }}>
-                    {isAdmin && req.status === "pending" && (
-                      <>
-                        <button
-                          onClick={() => handleApprove(req)}
-                          disabled={submitting}
-                          className="btn btn-primary"
-                          style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", background: "#166534", border: "1px solid #166534" }}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleReject(req)}
-                          disabled={submitting}
-                          className="btn btn-secondary"
-                          style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", color: "#991b1b" }}
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
-
-                    {!isAdmin && req.status === "pending" && (
-                      <button
-                        onClick={() => handleEditOpen(req)}
-                        className="btn btn-secondary"
-                        style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem" }}
-                      >
-                        Edit
-                      </button>
-                    )}
-
-                    {(isAdmin || req.requested_by === "staff") && (
-                      <button
-                        onClick={() => handleDelete(req.id)}
-                        disabled={submitting}
-                        className="btn btn-secondary"
-                        style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", color: "#991b1b" }}
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+          {loading ? (
+            <div className="empty-state" style={{ padding: "3rem" }}>
+              <div className="empty-state-icon">⏳</div>
+              <div className="empty-state-text">Loading queue...</div>
             </div>
-          ))}
+          ) : requests.length === 0 ? (
+            <div className="empty-state" style={{ padding: "3rem" }}>
+              <div className="empty-state-icon">✉</div>
+              <div className="empty-state-text">No requests in queue</div>
+              <div className="empty-state-sub">No requests are currently pending.</div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {requests.map((req) => (
+                <div
+                  key={req.id}
+                  style={{
+                    padding: "1.25rem",
+                    background: "#ffffff",
+                    borderBottom: "1px solid #e5e7eb",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.75rem"
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <span style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        color: "#4b5563",
+                        background: "#f3f4f6",
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "4px",
+                        letterSpacing: "0.02em"
+                      }}>
+                        {req.request_type.replace("_", " ")}
+                      </span>
+                      <div style={{ fontWeight: 600, color: "#111827", fontSize: "1rem", marginTop: "0.5rem" }}>
+                        {renderPayloadSummary(req)}
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.25rem" }}>
+                        Requested by: <span style={{ fontWeight: 600, color: "#4b5563" }}>{req.requested_by}</span> on {new Date(req.created_at).toLocaleString()}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <span style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "4px",
+                        color: req.status === "pending" ? "#92400e" : req.status === "approved" ? "#166534" : "#991b1b",
+                        background: req.status === "pending" ? "#fffbeb" : req.status === "approved" ? "#f0fdf4" : "#fef2f2"
+                      }}>
+                        {req.status.toUpperCase()}
+                      </span>
+
+                      {/* Actions */}
+                      <div style={{ display: "flex", gap: "0.35rem" }}>
+                        {isAdmin && req.status === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(req)}
+                              disabled={submitting}
+                              className="btn btn-primary"
+                              style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", background: "#166534", border: "1px solid #166534" }}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleReject(req)}
+                              disabled={submitting}
+                              className="btn btn-secondary"
+                              style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", color: "#991b1b" }}
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+
+                        {!isAdmin && req.status === "pending" && (
+                          <button
+                            onClick={() => handleEditOpen(req)}
+                            className="btn btn-secondary"
+                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem" }}
+                          >
+                            Edit
+                          </button>
+                        )}
+
+                        {(isAdmin || req.requested_by === "staff") && (
+                          <button
+                            onClick={() => handleDelete(req.id)}
+                            disabled={submitting}
+                            className="btn btn-secondary"
+                            style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", color: "#991b1b" }}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Pagination Controls */}
+        {!loading && totalCount > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 0.5rem" }}>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1 || loading}
+              className="btn btn-secondary"
+              style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+            >
+              ◀ Previous
+            </button>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#4b5563" }}>
+              Page {currentPage} of {Math.max(Math.ceil(totalCount / itemsPerPage), 1)}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => (prev * itemsPerPage < totalCount ? prev + 1 : prev))}
+              disabled={currentPage * itemsPerPage >= totalCount || loading}
+              className="btn btn-secondary"
+              style={{ fontSize: "0.8rem", padding: "0.5rem 1rem" }}
+            >
+              Next ▶
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Edit Payload Modal */}
       {editingRequest && (
@@ -498,7 +535,7 @@ export default function FleetRequestsPage() {
                 </>
               )}
 
-              {editingRequest.request_type.includes("driver") && (
+              {editingRequest.request_type.includes("driver") && editingRequest.request_type !== "log_driver_payment" && editingRequest.request_type !== "log_driver_leave" && (
                 <>
                   <div className="form-group">
                     <label className="form-label">Name</label>
