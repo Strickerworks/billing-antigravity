@@ -44,3 +44,15 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 ALTER TABLE payment_acknowledgement_requests DISABLE ROW LEVEL SECURITY;
 ALTER TABLE expense_reports DISABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
+
+-- 5. Create keep-alive table and seed default row (to prevent Supabase free tier pause)
+CREATE TABLE IF NOT EXISTS keepalive (
+  id INT PRIMARY KEY,
+  pinged_at TIMESTAMPTZ DEFAULT now()
+);
+
+INSERT INTO keepalive (id, pinged_at)
+VALUES (1, now())
+ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE keepalive DISABLE ROW LEVEL SECURITY;
