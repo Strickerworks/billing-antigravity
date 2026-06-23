@@ -1,19 +1,20 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function DriversPage() {
   const { role } = useParams();
+  const router = useRouter();
   const isAdmin = role === "admin";
 
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [expandedDriverId, setExpandedDriverId] = useState(null);
   const [driverCarMap, setDriverCarMap] = useState({});
 
-  // Detailed Form Fields
+  // Detailed Form Fields (Registration)
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState("");
@@ -22,25 +23,8 @@ export default function DriversPage() {
   const [licenseNumber, setLicenseNumber] = useState("");
   const [dateOfJoining, setDateOfJoining] = useState("");
 
-  // Edit State
-  const [editingDriver, setEditingDriver] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editDob, setEditDob] = useState("");
-  const [editAadharNumber, setEditAadharNumber] = useState("");
-  const [editAddress, setEditAddress] = useState("");
-  const [editLicenseNumber, setEditLicenseNumber] = useState("");
-  const [editDateOfJoining, setEditDateOfJoining] = useState("");
-
   useEffect(() => {
     fetchDriversAndAssignments();
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const expandId = params.get("expand");
-      if (expandId) {
-        setExpandedDriverId(parseInt(expandId));
-      }
-    }
   }, []);
 
   const fetchDriversAndAssignments = async () => {
@@ -126,63 +110,6 @@ export default function DriversPage() {
     setSubmitting(false);
   };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    if (!editName.trim() || !editPhone.trim()) {
-      alert("Please fill name and phone.");
-      return;
-    }
-
-    setSubmitting(true);
-    const driverPayload = {
-      driver_id: editingDriver.id,
-      name: editName.trim(),
-      phone: editPhone.trim(),
-      dob: editDob || null,
-      aadhar_number: editAadharNumber.trim() || null,
-      address: editAddress.trim() || null,
-      license_number: editLicenseNumber.trim() || null,
-      date_of_joining: editDateOfJoining || null
-    };
-
-    if (isAdmin) {
-      const { error } = await supabase
-        .from("drivers")
-        .update({
-          name: driverPayload.name,
-          phone: driverPayload.phone,
-          dob: driverPayload.dob,
-          aadhar_number: driverPayload.aadhar_number,
-          address: driverPayload.address,
-          license_number: driverPayload.license_number,
-          date_of_joining: driverPayload.date_of_joining
-        })
-        .eq("id", editingDriver.id);
-
-      if (error) {
-        alert("Failed to edit driver: " + error.message);
-      } else {
-        alert("Driver profile modified successfully.");
-        setEditingDriver(null);
-        fetchDriversAndAssignments();
-      }
-    } else {
-      const { error } = await supabase.from("fleet_requests").insert([{
-        request_type: "edit_driver",
-        payload: driverPayload,
-        requested_by: "staff",
-        status: "pending"
-      }]);
-      if (error) {
-        alert("Failed to submit update request: " + error.message);
-      } else {
-        alert("Driver modification request submitted to Admin for approval.");
-        setEditingDriver(null);
-      }
-    }
-    setSubmitting(false);
-  };
-
   const clearForm = () => {
     setName("");
     setPhone("");
@@ -191,17 +118,6 @@ export default function DriversPage() {
     setAddress("");
     setLicenseNumber("");
     setDateOfJoining("");
-  };
-
-  const handleStartEdit = (driver) => {
-    setEditingDriver(driver);
-    setEditName(driver.name || "");
-    setEditPhone(driver.phone || "");
-    setEditDob(driver.dob || "");
-    setEditAadharNumber(driver.aadhar_number || "");
-    setEditAddress(driver.address || "");
-    setEditLicenseNumber(driver.license_number || "");
-    setEditDateOfJoining(driver.date_of_joining || "");
   };
 
   const handleDeleteDriver = async (driverId, driverName) => {
@@ -217,10 +133,6 @@ export default function DriversPage() {
       fetchDriversAndAssignments();
     }
     setSubmitting(false);
-  };
-
-  const toggleExpand = (id) => {
-    setExpandedDriverId(expandedDriverId === id ? null : id);
   };
 
   return (
@@ -310,7 +222,6 @@ export default function DriversPage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {drivers.map((driver) => {
-              const isExpanded = expandedDriverId === driver.id;
               const currentCarReg = driverCarMap[driver.id];
 
               return (
@@ -326,14 +237,11 @@ export default function DriversPage() {
                 >
                   {/* Summary row */}
                   <div
-                    onClick={() => toggleExpand(driver.id)}
                     style={{
                       padding: "1rem 1.25rem",
                       display: "flex",
                       justifyContent: "space-between",
-                      alignItems: "center",
-                      cursor: "pointer",
-                      background: isExpanded ? "#f9fafb" : "#ffffff"
+                      alignItems: "center"
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -360,28 +268,25 @@ export default function DriversPage() {
                         <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>No vehicle assigned</span>
                       )}
 
-                      <span style={{ fontSize: "1rem", color: "#9ca3af" }}>
-                        {isExpanded ? "▲" : "▼"}
-                      </span>
-
-                      <div style={{ display: "flex", gap: "0.35rem" }} onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleStartEdit(driver)}
-                          className="btn btn-secondary"
-                          style={{
-                            padding: "0.35rem 0.5rem",
-                            fontSize: "0.75rem"
-                          }}
-                        >
-                          ✎ Edit
-                        </button>
+                      <div style={{ display: "flex", gap: "0.35rem" }}>
+                        <Link href={`/${role}/drivers/${driver.id}`}>
+                          <button
+                            className="btn btn-primary"
+                            style={{
+                              padding: "0.45rem 0.85rem",
+                              fontSize: "0.75rem"
+                            }}
+                          >
+                            View Profile
+                          </button>
+                        </Link>
 
                         {isAdmin && (
                           <button
                             onClick={() => handleDeleteDriver(driver.id, driver.name)}
                             className="btn btn-secondary"
                             style={{
-                              padding: "0.35rem 0.5rem",
+                              padding: "0.45rem 0.75rem",
                               fontSize: "0.75rem",
                               color: "#b91c1c",
                               border: "1px solid #fee2e2",
@@ -394,121 +299,12 @@ export default function DriversPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Expanded detailed profile */}
-                  {isExpanded && (
-                    <div style={{
-                      padding: "1.25rem",
-                      borderTop: "1px solid #e5e7eb",
-                      background: "#f9fafb",
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                      gap: "1rem"
-                    }}>
-                      <div>
-                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Date of Birth</span>
-                        <div style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 600, marginTop: "0.15rem" }}>
-                          {driver.dob ? new Date(driver.dob).toLocaleDateString() : "Not Provided"}
-                        </div>
-                      </div>
-
-                      <div>
-                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Aadhar Card</span>
-                        <div style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 600, marginTop: "0.15rem" }}>
-                          {driver.aadhar_number || "Not Provided"}
-                        </div>
-                      </div>
-
-                      <div>
-                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>License Number</span>
-                        <div style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 600, marginTop: "0.15rem" }}>
-                          {driver.license_number || "Not Provided"}
-                        </div>
-                      </div>
-
-                      <div>
-                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Date of Joining</span>
-                        <div style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 600, marginTop: "0.15rem" }}>
-                          {driver.date_of_joining ? new Date(driver.date_of_joining).toLocaleDateString() : "Not Provided"}
-                        </div>
-                      </div>
-
-                      <div style={{ gridColumn: "1 / -1" }}>
-                        <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Permanent Address</span>
-                        <div style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 600, marginTop: "0.15rem", whiteSpace: "pre-line" }}>
-                          {driver.address || "Not Provided"}
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })}
           </div>
         )}
       </div>
-
-      {/* Edit Driver Modal */}
-      {editingDriver && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 9999
-        }}>
-          <div className="card" style={{ width: "90%", maxWidth: "600px", padding: "1.5rem", background: "#ffffff" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>
-              {isAdmin ? "Modify Driver Profile" : "Request Driver Modification"}
-            </h3>
-            <form onSubmit={handleEditSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input type="text" className="form-input" value={editName} onChange={(e) => setEditName(e.target.value)} required />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Phone Number</label>
-                <input type="text" className="form-input" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} required />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Date of Birth</label>
-                <input type="date" className="form-input" value={editDob} onChange={(e) => setEditDob(e.target.value)} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Aadhar Card</label>
-                <input type="text" className="form-input" value={editAadharNumber} onChange={(e) => setEditAadharNumber(e.target.value)} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">License Number</label>
-                <input type="text" className="form-input" value={editLicenseNumber} onChange={(e) => setEditLicenseNumber(e.target.value)} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Date of Joining</label>
-                <input type="date" className="form-input" value={editDateOfJoining} onChange={(e) => setEditDateOfJoining(e.target.value)} />
-              </div>
-
-              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                <label className="form-label">Home Address</label>
-                <textarea className="form-input" rows="2" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} />
-              </div>
-
-              <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
-                <button type="button" onClick={() => setEditingDriver(null)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
-                <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
-                  {submitting ? "Processing..." : isAdmin ? "Save Directly" : "Submit Request"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

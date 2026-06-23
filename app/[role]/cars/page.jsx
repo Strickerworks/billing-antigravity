@@ -48,7 +48,7 @@ export default function CarsPage() {
 
         const { data: driverData } = await supabase
           .from("car_driver_history")
-          .select("assigned_at, drivers(name)")
+          .select("assigned_at, driver_id, drivers(name)")
           .eq("car_id", car.id)
           .order("assigned_at", { ascending: false })
           .limit(1);
@@ -57,6 +57,7 @@ export default function CarsPage() {
           ...car,
           currentKm: kmData?.[0]?.km_clocked || "0",
           currentDriver: driverData?.[0]?.drivers?.name || "No Driver Assigned",
+          currentDriverId: driverData?.[0]?.driver_id || null,
         });
       }
 
@@ -291,7 +292,13 @@ export default function CarsPage() {
 
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                     <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", fontWeight: 700 }}>Assigned Driver</span>
-                    <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{car.currentDriver}</span>
+                    {car.currentDriverId ? (
+                      <Link href={`/${role}/drivers/${car.currentDriverId}`} style={{ textDecoration: "none" }}>
+                        <span style={{ fontSize: "0.85rem", color: "#1e40af", fontWeight: 700, textDecoration: "underline" }}>{car.currentDriver}</span>
+                      </Link>
+                    ) : (
+                      <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{car.currentDriver}</span>
+                    )}
                   </div>
 
                   <div style={{ display: "flex", gap: "0.35rem", marginLeft: "1rem" }}>

@@ -386,7 +386,7 @@ export default function CarDetailPage() {
         marginBottom: "2rem"
       }}>
         {car.currentDriverId ? (
-          <Link href={`/${role}/drivers?expand=${car.currentDriverId}`} style={{ textDecoration: "none" }}>
+          <Link href={`/${role}/drivers/${car.currentDriverId}`} style={{ textDecoration: "none" }}>
             <div className="card action-card" style={{ padding: "1rem 1.25rem", border: "1px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", transition: "transform 0.15s, box-shadow 0.15s" }}>
               <div style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Current Driver ➔</div>
               <div style={{ fontSize: "1.1rem", color: "#1e40af", fontWeight: 700, marginTop: "0.25rem", textDecoration: "underline" }}>{car.currentDriver}</div>
@@ -681,7 +681,15 @@ export default function CarDetailPage() {
                   {driverLogs.map(log => (
                     <div key={log.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.5rem" }}>
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>👤 {log.drivers?.name || "Unknown Driver"}</div>
+                        <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>
+                          {log.drivers?.id ? (
+                            <Link href={`/${role}/drivers/${log.drivers.id}`} style={{ color: "#1e40af", textDecoration: "underline" }}>
+                              👤 {log.drivers.name}
+                            </Link>
+                          ) : (
+                            <span>👤 {log.drivers?.name || "Unknown Driver"}</span>
+                          )}
+                        </div>
                         <div style={{ fontSize: "0.8rem", color: "#6b7280" }}>📞 {log.drivers?.phone}</div>
                       </div>
                       <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
