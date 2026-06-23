@@ -1,13 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 
 export default function DriverDetailPage() {
   const { role, id } = useParams();
   const driverId = parseInt(id);
-  const router = useRouter();
   const isAdmin = role === "admin";
 
   const [driver, setDriver] = useState(null);
@@ -17,31 +16,6 @@ export default function DriverDetailPage() {
   const [pendingPayments, setPendingPayments] = useState([]);
   const [pendingLeaves, setPendingLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-
-  // Edit Modal fields
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [editPhone, setEditPhone] = useState("");
-  const [editDob, setEditDob] = useState("");
-  const [editAadharNumber, setEditAadharNumber] = useState("");
-  const [editAddress, setEditAddress] = useState("");
-  const [editLicenseNumber, setEditLicenseNumber] = useState("");
-  const [editDateOfJoining, setEditDateOfJoining] = useState("");
-  const [editSalary, setEditSalary] = useState("0");
-
-  // Payment Log Form state
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState("");
-  const [paymentDate, setPaymentDate] = useState("");
-  const [paymentType, setPaymentType] = useState("salary_paid"); // 'salary_paid', 'deduction', 'advance'
-  const [paymentComment, setPaymentComment] = useState("");
-
-  // Leave Log Form state
-  const [showLeaveForm, setShowLeaveForm] = useState(false);
-  const [leaveStartDate, setLeaveStartDate] = useState("");
-  const [leaveEndDate, setLeaveEndDate] = useState("");
-  const [leaveReason, setLeaveReason] = useState("");
 
   useEffect(() => {
     if (driverId) {
@@ -61,16 +35,6 @@ export default function DriverDetailPage() {
 
       if (driverErr) throw driverErr;
       setDriver(driverData);
-
-      // Pre-fill edit fields
-      setEditName(driverData.name || "");
-      setEditPhone(driverData.phone || "");
-      setEditDob(driverData.dob || "");
-      setEditAadharNumber(driverData.aadhar_number || "");
-      setEditAddress(driverData.address || "");
-      setEditLicenseNumber(driverData.license_number || "");
-      setEditDateOfJoining(driverData.date_of_joining || "");
-      setEditSalary(driverData.salary?.toString() || "0");
 
       // 2. Get assigned vehicle history
       const { data: historyList } = await supabase
@@ -118,164 +82,6 @@ export default function DriverDetailPage() {
       alert("Failed to load driver profile.");
     }
     setLoading(false);
-  };
-
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    if (!editName.trim() || !editPhone.trim()) {
-      alert("Name and phone are required.");
-      return;
-    }
-    setSubmitting(true);
-    const payload = {
-      driver_id: driverId,
-      name: editName.trim(),
-      phone: editPhone.trim(),
-      dob: editDob || null,
-      aadhar_number: editAadharNumber.trim() || null,
-      address: editAddress.trim() || null,
-      license_number: editLicenseNumber.trim() || null,
-      date_of_joining: editDateOfJoining || null,
-      salary: parseFloat(editSalary) || 0
-    };
-
-    try {
-      if (isAdmin) {
-        const { error } = await supabase
-          .from("drivers")
-          .update({
-            name: payload.name,
-            phone: payload.phone,
-            dob: payload.dob,
-            aadhar_number: payload.aadhar_number,
-            address: payload.address,
-            license_number: payload.license_number,
-            date_of_joining: payload.date_of_joining,
-            salary: payload.salary
-          })
-          .eq("id", driverId);
-
-        if (error) throw error;
-        alert("Driver profile updated successfully.");
-        setShowEditModal(false);
-        fetchDriverDetails();
-      } else {
-        const { error } = await supabase.from("fleet_requests").insert([{
-          request_type: "edit_driver",
-          payload,
-          requested_by: "staff",
-          status: "pending"
-        }]);
-        if (error) throw error;
-        alert("Driver update request submitted to Admin for approval.");
-        setShowEditModal(false);
-      }
-    } catch (err) {
-      alert(err.message || "Failed to update driver");
-    }
-    setSubmitting(false);
-  };
-
-  const handlePaymentSubmit = async (e) => {
-    e.preventDefault();
-    if (!paymentAmount || !paymentDate) {
-      alert("Please fill amount and date.");
-      return;
-    }
-    setSubmitting(true);
-
-    const payload = {
-      driver_id: driverId,
-      amount: parseFloat(paymentAmount),
-      type: paymentType,
-      payment_date: paymentDate,
-      comment: paymentComment.trim()
-    };
-
-    try {
-      if (isAdmin) {
-        const { error } = await supabase.from("driver_payments").insert([payload]);
-        if (error) throw error;
-
-        // Auto raise expense ticket for Salary Paid or Advance
-        if (paymentType === "salary_paid" || paymentType === "advance") {
-          const category = "Driver Payment";
-          const label = paymentType === "salary_paid" ? "Salary Payment" : "Salary Advance";
-          await supabase.from("expense_reports").insert([{
-            amount: payload.amount,
-            category,
-            comment: `[Driver: ${driver.name}] ${label}: ${payload.comment || "Paid"}`,
-            status: "pending",
-            requested_by: "admin"
-          }]);
-        }
-        alert("Payment activity logged successfully and expense ticket created.");
-      } else {
-        const { error } = await supabase.from("fleet_requests").insert([{
-          request_type: "log_driver_payment",
-          payload,
-          requested_by: "staff",
-          status: "pending"
-        }]);
-        if (error) throw error;
-        alert("Payment request submitted to Admin for approval.");
-      }
-
-      setPaymentAmount("");
-      setPaymentDate("");
-      setPaymentComment("");
-      setShowPaymentForm(false);
-      fetchDriverDetails();
-    } catch (err) {
-      alert(err.message || "Failed to log payment activity");
-    }
-    setSubmitting(false);
-  };
-
-  const handleLeaveSubmit = async (e) => {
-    e.preventDefault();
-    if (!leaveStartDate || !leaveEndDate) {
-      alert("Please specify start and end dates.");
-      return;
-    }
-    if (new Date(leaveStartDate) > new Date(leaveEndDate)) {
-      alert("Start Date cannot be after End Date.");
-      return;
-    }
-    setSubmitting(true);
-
-    const payload = {
-      driver_id: driverId,
-      start_date: leaveStartDate,
-      end_date: leaveEndDate,
-      reason: leaveReason.trim()
-    };
-
-    try {
-      if (isAdmin) {
-        const { error } = await supabase.from("driver_leaves").insert([payload]);
-        if (error) throw error;
-        alert("Leave logged successfully.");
-      } else {
-        const { error } = await supabase.from("fleet_requests").insert([{
-          request_type: "log_driver_leave",
-          payload,
-          requested_by: "staff",
-          status: "pending"
-        }]);
-        if (error) throw error;
-        alert("Leave request submitted to Admin for approval.");
-      }
-
-      setLeaveStartDate("");
-      setLeaveEndDate("");
-      setLeaveReason("");
-      setShowLeaveForm(false);
-      fetchDriverDetails();
-    } catch (err) {
-      alert(err.message || "Failed to log leave record");
-    }
-    setSubmitting(false);
   };
 
   if (loading && !driver) {
@@ -351,15 +157,15 @@ export default function DriverDetailPage() {
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={() => { setShowLeaveForm(!showLeaveForm); setShowPaymentForm(false); }} className="btn btn-secondary" style={{ fontSize: "0.8rem", background: "#f59e0b", color: "#ffffff", borderColor: "#f59e0b" }}>
+            <Link href={`/${role}/drivers/${driverId}/leave`} className="btn btn-secondary" style={{ fontSize: "0.8rem", background: "#f59e0b", color: "#ffffff", borderColor: "#f59e0b" }}>
               📅 Log Leave
-            </button>
-            <button onClick={() => { setShowPaymentForm(!showPaymentForm); setShowLeaveForm(false); }} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#10b981", borderColor: "#10b981" }}>
+            </Link>
+            <Link href={`/${role}/drivers/${driverId}/payment`} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#10b981", borderColor: "#10b981" }}>
               💵 Log Payment
-            </button>
-            <button onClick={() => setShowEditModal(true)} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
+            </Link>
+            <Link href={`/${role}/drivers/${driverId}/edit`} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
               ✎ Edit Profile
-            </button>
+            </Link>
             <Link href={`/${role}/drivers`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
               ➔ Drivers List
             </Link>
@@ -451,79 +257,6 @@ export default function DriverDetailPage() {
               </li>
             ))}
           </ul>
-        </div>
-      )}
-
-      {/* Log Payment Form */}
-      {showPaymentForm && (
-        <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "1.5rem" }}>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>
-            {isAdmin ? "Log Salary/Payment Activity Directly" : "Request Salary/Payment Activity"}
-          </h2>
-          <form onSubmit={handlePaymentSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-            <div className="form-group">
-              <label className="form-label">Amount (₹)</label>
-              <input type="number" className="form-input" placeholder="Enter amount" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} required />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Payment Date</label>
-              <input type="date" className="form-input" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} required />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Activity Type</label>
-              <select className="form-input" value={paymentType} onChange={(e) => setPaymentType(e.target.value)} required>
-                <option value="salary_paid">Salary Paid</option>
-                <option value="advance">Advance Taken</option>
-                <option value="deduction">Deduction</option>
-              </select>
-            </div>
-
-            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-              <label className="form-label">Remarks / Description</label>
-              <input type="text" className="form-input" placeholder="Details (e.g. June Month Salary, Advance for trip)" value={paymentComment} onChange={(e) => setPaymentComment(e.target.value)} />
-            </div>
-
-            <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-              <button type="button" onClick={() => setShowPaymentForm(false)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
-              <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#10b981", borderColor: "#10b981" }}>
-                {submitting ? "Processing..." : isAdmin ? "Save Record" : "Submit Request"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Log Leave Form */}
-      {showLeaveForm && (
-        <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "1.5rem" }}>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>
-            {isAdmin ? "Log Leave Directly" : "Request Leave Record"}
-          </h2>
-          <form onSubmit={handleLeaveSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
-            <div className="form-group">
-              <label className="form-label">Start Date</label>
-              <input type="date" className="form-input" value={leaveStartDate} onChange={(e) => setLeaveStartDate(e.target.value)} required />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">End Date</label>
-              <input type="date" className="form-input" value={leaveEndDate} onChange={(e) => setLeaveEndDate(e.target.value)} required />
-            </div>
-
-            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-              <label className="form-label">Reason / Remarks</label>
-              <input type="text" className="form-input" placeholder="Leave remarks (e.g. Personal work, Sick leave)" value={leaveReason} onChange={(e) => setLeaveReason(e.target.value)} />
-            </div>
-
-            <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-              <button type="button" onClick={() => setShowLeaveForm(false)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
-              <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#f59e0b", borderColor: "#f59e0b" }}>
-                {submitting ? "Processing..." : isAdmin ? "Save Record" : "Submit Request"}
-              </button>
-            </div>
-          </form>
         </div>
       )}
 
@@ -693,73 +426,6 @@ export default function DriverDetailPage() {
           )}
         </div>
       </div>
-
-      {/* Edit Driver Modal */}
-      {showEditModal && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 9999
-        }}>
-          <div className="card" style={{ width: "90%", maxWidth: "600px", padding: "1.5rem", background: "#ffffff" }}>
-            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>
-              {isAdmin ? "Modify Driver Profile" : "Request Driver Modification"}
-            </h3>
-            <form onSubmit={handleEditSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-              <div className="form-group">
-                <label className="form-label">Full Name</label>
-                <input type="text" className="form-input" value={editName} onChange={(e) => setEditName(e.target.value)} required />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Phone Number</label>
-                <input type="text" className="form-input" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} required />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Date of Birth</label>
-                <input type="date" className="form-input" value={editDob} onChange={(e) => setEditDob(e.target.value)} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Aadhar Card</label>
-                <input type="text" className="form-input" value={editAadharNumber} onChange={(e) => setEditAadharNumber(e.target.value)} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">License Number</label>
-                <input type="text" className="form-input" value={editLicenseNumber} onChange={(e) => setEditLicenseNumber(e.target.value)} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Date of Joining</label>
-                <input type="date" className="form-input" value={editDateOfJoining} onChange={(e) => setEditDateOfJoining(e.target.value)} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Base Salary (₹)</label>
-                <input type="number" className="form-input" value={editSalary} onChange={(e) => setEditSalary(e.target.value)} />
-              </div>
-
-              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                <label className="form-label">Home Address</label>
-                <textarea className="form-input" rows="2" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} />
-              </div>
-
-              <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
-                <button type="button" onClick={() => setShowEditModal(false)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
-                <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
-                  {submitting ? "Processing..." : isAdmin ? "Save Directly" : "Submit Request"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
