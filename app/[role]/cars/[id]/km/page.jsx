@@ -113,7 +113,7 @@ export default function CarKmPage() {
       {/* Log Form */}
       <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
         <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>New Odometer Log</h2>
-        <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+        <form onSubmit={handleSubmit} className="form-grid-2">
           <div className="form-group">
             <label className="form-label" style={{ fontWeight: 600 }}>Odometer Reading (KM) *</label>
             <input type="number" className="form-input" placeholder="e.g. 52000" value={kmVal} onChange={(e) => setKmVal(e.target.value)} required />
@@ -145,7 +145,7 @@ export default function CarKmPage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {kmLogs.map((log) => (
-              <div key={log.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.6rem" }}>
+              <div key={log.id} className="log-row">
                 <div>
                   <div style={{ fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
                     {parseFloat(log.km_clocked).toLocaleString()} km

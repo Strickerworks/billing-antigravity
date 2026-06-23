@@ -79,7 +79,7 @@ export default function DriversPage() {
           ← Back to Home
         </Link>
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 0" }}>
+      <div className="registry-header">
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
             Drivers Portal
@@ -122,6 +122,7 @@ export default function DriversPage() {
                   key={driver.id}
                   className="card"
                   style={{
+                    padding: 0,
                     background: "#ffffff",
                     border: "1px solid #e5e7eb",
                     borderRadius: "8px",
@@ -129,15 +130,8 @@ export default function DriversPage() {
                   }}
                 >
                   {/* Summary row */}
-                  <div
-                    style={{
-                      padding: "1rem 1.25rem",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center"
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <div className="fleet-card-row">
+                    <div className="fleet-card-info">
                       <div style={{ fontSize: "1.5rem" }}>👤</div>
                       <div>
                         <div style={{ fontWeight: 700, color: "#111827", fontSize: "1rem" }}>{driver.name}</div>
@@ -146,7 +140,7 @@ export default function DriversPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
+                    <div className="fleet-card-actions">
                       {currentCarReg ? (
                         <span style={{
                           fontSize: "0.75rem",
@@ -154,7 +148,8 @@ export default function DriversPage() {
                           color: "#1e3a8a",
                           background: "#dbeafe",
                           padding: "0.25rem 0.5rem",
-                          borderRadius: "4px"
+                          borderRadius: "4px",
+                          whiteSpace: "nowrap"
                         }}>
                           🚗 {currentCarReg}
                         </span>
@@ -162,7 +157,7 @@ export default function DriversPage() {
                         <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>No vehicle assigned</span>
                       )}
 
-                      <div style={{ display: "flex", gap: "0.35rem" }}>
+                      <div className="fleet-btn-group">
                         <Link href={`/${role}/drivers/${driver.id}`}>
                           <button
                             className="btn btn-primary"

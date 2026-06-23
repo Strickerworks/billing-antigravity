@@ -249,16 +249,16 @@ export default function DriverDetailPage() {
           background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
           border: "1px solid #fde68a",
           borderRadius: "8px",
-          display: "flex",
-          gap: "2rem"
         }}>
-          <div>
-            <span style={{ fontSize: "0.7rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase" }}>Leaves Taken (This Month)</span>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>{thisMonthLeaveDays} Days</div>
-          </div>
-          <div style={{ borderLeft: "1px solid #fde68a", paddingLeft: "2rem" }}>
-            <span style={{ fontSize: "0.7rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase" }}>Total Leaves (All Time)</span>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>{totalLeaveDays} Days</div>
+          <div className="stats-banner">
+            <div>
+              <span style={{ fontSize: "0.7rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase" }}>Leaves Taken (This Month)</span>
+              <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>{thisMonthLeaveDays} Days</div>
+            </div>
+            <div className="stats-banner-divider">
+              <span style={{ fontSize: "0.7rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase" }}>Total Leaves (All Time)</span>
+              <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>{totalLeaveDays} Days</div>
+            </div>
           </div>
         </div>
       </div>
@@ -299,7 +299,7 @@ export default function DriverDetailPage() {
         {/* 1. Profile Information */}
         <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Profile Information</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+          <div className="info-grid-2">
             <div>
               <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Full Name</span>
               <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.name}</div>

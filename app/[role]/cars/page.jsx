@@ -140,7 +140,7 @@ export default function CarsPage() {
           ← Back to Home
         </Link>
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 0" }}>
+      <div className="registry-header">
         <div>
           <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
             Fleet Registry
@@ -180,81 +180,80 @@ export default function CarsPage() {
                 key={car.id}
                 className="card"
                 style={{
-                  padding: "1.25rem",
+                  padding: 0,
                   background: "#ffffff",
                   border: "1px solid #e5e7eb",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center"
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  <div style={{ fontSize: "1.5rem" }}>🚗</div>
-                  <div>
-                    <div style={{ fontWeight: 700, color: "#111827", fontSize: "1.05rem" }}>{car.name}</div>
-                    <span style={{
-                      fontSize: "0.75rem",
-                      color: "#1e40af",
-                      background: "#eff6ff",
-                      border: "1px solid #bfdbfe",
-                      borderRadius: "4px",
-                      padding: "0.125rem 0.375rem",
-                      display: "inline-block",
-                      fontWeight: 600,
-                      marginTop: "0.25rem"
-                    }}>
-                      {car.registration_name}
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                    <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", fontWeight: 700 }}>Odometer</span>
-                    <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{parseFloat(car.currentKm).toLocaleString()} km</span>
+                <div className="fleet-card-row">
+                  <div className="fleet-card-info">
+                    <div style={{ fontSize: "1.5rem" }}>🚗</div>
+                    <div>
+                      <div style={{ fontWeight: 700, color: "#111827", fontSize: "1.05rem" }}>{car.name}</div>
+                      <span style={{
+                        fontSize: "0.75rem",
+                        color: "#1e40af",
+                        background: "#eff6ff",
+                        border: "1px solid #bfdbfe",
+                        borderRadius: "4px",
+                        padding: "0.125rem 0.375rem",
+                        display: "inline-block",
+                        fontWeight: 600,
+                        marginTop: "0.25rem"
+                      }}>
+                        {car.registration_name}
+                      </span>
+                    </div>
                   </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                    <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", fontWeight: 700 }}>Assigned Driver</span>
-                    {car.currentDriverId ? (
-                      <Link href={`/${role}/drivers/${car.currentDriverId}`} style={{ textDecoration: "none" }}>
-                        <span style={{ fontSize: "0.85rem", color: "#1e40af", fontWeight: 700, textDecoration: "underline" }}>{car.currentDriver}</span>
+                  <div className="fleet-card-actions">
+                    <div className="fleet-stat">
+                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", fontWeight: 700 }}>Odometer</span>
+                      <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{parseFloat(car.currentKm).toLocaleString()} km</span>
+                    </div>
+
+                    <div className="fleet-stat">
+                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", fontWeight: 700 }}>Assigned Driver</span>
+                      {car.currentDriverId ? (
+                        <Link href={`/${role}/drivers/${car.currentDriverId}`} style={{ textDecoration: "none" }}>
+                          <span style={{ fontSize: "0.85rem", color: "#1e40af", fontWeight: 700, textDecoration: "underline" }}>{car.currentDriver}</span>
+                        </Link>
+                      ) : (
+                        <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{car.currentDriver}</span>
+                      )}
+                    </div>
+
+                    <div className="fleet-btn-group">
+                      <Link href={`/${role}/cars/${car.id}`}>
+                        <button className="btn btn-primary" style={{ fontSize: "0.8rem", padding: "0.45rem 1rem" }}>
+                          View Logs
+                        </button>
                       </Link>
-                    ) : (
-                      <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{car.currentDriver}</span>
-                    )}
-                  </div>
 
-                  <div style={{ display: "flex", gap: "0.35rem", marginLeft: "1rem" }}>
-                    <Link href={`/${role}/cars/${car.id}`}>
-                      <button className="btn btn-primary" style={{ fontSize: "0.8rem", padding: "0.45rem 1rem" }}>
-                        View Logs
-                      </button>
-                    </Link>
-
-                    <button
-                      onClick={() => handleStartEdit(car)}
-                      className="btn btn-secondary"
-                      style={{ fontSize: "0.8rem", padding: "0.45rem 0.85rem" }}
-                    >
-                      ✎ Edit
-                    </button>
-
-                    {isAdmin && (
                       <button
-                        onClick={() => handleDeleteCar(car.id, car.registration_name)}
+                        onClick={() => handleStartEdit(car)}
                         className="btn btn-secondary"
-                        style={{
-                          padding: "0.45rem 0.75rem",
-                          fontSize: "0.8rem",
-                          color: "#b91c1c",
-                          border: "1px solid #fee2e2",
-                          background: "#fef2f2"
-                        }}
+                        style={{ fontSize: "0.8rem", padding: "0.45rem 0.85rem" }}
                       >
-                        Delete
+                        ✎ Edit
                       </button>
-                    )}
+
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDeleteCar(car.id, car.registration_name)}
+                          className="btn btn-secondary"
+                          style={{
+                            padding: "0.45rem 0.75rem",
+                            fontSize: "0.8rem",
+                            color: "#b91c1c",
+                            border: "1px solid #fee2e2",
+                            background: "#fef2f2"
+                          }}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

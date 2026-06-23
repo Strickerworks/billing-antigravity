@@ -134,7 +134,7 @@ export default function CarInsurancePage() {
       {/* Log Form */}
       <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
         <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>New Insurance Renewal</h2>
-        <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+        <form onSubmit={handleSubmit} className="form-grid-2">
           <div className="form-group">
             <label className="form-label" style={{ fontWeight: 600 }}>Payment/Log Date *</label>
             <input type="date" className="form-input" value={insuranceDate} onChange={(e) => setInsuranceDate(e.target.value)} required />
@@ -181,7 +181,7 @@ export default function CarInsurancePage() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {insuranceLogs.map((log) => (
-              <div key={log.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.6rem" }}>
+              <div key={log.id} className="log-row">
                 <div>
                   <div style={{ fontSize: "1rem", fontWeight: 700, color: "#111827" }}>
                     Policy Renewal Date: {new Date(log.insurance_date).toLocaleDateString()}

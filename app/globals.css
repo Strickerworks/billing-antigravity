@@ -10,12 +10,14 @@
 html {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 body {
   background: #ebebeb;
   color: #111111;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* ===== LAYOUT ===== */
@@ -833,5 +835,175 @@ body {
   .edit-table th, .edit-table td {
     padding: 0.35rem 0.35rem;
     font-size: 0.75rem;
+  }
+}
+
+/* ===== FLEET / DRIVER REGISTRY CARDS ===== */
+/* Header row: title left, button right — wraps on mobile */
+.registry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Each vehicle/driver card summary row */
+.fleet-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Left side of card (icon + name info) */
+.fleet-card-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Right side of card (stats + actions) */
+.fleet-card-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Stats pair inside a card */
+.fleet-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Action buttons group */
+.fleet-btn-group {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+/* 2-column info grid (used in profile cards) */
+.info-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* 2-column form grid */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* Stats summary banner (leaves, salary) — horizontal flex */
+.stats-banner {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.stats-banner-divider {
+  border-left: 1px solid #fde68a;
+  padding-left: 2rem;
+}
+
+/* Log row in history ledger */
+.log-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.log-row-date {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Monthly expense banner */
+.month-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .info-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Stats banner stacks */
+  .stats-banner {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .stats-banner-divider {
+    border-left: none;
+    border-top: 1px solid #fde68a;
+    padding-left: 0;
+    padding-top: 1rem;
+  }
+
+  /* Fleet card stacks vertically */
+  .fleet-card-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .fleet-card-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .fleet-stat {
+    align-items: flex-start;
+  }
+
+  .fleet-btn-group {
+    margin-left: auto;
+  }
+
+  .registry-header {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .fleet-card-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .fleet-btn-group {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .fleet-btn-group .btn {
+    flex: 1;
+    justify-content: center;
   }
 }

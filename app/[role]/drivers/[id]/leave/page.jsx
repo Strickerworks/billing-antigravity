@@ -121,7 +121,7 @@ export default function LogDriverLeavePage() {
       {/* Log Leave Form */}
       <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
         <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>New Leave Form</h2>
-        <form onSubmit={handleLeaveSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}>
+        <form onSubmit={handleLeaveSubmit} className="form-grid-2">
           <div className="form-group">
             <label className="form-label" style={{ fontWeight: 600 }}>Start Date *</label>
             <input type="date" className="form-input" value={leaveStartDate} onChange={(e) => setLeaveStartDate(e.target.value)} required />
@@ -163,7 +163,7 @@ export default function LogDriverLeavePage() {
               const days = Math.ceil(Math.abs(eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
 
               return (
-                <div key={leave.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.6rem" }}>
+                <div key={leave.id} className="log-row" style={{ paddingBottom: "0.6rem" }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>

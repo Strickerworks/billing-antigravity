@@ -189,15 +189,12 @@ export default function CarDetailPage() {
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
       {/* 4. Monthly Expense Banner */}
-      <div className="card" style={{
+      <div className="card month-banner" style={{
         padding: "1.25rem",
         background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
         border: "1px solid #fde68a",
         borderRadius: "8px",
         marginBottom: "1.5rem",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
       }}>
         <div>
           <span style={{ fontSize: "0.75rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em" }}>
@@ -239,7 +236,7 @@ export default function CarDetailPage() {
         
         <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Vehicle Information</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+          <div className="info-grid-2">
             <div>
               <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Model / Name</span>
               <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{car.name}</div>
@@ -277,7 +274,7 @@ export default function CarDetailPage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
               {driverLogs.map((log) => (
-                <div key={log.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.5rem" }}>
+                <div key={log.id} className="log-row" style={{ paddingBottom: "0.5rem" }}>
                   <div>
                     {log.drivers?.id ? (
                       <Link href={`/${role}/drivers/${log.drivers.id}`} style={{ textDecoration: "none", fontWeight: 700, color: "#1e40af" }}>

@@ -136,7 +136,7 @@ export default function EditDriverPage() {
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
       <div className="card" style={{ padding: "2rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-        <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+        <form onSubmit={handleSubmit} className="form-grid-2">
           <div className="form-group">
             <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>Full Name *</label>
             <input type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} required />
