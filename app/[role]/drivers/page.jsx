@@ -14,15 +14,11 @@ export default function DriversPage() {
   const [submitting, setSubmitting] = useState(false);
   const [driverCarMap, setDriverCarMap] = useState({});
 
-  // Detailed Form Fields (Registration)
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [dob, setDob] = useState("");
-  const [aadharNumber, setAadharNumber] = useState("");
-  const [address, setAddress] = useState("");
-  const [licenseNumber, setLicenseNumber] = useState("");
-  const [dateOfJoining, setDateOfJoining] = useState("");
-  const [salary, setSalary] = useState("0");
+  // Only basic state for display & status mapping
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [driverCarMap, setDriverCarMap] = useState({});
 
   useEffect(() => {
     fetchDriversAndAssignments();
@@ -67,62 +63,6 @@ export default function DriversPage() {
     setLoading(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name.trim() || !phone.trim()) {
-      alert("Please fill name and phone.");
-      return;
-    }
-
-    setSubmitting(true);
-    const driverPayload = {
-      name: name.trim(),
-      phone: phone.trim(),
-      dob: dob || null,
-      aadhar_number: aadharNumber.trim() || null,
-      address: address.trim() || null,
-      license_number: licenseNumber.trim() || null,
-      date_of_joining: dateOfJoining || null,
-      salary: parseFloat(salary) || 0
-    };
-
-    if (isAdmin) {
-      const { error } = await supabase.from("drivers").insert([driverPayload]);
-      if (error) {
-        alert("Failed to add driver: " + error.message);
-      } else {
-        alert("Driver added successfully.");
-        clearForm();
-        fetchDriversAndAssignments();
-      }
-    } else {
-      const { error } = await supabase.from("fleet_requests").insert([{
-        request_type: "add_driver",
-        payload: driverPayload,
-        requested_by: "staff",
-        status: "pending"
-      }]);
-      if (error) {
-        alert("Failed to submit request: " + error.message);
-      } else {
-        alert("Driver registration request submitted to Admin for approval.");
-        clearForm();
-      }
-    }
-    setSubmitting(false);
-  };
-
-  const clearForm = () => {
-    setName("");
-    setPhone("");
-    setDob("");
-    setAadharNumber("");
-    setAddress("");
-    setLicenseNumber("");
-    setDateOfJoining("");
-    setSalary("0");
-  };
-
   const handleDeleteDriver = async (driverId, driverName) => {
     if (!confirm(`Are you sure you want to delete driver ${driverName} permanently?`)) {
       return;
@@ -140,75 +80,21 @@ export default function DriversPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 900, paddingBottom: "3rem" }}>
-      <div style={{ padding: "1.5rem 0 1rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
-          Drivers Portal
-        </h1>
-        <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-          {isAdmin ? "Admin Registry & Controls" : "Submit Driver Registry/Edit Requests"}
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.5rem 0 1rem" }}>
+        <div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+            Drivers Portal
+          </h1>
+          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+            {isAdmin ? "Admin Registry & Controls" : "Submit Driver Registry/Edit Requests"}
+          </p>
+        </div>
+        <Link href={`/${role}/drivers/add`} className="btn btn-primary" style={{ padding: "0.6rem 1.5rem", fontSize: "0.85rem", fontWeight: 600 }}>
+          {isAdmin ? "+ Add New Driver" : "+ Request Driver Registration"}
+        </Link>
       </div>
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
-
-      {/* Driver Registration Form */}
-      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem", color: "#111827" }}>
-          {isAdmin ? "Add New Driver" : "Request Driver Registration"}
-        </h2>
-        <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Full Name</label>
-            <input type="text" className="form-input" placeholder="Driver Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Phone Number</label>
-            <input type="text" className="form-input" placeholder="Phone contact" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Date of Birth</label>
-            <input type="date" className="form-input" value={dob} onChange={(e) => setDob(e.target.value)} />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Aadhar Card Number</label>
-            <input type="text" className="form-input" placeholder="Aadhar number" value={aadharNumber} onChange={(e) => setAadharNumber(e.target.value)} />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>License Number</label>
-            <input type="text" className="form-input" placeholder="DL registration number" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Date of Joining</label>
-            <input type="date" className="form-input" value={dateOfJoining} onChange={(e) => setDateOfJoining(e.target.value)} />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Monthly Base Salary (₹)</label>
-            <input type="number" className="form-input" placeholder="e.g. 25000" value={salary} onChange={(e) => setSalary(e.target.value)} />
-          </div>
-
-          <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Home Address</label>
-            <textarea className="form-input" rows="2" placeholder="Residential permanent address" value={address} onChange={(e) => setAddress(e.target.value)} />
-          </div>
-
-          <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end" }}>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="btn btn-primary"
-              style={{ padding: "0.625rem 2rem", fontSize: "0.875rem", fontWeight: 600 }}
-            >
-              {submitting ? "Processing..." : isAdmin ? "Add Driver Profile" : "Submit Request"}
-            </button>
-          </div>
-        </form>
-      </div>
 
       {/* Drivers List */}
       <div>
