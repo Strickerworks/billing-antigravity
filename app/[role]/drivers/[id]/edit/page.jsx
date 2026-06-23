@@ -116,27 +116,20 @@ export default function EditDriverPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
-      {/* Breadcrumb & Header */}
-      <div style={{ padding: "1.5rem 0 1rem" }}>
-        <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.5rem" }}>
-          <Link href={`/${role}`} style={{ color: "#6b7280" }}>Home</Link> / 
-          <Link href={`/${role}/drivers`} style={{ color: "#6b7280" }}>Drivers</Link> /
-          <Link href={`/${role}/drivers/${driverId}`} style={{ color: "#6b7280" }}>Profile</Link> /
-          <span>Edit</span>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
-              {isAdmin ? "Modify Driver Profile" : "Request Driver Modification"}
-            </h1>
-            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-              Updating details for driver #{driverId}
-            </p>
-          </div>
-          <Link href={`/${role}/drivers/${driverId}`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
+      <div style={{ paddingTop: "1rem" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          <Link href={`/${role}/drivers/${driverId}`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
             ← Back to Profile
           </Link>
+        </div>
+
+        <div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+            {isAdmin ? "Modify Driver Profile" : "Request Driver Modification"}
+          </h1>
+          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+            Updating details for driver #{driverId}
+          </p>
         </div>
       </div>
 
