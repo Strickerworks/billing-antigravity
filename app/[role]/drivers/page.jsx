@@ -14,12 +14,6 @@ export default function DriversPage() {
   const [submitting, setSubmitting] = useState(false);
   const [driverCarMap, setDriverCarMap] = useState({});
 
-  // Only basic state for display & status mapping
-  const [drivers, setDrivers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [driverCarMap, setDriverCarMap] = useState({});
-
   useEffect(() => {
     fetchDriversAndAssignments();
   }, []);
