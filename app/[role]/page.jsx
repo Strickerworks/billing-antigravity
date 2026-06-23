@@ -90,6 +90,7 @@ export default function AdminPage() {
     { href: `${prefix}/requests`, icon: "✉", label: "Invoice Requests", desc: "Track status of invoice creations/updates" },
     { href: `${prefix}/expenses`, icon: "📋", label: "Expense Requests", desc: "Track and manage expense submissions" },
     { href: `${prefix}/payment-request`, icon: "🏷", label: "Payment Requests", desc: "Track payment acknowledgement logs" },
+    { href: `${prefix}/fleet-requests`, icon: "🚚", label: "Fleet Requests", desc: "Track and approve car & driver updates" },
     { href: `${prefix}/audit-log`, icon: "📜", label: "Audit Log", desc: "Unified timeline logs of all updates" },
   ];
 
