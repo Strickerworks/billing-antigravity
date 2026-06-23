@@ -13,10 +13,6 @@ export default function CarsPage() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form State (New registration)
-  const [name, setName] = useState("");
-  const [registrationName, setRegistrationName] = useState("");
-
   // Edit Form State
   const [editingCar, setEditingCar] = useState(null);
   const [editName, setEditName] = useState("");
@@ -67,47 +63,6 @@ export default function CarsPage() {
       alert("Failed to load cars list.");
     }
     setLoading(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name.trim() || !registrationName.trim()) {
-      alert("Please fill all fields.");
-      return;
-    }
-
-    setSubmitting(true);
-    const carPayload = {
-      name: name.trim(),
-      registration_name: registrationName.trim().toUpperCase()
-    };
-
-    if (isAdmin) {
-      const { error } = await supabase.from("cars").insert([carPayload]);
-      if (error) {
-        alert("Failed to register car: " + error.message);
-      } else {
-        alert("Vehicle registered successfully.");
-        setName("");
-        setRegistrationName("");
-        fetchCarsData();
-      }
-    } else {
-      const { error } = await supabase.from("fleet_requests").insert([{
-        request_type: "add_car",
-        payload: carPayload,
-        requested_by: "staff",
-        status: "pending"
-      }]);
-      if (error) {
-        alert("Failed to submit request: " + error.message);
-      } else {
-        alert("Vehicle registration request submitted to Admin for approval.");
-        setName("");
-        setRegistrationName("");
-      }
-    }
-    setSubmitting(false);
   };
 
   const handleEditSubmit = async (e) => {
@@ -185,57 +140,21 @@ export default function CarsPage() {
           ← Back to Home
         </Link>
       </div>
-      <div style={{ padding: "1rem 0" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
-          Fleet Registry
-        </h1>
-        <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-          {isAdmin ? "Admin Fleet Registry & Controls" : "Submit Vehicle Addition/Modification Requests"}
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 0" }}>
+        <div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+            Fleet Registry
+          </h1>
+          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+            {isAdmin ? "Admin Fleet Registry & Controls" : "Submit Vehicle Addition/Modification Requests"}
+          </p>
+        </div>
+        <Link href={`/${role}/cars/add`} className="btn btn-primary" style={{ padding: "0.6rem 1.5rem", fontSize: "0.85rem", fontWeight: 600 }}>
+          {isAdmin ? "+ Add Vehicle" : "+ Request Registration"}
+        </Link>
       </div>
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
-
-      {/* Register vehicle form */}
-      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem", color: "#111827" }}>
-          {isAdmin ? "Register New Vehicle" : "Request Vehicle Registration"}
-        </h2>
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-end" }}>
-          <div className="form-group" style={{ flex: "1 1 250px" }}>
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Car Model / Name</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. Tata Prima 4925"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="form-group" style={{ flex: "1 1 200px" }}>
-            <label className="form-label" style={{ fontWeight: 500, fontSize: "0.85rem" }}>Registration Number</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="e.g. KA-01-AB-1234"
-              value={registrationName}
-              onChange={(e) => setRegistrationName(e.target.value)}
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="btn btn-primary"
-            style={{ height: "42px", padding: "0.625rem 2rem", fontSize: "0.875rem", fontWeight: 600 }}
-          >
-            {submitting ? "Processing..." : isAdmin ? "Register Vehicle" : "Submit Request"}
-          </button>
-        </form>
-      </div>
 
       {/* Fleet list */}
       <div>
