@@ -93,7 +93,7 @@ export default function CarDetailPage() {
         supabase.from("car_fuel_history").select("*").eq("car_id", carId).order("created_at", { ascending: false }),
         supabase.from("car_insurance_history").select("*").eq("car_id", carId).order("insurance_date", { ascending: false }),
         supabase.from("car_misc_history").select("*").eq("car_id", carId).order("created_at", { ascending: false }),
-        supabase.from("car_driver_history").select("*, drivers(name, phone)").eq("car_id", carId).order("assigned_at", { ascending: false }),
+        supabase.from("car_driver_history").select("*, drivers(id, name, phone)").eq("car_id", carId).order("assigned_at", { ascending: false }),
         supabase.from("fleet_requests").select("*").eq("status", "pending"),
         supabase.from("expense_reports").select("amount, created_at").eq("status", "approved").ilike("comment", `%[${carData.registration_name}]%`)
       ]);
@@ -149,6 +149,7 @@ export default function CarDetailPage() {
         lastService,
         currentDriver,
         currentDriverPhone,
+        currentDriverId: assigns?.[0]?.drivers?.id || null,
         insuranceStatus
       });
 
@@ -384,11 +385,21 @@ export default function CarDetailPage() {
         gap: "1rem",
         marginBottom: "2rem"
       }}>
-        <div className="card" style={{ padding: "1rem 1.25rem", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
-          <div style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Current Driver</div>
-          <div style={{ fontSize: "1.1rem", color: "#111827", fontWeight: 700, marginTop: "0.25rem" }}>{car.currentDriver}</div>
-          {car.currentDriverPhone && <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.1rem" }}>📞 {car.currentDriverPhone}</div>}
-        </div>
+        {car.currentDriverId ? (
+          <Link href={`/${role}/drivers?expand=${car.currentDriverId}`} style={{ textDecoration: "none" }}>
+            <div className="card action-card" style={{ padding: "1rem 1.25rem", border: "1px solid #e5e7eb", background: "#f9fafb", cursor: "pointer", transition: "transform 0.15s, box-shadow 0.15s" }}>
+              <div style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Current Driver ➔</div>
+              <div style={{ fontSize: "1.1rem", color: "#1e40af", fontWeight: 700, marginTop: "0.25rem", textDecoration: "underline" }}>{car.currentDriver}</div>
+              {car.currentDriverPhone && <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.1rem" }}>📞 {car.currentDriverPhone}</div>}
+            </div>
+          </Link>
+        ) : (
+          <div className="card" style={{ padding: "1rem 1.25rem", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
+            <div style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Current Driver</div>
+            <div style={{ fontSize: "1.1rem", color: "#111827", fontWeight: 700, marginTop: "0.25rem" }}>{car.currentDriver}</div>
+            {car.currentDriverPhone && <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.1rem" }}>📞 {car.currentDriverPhone}</div>}
+          </div>
+        )}
 
         <div className="card" style={{ padding: "1rem 1.25rem", border: "1px solid #e5e7eb", background: "#f9fafb" }}>
           <div style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Odometer Clocked</div>

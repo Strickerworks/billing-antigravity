@@ -34,6 +34,13 @@ export default function DriversPage() {
 
   useEffect(() => {
     fetchDriversAndAssignments();
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const expandId = params.get("expand");
+      if (expandId) {
+        setExpandedDriverId(parseInt(expandId));
+      }
+    }
   }, []);
 
   const fetchDriversAndAssignments = async () => {
