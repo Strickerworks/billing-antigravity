@@ -184,6 +184,9 @@ export default function DriverDetailPage() {
 
         {/* Buttons placed below the name in a clean row */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.50rem" }}>
+          <Link href={`/${role}/drivers`} style={buttonStyle}>
+            ← Back
+          </Link>
           <Link href={`/${role}/drivers/${driverId}/leave`} style={buttonStyle}>
             📅 Log Leave
           </Link>
