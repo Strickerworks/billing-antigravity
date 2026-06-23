@@ -101,6 +101,19 @@ export default function FleetRequestsPage() {
         }]);
         if (error) throw error;
 
+        // Auto raise expense ticket if cost exists
+        if (payload.service_cost > 0) {
+          const { data: carObj } = await supabase.from("cars").select("registration_name").eq("id", payload.car_id).single();
+          const carReg = carObj ? carObj.registration_name : `ID:${payload.car_id}`;
+          await supabase.from("expense_reports").insert([{
+            amount: payload.service_cost,
+            category: "Maintenance",
+            comment: `[${carReg}] Servicing Cost: ${payload.comment}`,
+            status: "pending",
+            requested_by: req.requested_by || "staff"
+          }]);
+        }
+
       } else if (req.request_type === "log_fuel") {
         const { error } = await supabase.from("car_fuel_history").insert([{
           car_id: payload.car_id,
@@ -109,6 +122,17 @@ export default function FleetRequestsPage() {
           comment: payload.comment
         }]);
         if (error) throw error;
+
+        // Auto raise expense ticket
+        const { data: carObj } = await supabase.from("cars").select("registration_name").eq("id", payload.car_id).single();
+        const carReg = carObj ? carObj.registration_name : `ID:${payload.car_id}`;
+        await supabase.from("expense_reports").insert([{
+          amount: parseFloat(payload.money),
+          category: "Fuel",
+          comment: `[${carReg}] Fuel Fill: ${payload.liters}L - ${payload.comment || 'No remarks'}`,
+          status: "pending",
+          requested_by: req.requested_by || "staff"
+        }]);
 
       } else if (req.request_type === "log_insurance") {
         const { error } = await supabase.from("car_insurance_history").insert([{
@@ -120,6 +144,19 @@ export default function FleetRequestsPage() {
         }]);
         if (error) throw error;
 
+        // Auto raise expense ticket if cost exists
+        if (payload.insurance_cost > 0) {
+          const { data: carObj } = await supabase.from("cars").select("registration_name").eq("id", payload.car_id).single();
+          const carReg = carObj ? carObj.registration_name : `ID:${payload.car_id}`;
+          await supabase.from("expense_reports").insert([{
+            amount: payload.insurance_cost,
+            category: "Insurance",
+            comment: `[${carReg}] Insurance Policy: ${payload.comment || 'Renewed'}`,
+            status: "pending",
+            requested_by: req.requested_by || "staff"
+          }]);
+        }
+
       } else if (req.request_type === "log_misc") {
         const { error } = await supabase.from("car_misc_history").insert([{
           car_id: payload.car_id,
@@ -127,6 +164,17 @@ export default function FleetRequestsPage() {
           comment: payload.comment
         }]);
         if (error) throw error;
+
+        // Auto raise expense ticket
+        const { data: carObj } = await supabase.from("cars").select("registration_name").eq("id", payload.car_id).single();
+        const carReg = carObj ? carObj.registration_name : `ID:${payload.car_id}`;
+        await supabase.from("expense_reports").insert([{
+          amount: parseFloat(payload.amount),
+          category: "Misc",
+          comment: `[${carReg}] Misc Charge: ${payload.comment}`,
+          status: "pending",
+          requested_by: req.requested_by || "staff"
+        }]);
 
       } else if (req.request_type === "assign_driver") {
         const { error } = await supabase.from("car_driver_history").insert([{

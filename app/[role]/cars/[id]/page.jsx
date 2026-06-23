@@ -17,7 +17,7 @@ export default function CarDetailPage() {
   const [activeTab, setActiveTab] = useState("km");
   const [submitting, setSubmitting] = useState(false);
 
-  // History states (Only holds approved logs)
+  // History states
   const [kmLogs, setKmLogs] = useState([]);
   const [serviceLogs, setServiceLogs] = useState([]);
   const [fuelLogs, setFuelLogs] = useState([]);
@@ -35,6 +35,7 @@ export default function CarDetailPage() {
 
   const [serviceDate, setServiceDate] = useState("");
   const [serviceComment, setServiceComment] = useState("");
+  const [serviceCost, setServiceCost] = useState("");
 
   const [fuelLiters, setFuelLiters] = useState("");
   const [fuelMoney, setFuelMoney] = useState("");
@@ -44,6 +45,7 @@ export default function CarDetailPage() {
   const [insuranceFrom, setInsuranceFrom] = useState("");
   const [insuranceTo, setInsuranceTo] = useState("");
   const [insuranceComment, setInsuranceComment] = useState("");
+  const [insuranceCost, setInsuranceCost] = useState("");
 
   const [miscAmount, setMiscAmount] = useState("");
   const [miscComment, setMiscComment] = useState("");
@@ -74,7 +76,7 @@ export default function CarDetailPage() {
 
       if (carErr) throw carErr;
 
-      // 2. Fetch history logs (all entries in main tables are approved)
+      // 2. Fetch history logs
       const [
         { data: kms },
         { data: services },
@@ -149,13 +151,25 @@ export default function CarDetailPage() {
         payload = { car_id: carId, km_clocked: parseFloat(kmVal), comment: kmComment };
       } else if (type === "service") {
         if (!serviceDate) throw new Error("Please enter service date");
-        payload = { car_id: carId, service_date: serviceDate, comment: serviceComment };
+        payload = {
+          car_id: carId,
+          service_date: serviceDate,
+          comment: serviceComment,
+          service_cost: serviceCost ? parseFloat(serviceCost) : 0
+        };
       } else if (type === "fuel") {
         if (!fuelLiters || !fuelMoney) throw new Error("Please fill fuel metrics");
         payload = { car_id: carId, liters: parseFloat(fuelLiters), money: parseFloat(fuelMoney), comment: fuelComment };
       } else if (type === "insurance") {
         if (!insuranceDate || !insuranceFrom || !insuranceTo) throw new Error("Please specify dates");
-        payload = { car_id: carId, insurance_date: insuranceDate, insurance_from: insuranceFrom, insurance_to: insuranceTo, comment: insuranceComment };
+        payload = {
+          car_id: carId,
+          insurance_date: insuranceDate,
+          insurance_from: insuranceFrom,
+          insurance_to: insuranceTo,
+          comment: insuranceComment,
+          insurance_cost: insuranceCost ? parseFloat(insuranceCost) : 0
+        };
       } else if (type === "misc") {
         if (!miscAmount) throw new Error("Please specify charges amount");
         payload = { car_id: carId, amount: parseFloat(miscAmount), comment: miscComment };
@@ -167,17 +181,60 @@ export default function CarDetailPage() {
       if (isAdmin) {
         // Admin executes directly
         let table = "";
-        let insertData = {};
-        if (type === "km") { table = "car_km_history"; insertData = payload; }
-        else if (type === "service") { table = "car_service_history"; insertData = payload; }
-        else if (type === "fuel") { table = "car_fuel_history"; insertData = payload; }
-        else if (type === "insurance") { table = "car_insurance_history"; insertData = payload; }
-        else if (type === "misc") { table = "car_misc_history"; insertData = payload; }
-        else if (type === "driver") { table = "car_driver_history"; insertData = payload; }
+        let insertData = { ...payload };
+
+        // Remove extra UI cost fields not in DB schema before inserting to history tables
+        if (type === "service") {
+          table = "car_service_history";
+          delete insertData.service_cost;
+        } else if (type === "insurance") {
+          table = "car_insurance_history";
+          delete insertData.insurance_cost;
+        } else if (type === "km") { table = "car_km_history"; }
+        else if (type === "fuel") { table = "car_fuel_history"; }
+        else if (type === "misc") { table = "car_misc_history"; }
+        else if (type === "driver") { table = "car_driver_history"; }
 
         const { error } = await supabase.from(table).insert([insertData]);
         if (error) throw error;
-        alert("Record logged successfully.");
+
+        // Auto raise expense ticket for costs
+        const carReg = car.registration_name;
+        if (type === "fuel") {
+          await supabase.from("expense_reports").insert([{
+            amount: parseFloat(payload.money),
+            category: "Fuel",
+            comment: `[${carReg}] Fuel Fill: ${payload.liters}L - ${payload.comment || 'No remarks'}`,
+            status: "pending",
+            requested_by: "admin"
+          }]);
+        } else if (type === "misc") {
+          await supabase.from("expense_reports").insert([{
+            amount: parseFloat(payload.amount),
+            category: "Misc",
+            comment: `[${carReg}] Misc Charge: ${payload.comment}`,
+            status: "pending",
+            requested_by: "admin"
+          }]);
+        } else if (type === "service" && payload.service_cost > 0) {
+          await supabase.from("expense_reports").insert([{
+            amount: payload.service_cost,
+            category: "Maintenance",
+            comment: `[${carReg}] Servicing Cost: ${payload.comment}`,
+            status: "pending",
+            requested_by: "admin"
+          }]);
+        } else if (type === "insurance" && payload.insurance_cost > 0) {
+          await supabase.from("expense_reports").insert([{
+            amount: payload.insurance_cost,
+            category: "Insurance",
+            comment: `[${carReg}] Insurance Policy: ${payload.comment || 'Renewed'}`,
+            status: "pending",
+            requested_by: "admin"
+          }]);
+        }
+
+        alert("Record logged successfully and expense report ticket created.");
       } else {
         // Staff requests
         const { error } = await supabase.from("fleet_requests").insert([{
@@ -187,14 +244,14 @@ export default function CarDetailPage() {
           status: "pending"
         }]);
         if (error) throw error;
-        alert("Log request submitted to Admin for approval.");
+        alert("Log and expense request submitted to Admin for approval.");
       }
 
       // Reset forms
       setKmVal(""); setKmComment("");
-      setServiceDate(""); setServiceComment("");
+      setServiceDate(""); setServiceComment(""); setServiceCost("");
       setFuelLiters(""); setFuelMoney(""); setFuelComment("");
-      setInsuranceDate(""); setInsuranceFrom(""); setInsuranceTo(""); setInsuranceComment("");
+      setInsuranceDate(""); setInsuranceFrom(""); setInsuranceTo(""); setInsuranceComment(""); setInsuranceCost("");
       setMiscAmount(""); setMiscComment("");
       setAssignDriverId("");
       setShowLogForm(null);
@@ -348,10 +405,14 @@ export default function CarDetailPage() {
               )}
 
               {showLogForm === "service" && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: "1rem" }}>
                   <div className="form-group">
                     <label className="form-label">Date of Service</label>
                     <input type="date" className="form-input" value={serviceDate} onChange={(e) => setServiceDate(e.target.value)} required />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Cost of Service (₹)</label>
+                    <input type="number" className="form-input" placeholder="Optional service cost" value={serviceCost} onChange={(e) => setServiceCost(e.target.value)} />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Details / Comment</label>
@@ -378,7 +439,7 @@ export default function CarDetailPage() {
               )}
 
               {showLogForm === "insurance" && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "1rem" }}>
                   <div className="form-group">
                     <label className="form-label">Date Insured</label>
                     <input type="date" className="form-input" value={insuranceDate} onChange={(e) => setInsuranceDate(e.target.value)} required />
@@ -392,6 +453,10 @@ export default function CarDetailPage() {
                     <input type="date" className="form-input" value={insuranceTo} onChange={(e) => setInsuranceTo(e.target.value)} required />
                   </div>
                   <div className="form-group">
+                    <label className="form-label">Policy Cost (₹)</label>
+                    <input type="number" className="form-input" placeholder="Policy amount" value={insuranceCost} onChange={(e) => setInsuranceCost(e.target.value)} />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: "span 2" }}>
                     <label className="form-label">Provider / Policy Info</label>
                     <input type="text" className="form-input" placeholder="Policy details" value={insuranceComment} onChange={(e) => setInsuranceComment(e.target.value)} />
                   </div>
