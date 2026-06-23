@@ -14,6 +14,7 @@ export default function AdminPage() {
     pendingInvoicesCount: 0,
     pendingExpensesCount: 0,
     pendingPaymentsCount: 0,
+    totalCarsCount: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -48,11 +49,17 @@ export default function AdminPage() {
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
 
+      // 5. Total Cars
+      const { count: carsCount } = await supabase
+        .from("cars")
+        .select("*", { count: "exact", head: true });
+        
       setStats({
         approvedBillsCount: billsCount || 0,
         pendingInvoicesCount: pendingInvoices || 0,
         pendingExpensesCount: pendingExpenses || 0,
         pendingPaymentsCount: pendingPayments || 0,
+        totalCarsCount: carsCount || 0,
       });
     } catch (err) {
       console.error("Error loading dashboard stats:", err);
@@ -84,6 +91,11 @@ export default function AdminPage() {
     { href: `${prefix}/expenses`, icon: "📋", label: "Expense Requests", desc: "Track and manage expense submissions" },
     { href: `${prefix}/payment-request`, icon: "🏷", label: "Payment Requests", desc: "Track payment acknowledgement logs" },
     { href: `${prefix}/audit-log`, icon: "📜", label: "Audit Log", desc: "Unified timeline logs of all updates" },
+  ];
+
+  const fleetActions = [
+    { href: `${prefix}/cars`, icon: "🚗", label: "Cars Profile", desc: "View vehicle logs, service records, and fuel history" },
+    { href: `${prefix}/drivers`, icon: "👤", label: "Manage Drivers", desc: "Register drivers and view contact details" },
   ];
 
   return (
@@ -206,6 +218,26 @@ export default function AdminPage() {
               Awaiting Approval
             </span>
           </div>
+
+          {/* Card 5: Fleet Vehicles */}
+          <div className="card fade-in" style={{
+            background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
+            border: "1px solid #d1d5db",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.25rem",
+            padding: "1.25rem"
+          }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Fleet Vehicles
+            </span>
+            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1f2937" }}>
+              {stats.totalCarsCount}
+            </span>
+            <span style={{ fontSize: "0.7rem", color: "#4b5563", fontWeight: 500 }}>
+              Registered Fleet
+            </span>
+          </div>
         </div>
       )}
 
@@ -260,6 +292,26 @@ export default function AdminPage() {
           gap: "0.875rem",
         }}>
           {reviewActions.map((action) => (
+            <Link key={action.href} href={action.href} className="action-card fade-in">
+              <div className="action-card-icon">{action.icon}</div>
+              <div>
+                <div className="action-card-label">{action.label}</div>
+                <div className="action-card-desc">{action.desc}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* Section 4: Fleet & Vehicles */}
+      <div style={{ marginBottom: "2rem" }}>
+        <p className="section-title" style={{ marginBottom: "0.75rem" }}>🚗 Fleet &amp; Vehicles</p>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+          gap: "0.875rem",
+        }}>
+          {fleetActions.map((action) => (
             <Link key={action.href} href={action.href} className="action-card fade-in">
               <div className="action-card-icon">{action.icon}</div>
               <div>
