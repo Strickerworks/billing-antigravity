@@ -21,7 +21,6 @@ export default function AuditLogPage() {
     setLoading(true);
     let query = supabase.from("audit_logs").select("*").order("submitted_at", { ascending: false });
 
-    // Client-side or database filters
     const { data, error } = await query;
     if (error) {
       console.error("Error fetching audit logs:", error);
@@ -37,6 +36,23 @@ export default function AuditLogPage() {
         });
       }
       setLogs(filteredData);
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteLog = async (logId) => {
+    if (!confirm("Are you sure you want to permanently delete this audit log record? This cannot be undone.")) {
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from("audit_logs").delete().eq("id", logId);
+    if (error) {
+      console.error("Error deleting audit log:", error);
+      alert("Failed to delete log record.");
+    } else {
+      alert("Audit log record deleted.");
+      setSelectedLog(null);
+      fetchLogs();
     }
     setLoading(false);
   };
@@ -65,6 +81,8 @@ export default function AuditLogPage() {
         return { backgroundColor: "#f3f4f6", color: "#374151", textDecoration: "line-through", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
       case "edited":
         return { backgroundColor: "#e0f2fe", color: "#075985", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
+      case "reverted":
+        return { backgroundColor: "#f5f5f5", color: "#6b7280", border: "1px dashed #d1d5db", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
       default:
         return { backgroundColor: "#e5e7eb", color: "#111111", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
     }
@@ -159,7 +177,7 @@ export default function AuditLogPage() {
                     <th>Submitted At</th>
                     <th>Action/Status</th>
                     <th>Processed By</th>
-                    <th>Details</th>
+                    <th style={{ textAlign: "center" }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -187,9 +205,20 @@ export default function AuditLogPage() {
                         )}
                       </td>
                       <td>
-                        <button onClick={() => setSelectedLog(log)} className="btn btn-sm btn-secondary">
-                          View
-                        </button>
+                        <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
+                          <button onClick={() => setSelectedLog(log)} className="btn btn-sm btn-secondary">
+                            View
+                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDeleteLog(log.id)}
+                              className="btn btn-sm btn-outline"
+                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)" }}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -202,7 +231,7 @@ export default function AuditLogPage() {
         {/* Sidebar Details Panel */}
         {selectedLog && (
           <div className="card fade-in" style={{ border: "1px solid #e5e7eb", padding: "1.25rem" }}>
-            <div style={{ display: "flex", justifyPosition: "space-between", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <div>
                 <p style={{ fontWeight: 700, margin: 0, fontSize: "0.95rem" }}>Log Payload Details</p>
                 <span style={{ fontSize: "0.72rem", color: "#6b7280" }}>
