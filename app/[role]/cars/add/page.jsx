@@ -58,25 +58,20 @@ export default function AddCarPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
-      <div style={{ padding: "1.5rem 0 1rem" }}>
-        <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.5rem" }}>
-          <Link href={`/${role}`} style={{ color: "#6b7280" }}>Home</Link> / 
-          <Link href={`/${role}/cars`} style={{ color: "#6b7280" }}>Fleet</Link> /
-          <span>Add</span>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
-              {isAdmin ? "Register New Vehicle" : "Request Vehicle Registration"}
-            </h1>
-            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-              Provide registration details to add a new car to the fleet.
-            </p>
-          </div>
-          <Link href={`/${role}/cars`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
+      <div style={{ paddingTop: "1rem" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          <Link href={`/${role}/cars`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
             ← Back to Fleet Registry
           </Link>
+        </div>
+
+        <div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+            {isAdmin ? "Register New Vehicle" : "Request Vehicle Registration"}
+          </h1>
+          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+            Provide registration details to add a new car to the fleet.
+          </p>
         </div>
       </div>
 

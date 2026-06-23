@@ -72,26 +72,20 @@ export default function AddDriverPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
-      {/* Breadcrumb & Header */}
-      <div style={{ padding: "1.5rem 0 1rem" }}>
-        <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.5rem" }}>
-          <Link href={`/${role}`} style={{ color: "#6b7280" }}>Home</Link> / 
-          <Link href={`/${role}/drivers`} style={{ color: "#6b7280" }}>Drivers</Link> /
-          <span>Add</span>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
-              {isAdmin ? "Register New Driver" : "Request Driver Registration"}
-            </h1>
-            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-              Provide driver details to add them to the active fleet.
-            </p>
-          </div>
-          <Link href={`/${role}/drivers`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
+      <div style={{ paddingTop: "1rem" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          <Link href={`/${role}/drivers`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
             ← Back to Registry
           </Link>
+        </div>
+
+        <div>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+            {isAdmin ? "Register New Driver" : "Request Driver Registration"}
+          </h1>
+          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+            Provide driver details to add them to the active fleet.
+          </p>
         </div>
       </div>
 
