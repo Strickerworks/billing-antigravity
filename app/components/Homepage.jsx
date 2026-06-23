@@ -57,15 +57,33 @@ export default function Homepage() {
     actions.push({
       href: "/admin/requests",
       icon: "✉",
-      label: "Approval Requests",
+      label: "Invoice Requests",
       description: "Review and approve/reject staff billing updates",
+    });
+    actions.push({
+      href: "/admin/expenses",
+      icon: "💸",
+      label: "Expense Requests",
+      description: "Review and manage business expenses",
     });
   } else {
     actions.push({
       href: "/staff/requests",
       icon: "✉",
-      label: "Request Status",
+      label: "Invoice Requests",
       description: "Track status of your submitted change requests",
+    });
+    actions.push({
+      href: "/staff/expenses",
+      icon: "💸",
+      label: "Expense Requests",
+      description: "Submit and track business expenses",
+    });
+    actions.push({
+      href: "/staff/payment-request",
+      icon: "💳",
+      label: "Payment Requests",
+      description: "Acknowledge and request approval for customer payments",
     });
   }
 
@@ -120,7 +138,7 @@ export default function Homepage() {
       </div>
 
       <div className="footer">
-        © 2025 The Heritage Group · All rights reserved
+        © 2026 The Heritage Group · All rights reserved
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
+import { logAudit } from "@/utils/supabase/audit";
 
 export default function RequestsPage() {
   const [requests, setRequests] = useState([]);
@@ -10,9 +11,16 @@ export default function RequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState(null); // For detail preview sidebar
   const [originalInvoice, setOriginalInvoice] = useState(null); // For diff comparison
   const [loadingOriginal, setLoadingOriginal] = useState(false);
+
+  // Edit Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingRequest, setEditingRequest] = useState(null);
+  const [editForm, setEditForm] = useState({});
+
   const router = useRouter();
   const { role } = useParams();
   const isAdmin = role === "admin";
+  const isStaff = role === "staff";
 
   useEffect(() => {
     fetchRequests();
@@ -97,6 +105,17 @@ export default function RequestsPage() {
     if (updateError) {
       console.error("Error updating request status:", updateError);
       alert("Invoice was created, but failed to mark request status as approved.");
+    } else {
+      await logAudit({
+        requestId: req.id,
+        requestType: `bill_pass_${req.request_type}`,
+        submittedBy: req.requested_by || "staff",
+        submittedAt: req.created_at,
+        status: "Approved",
+        actionBy: "admin",
+        actionAt: new Date().toISOString(),
+        payload: req.data,
+      });
     }
 
     setSelectedRequest(null);
@@ -117,28 +136,152 @@ export default function RequestsPage() {
     if (error) {
       console.error("Error rejecting request:", error);
       alert("Failed to reject request.");
+    } else {
+      await logAudit({
+        requestId: req.id,
+        requestType: `bill_pass_${req.request_type}`,
+        submittedBy: req.requested_by || "staff",
+        submittedAt: req.created_at,
+        status: "Rejected",
+        actionBy: "admin",
+        actionAt: new Date().toISOString(),
+        payload: req.data,
+      });
     }
 
     setSelectedRequest(null);
     fetchRequests();
   };
 
+  const handleDelete = async (req) => {
+    if (!confirm("Are you sure you want to cancel and delete this pending invoice request? This cannot be undone.")) {
+      return;
+    }
+    setLoading(true);
+
+    await logAudit({
+      requestId: req.id,
+      requestType: `bill_pass_${req.request_type}`,
+      submittedBy: req.requested_by || "staff",
+      submittedAt: req.created_at,
+      status: "Deleted",
+      actionBy: "staff",
+      actionAt: new Date().toISOString(),
+      payload: req.data,
+    });
+
+    const { error } = await supabase.from("billing_requests").delete().eq("id", req.id);
+
+    if (error) {
+      console.error("Error deleting request:", error);
+      alert("Failed to delete request.");
+    } else {
+      alert("Request deleted successfully.");
+    }
+
+    setSelectedRequest(null);
+    fetchRequests();
+  };
+
+  const openEditModal = (req) => {
+    setEditingRequest(req);
+    setEditForm({
+      customer_name: req.data?.customer_name || "",
+      customer_gst: req.data?.customer_gst || "",
+      grand_total: req.data?.grand_total || 0,
+      payment_account: req.data?.payment_account || "",
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingRequest) return;
+    setLoading(true);
+
+    const updateData = {
+      data: {
+        ...editingRequest.data,
+        customer_name: editForm.customer_name,
+        customer_gst: editForm.customer_gst,
+        grand_total: parseFloat(editForm.grand_total),
+        payment_account: editForm.payment_account,
+      },
+    };
+
+    const { error } = await supabase
+      .from("billing_requests")
+      .update(updateData)
+      .eq("id", editingRequest.id);
+
+    if (error) {
+      console.error("Error updating request:", error);
+      alert("Failed to update request.");
+    } else {
+      await logAudit({
+        requestId: editingRequest.id,
+        requestType: `bill_pass_${editingRequest.request_type}`,
+        submittedBy: editingRequest.requested_by || "staff",
+        submittedAt: editingRequest.created_at,
+        status: "Edited",
+        actionBy: "staff",
+        actionAt: new Date().toISOString(),
+        payload: updateData.data,
+      });
+
+      alert("Invoice request updated successfully.");
+      setIsEditModalOpen(false);
+      setSelectedRequest(null);
+      fetchRequests();
+    }
+  };
+
   const formatDate = (isoDate) => {
     if (!isoDate) return "—";
     const date = new Date(isoDate);
-    return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
-  const fmt = (num) => `₹${parseFloat(num || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+  const fmt = (num) =>
+    `₹${parseFloat(num || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 
   const getStatusStyle = (status) => {
     switch (status) {
       case "approved":
-        return { backgroundColor: "#111111", color: "#ffffff", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
+        return {
+          backgroundColor: "#111111",
+          color: "#ffffff",
+          padding: "0.25rem 0.6rem",
+          borderRadius: "100px",
+          fontSize: "0.75rem",
+          fontWeight: 600,
+        };
       case "rejected":
-        return { backgroundColor: "#e5e7eb", color: "#6b7280", textDecoration: "line-through", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
+        return {
+          backgroundColor: "#e5e7eb",
+          color: "#6b7280",
+          textDecoration: "line-through",
+          padding: "0.25rem 0.6rem",
+          borderRadius: "100px",
+          fontSize: "0.75rem",
+          fontWeight: 600,
+        };
       default:
-        return { backgroundColor: "#e5e7eb", color: "#111111", border: "1px solid #d1d5db", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
+        return {
+          backgroundColor: "#e5e7eb",
+          color: "#111111",
+          border: "1px solid #d1d5db",
+          padding: "0.25rem 0.6rem",
+          borderRadius: "100px",
+          fontSize: "0.75rem",
+          fontWeight: 600,
+        };
     }
   };
 
@@ -157,7 +300,6 @@ export default function RequestsPage() {
     if (!selectedRequest) return [];
     const proposed = selectedRequest.data;
 
-    // For new/duplicate requests, everything is new, so show core creation details
     if (selectedRequest.request_type !== "update") {
       return [
         { field: "Customer Name", oldVal: "None (New Invoice)", newVal: proposed.customer_name },
@@ -165,7 +307,7 @@ export default function RequestsPage() {
         { field: "Bill Date", oldVal: "None (New Invoice)", newVal: proposed.bill_date },
         { field: "Grand Total", oldVal: "None (New Invoice)", newVal: fmt(proposed.grand_total) },
         { field: "Payment Account", oldVal: "None (New Invoice)", newVal: proposed.payment_account || "—" },
-        { field: "Items List", oldVal: "None (New Invoice)", newVal: `${proposed.content?.length || 0} items` }
+        { field: "Items List", oldVal: "None (New Invoice)", newVal: `${proposed.content?.length || 0} items` },
       ];
     }
 
@@ -186,8 +328,8 @@ export default function RequestsPage() {
       if (oldV !== newV) {
         diffs.push({
           field: label,
-          oldVal: isAmount ? fmt(oldV) : (oldV || "—"),
-          newVal: isAmount ? fmt(newV) : (newV || "—")
+          oldVal: isAmount ? fmt(oldV) : oldV || "—",
+          newVal: isAmount ? fmt(newV) : newV || "—",
         });
       }
     };
@@ -201,7 +343,6 @@ export default function RequestsPage() {
     compareField("IGST %", "igst_percentage");
     compareField("Grand Total", "grand_total", true);
 
-    // Compare content items
     const oldContentStr = JSON.stringify(original.content || []);
     const newContentStr = JSON.stringify(proposed.content || []);
     if (oldContentStr !== newContentStr) {
@@ -209,11 +350,10 @@ export default function RequestsPage() {
         field: "Items List",
         oldVal: `${original.content?.length || 0} items`,
         newVal: `${proposed.content?.length || 0} items`,
-        itemsChanged: true
+        itemsChanged: true,
       });
     }
 
-    // Compare additional charges
     const oldAddStr = JSON.stringify(original.additional_charges || []);
     const newAddStr = JSON.stringify(proposed.additional_charges || []);
     if (oldAddStr !== newAddStr) {
@@ -221,7 +361,7 @@ export default function RequestsPage() {
         field: "Additional Charges",
         oldVal: `${original.additional_charges?.length || 0} charges`,
         newVal: `${proposed.additional_charges?.length || 0} charges`,
-        addChargesChanged: true
+        addChargesChanged: true,
       });
     }
 
@@ -229,12 +369,12 @@ export default function RequestsPage() {
   };
 
   const diffs = getDifferences();
-  const itemsChanged = diffs.some(d => d.itemsChanged);
+  const itemsChanged = diffs.some((d) => d.itemsChanged);
 
   return (
     <div className="page-content" style={{ position: "relative" }}>
-      {/* Responsive stylesheet for the requests layout */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .requests-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -257,21 +397,21 @@ export default function RequestsPage() {
             grid-template-columns: 1fr;
           }
         }
-      `}} />
+      `,
+      }} />
 
       {/* Header */}
       <div className="page-header">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <h1 className="page-title">{isAdmin ? "Approval Requests" : "My Requests"}</h1>
+            <h1 className="page-title">{isAdmin ? "Invoice Requests" : "Invoice Requests"}</h1>
             <p className="page-subtitle">
-              {isAdmin ? "Manage and approve billing updates made by staff members." : "Track status of your submitted invoice change requests."}
+              {isAdmin
+                ? "Review and approve billing creations, updates, or duplicates."
+                : "Track, edit, or cancel your submitted invoice change requests."}
             </p>
           </div>
-          <button
-            onClick={() => router.push(`/${role}`)}
-            className="btn btn-secondary"
-          >
+          <button onClick={() => router.push(`/${role}`)} className="btn btn-secondary">
             ← Back to Dashboard
           </button>
         </div>
@@ -302,10 +442,8 @@ export default function RequestsPage() {
           ) : requests.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">✉</div>
-              <div className="empty-state-text">No requests found</div>
-              <div className="empty-state-sub">
-                No change requests are currently recorded in the system.
-              </div>
+              <div className="empty-state-text">No invoice requests found</div>
+              <div className="empty-state-sub">No invoice requests are currently pending.</div>
             </div>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -339,13 +477,11 @@ export default function RequestsPage() {
                       </td>
                       <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
                       <td style={{ textAlign: "center" }}>
-                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                          <button
-                            onClick={() => setSelectedRequest(req)}
-                            className="btn btn-sm btn-secondary"
-                          >
+                        <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
+                          <button onClick={() => setSelectedRequest(req)} className="btn btn-sm btn-secondary">
                             Details
                           </button>
+
                           {isAdmin && req.status === "pending" && (
                             <>
                               <button
@@ -361,6 +497,25 @@ export default function RequestsPage() {
                                 style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
                               >
                                 Reject
+                              </button>
+                            </>
+                          )}
+
+                          {!isAdmin && req.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => openEditModal(req)}
+                                className="btn btn-sm btn-outline"
+                                style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDelete(req)}
+                                className="btn btn-sm btn-outline"
+                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                              >
+                                Cancel
                               </button>
                             </>
                           )}
@@ -393,7 +548,7 @@ export default function RequestsPage() {
                 ✕
               </button>
             </div>
-            
+
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.825rem" }}>
               {diffs.length === 0 ? (
                 <p style={{ color: "#6b7280", textAlign: "center", margin: "1rem 0" }}>
@@ -406,68 +561,36 @@ export default function RequestsPage() {
                       <p style={{ fontWeight: 600, margin: "0 0 0.25rem", color: "#4b5563", fontSize: "0.78rem" }}>
                         {diff.field}
                       </p>
-                      {selectedRequest.request_type === "update" ? (
+                      {selectedRequest.request_type === "update" && diff.oldVal !== undefined ? (
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                           <span style={{ color: "#9ca3af", textDecoration: "line-through", whiteSpace: "nowrap" }}>
                             {diff.oldVal}
                           </span>
                           <span style={{ color: "#9ca3af" }}>&rarr;</span>
-                          <strong style={{ color: "#111111" }}>
-                            {diff.newVal}
-                          </strong>
+                          <strong style={{ color: "#111111" }}>{diff.newVal}</strong>
                         </div>
                       ) : (
-                        <strong style={{ color: "#111111" }}>
-                          {diff.newVal}
-                        </strong>
+                        <strong style={{ color: "#111111" }}>{diff.newVal}</strong>
                       )}
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Items Side-by-Side Comparison (only for update requests when content changed) */}
-              {selectedRequest.request_type === "update" && itemsChanged && originalInvoice && (
-                <div style={{ marginTop: "0.25rem" }}>
-                  <p style={{ fontWeight: 600, color: "#4b5563", margin: "0 0 0.35rem", fontSize: "0.78rem" }}>
-                    Items Comparison:
-                  </p>
-                  <div className="comparison-grid">
-                    <div>
-                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 600 }}>Original:</span>
-                      <div style={{ maxHeight: "160px", overflowY: "auto", background: "#f9fafb", borderRadius: "6px", padding: "0.4rem", border: "1px solid #e5e7eb", fontSize: "0.72rem" }}>
-                        {originalInvoice.content?.map((item, idx) => (
-                          <div key={idx} style={{ borderBottom: idx < originalInvoice.content.length - 1 ? "1px dashed #e5e7eb" : "none", paddingBottom: "4px", marginBottom: "4px" }}>
-                            <strong>{item.sno}. {item.description}</strong><br />
-                            <span style={{ color: "#6b7280" }}>{item.unit} x {fmt(item.rate)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", fontWeight: 600 }}>Proposed:</span>
-                      <div style={{ maxHeight: "160px", overflowY: "auto", background: "#f9fafb", borderRadius: "6px", padding: "0.4rem", border: "1px solid #e5e7eb", fontSize: "0.72rem" }}>
-                        {selectedRequest.data?.content?.map((item, idx) => (
-                          <div key={idx} style={{ borderBottom: idx < selectedRequest.data.content.length - 1 ? "1px dashed #e5e7eb" : "none", paddingBottom: "4px", marginBottom: "4px" }}>
-                            <strong>{item.sno}. {item.description}</strong><br />
-                            <span style={{ color: "#6b7280" }}>{item.unit} x {fmt(item.rate)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Items Summary list (only for CREATE / DUPLICATE requests) */}
+              {/* Items Summary (for Billing Create/Duplicate) */}
               {selectedRequest.request_type !== "update" && (
                 <div>
-                  <p style={{ fontWeight: 600, color: "#374151", margin: "0.5rem 0 0.25rem", fontSize: "0.8rem" }}>Content Summary:</p>
+                  <p style={{ fontWeight: 600, color: "#374151", margin: "0.5rem 0 0.25rem", fontSize: "0.8rem" }}>
+                    Content Summary:
+                  </p>
                   <div style={{ maxHeight: "150px", overflowY: "auto", background: "#f9fafb", borderRadius: "6px", padding: "0.5rem", border: "1px solid #f3f4f6" }}>
                     {selectedRequest.data?.content?.map((item, idx) => (
                       <div key={idx} style={{ padding: "0.25rem 0", fontSize: "0.75rem", borderBottom: idx < selectedRequest.data.content.length - 1 ? "1px dashed #e5e7eb" : "none" }}>
-                        <strong>{item.sno}. {item.description}</strong><br />
-                        <span style={{ color: "#6b7280" }}>{item.unit} Unit @ {fmt(item.rate)} = {fmt(item.amount)}</span>
+                        <strong>{item.sno}. {item.description}</strong>
+                        <br />
+                        <span style={{ color: "#6b7280" }}>
+                          {item.unit} Unit @ {fmt(item.rate)} = {fmt(item.amount)}
+                        </span>
                       </div>
                     )) || <p style={{ margin: 0, color: "#9ca3af" }}>No items found</p>}
                   </div>
@@ -476,11 +599,7 @@ export default function RequestsPage() {
 
               {isAdmin && selectedRequest.status === "pending" && (
                 <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
-                  <button
-                    onClick={() => handleApprove(selectedRequest)}
-                    className="btn btn-primary"
-                    style={{ flex: 1, padding: "0.5rem" }}
-                  >
+                  <button onClick={() => handleApprove(selectedRequest)} className="btn btn-primary" style={{ flex: 1, padding: "0.5rem" }}>
                     Approve
                   </button>
                   <button
@@ -496,6 +615,76 @@ export default function RequestsPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && editingRequest && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
+        }}>
+          <div className="card fade-in" style={{ width: "90%", maxWidth: "500px", padding: "1.5rem", position: "relative" }}>
+            <p className="card-title" style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
+              Edit Pending Invoice Request
+            </p>
+            <form onSubmit={handleEditSubmit}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div>
+                  <label className="form-label">Customer Name</label>
+                  <input
+                    type="text"
+                    value={editForm.customer_name}
+                    onChange={(e) => setEditForm({ ...editForm, customer_name: e.target.value })}
+                    className="form-input"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Customer GST</label>
+                  <input
+                    type="text"
+                    value={editForm.customer_gst}
+                    onChange={(e) => setEditForm({ ...editForm, customer_gst: e.target.value })}
+                    className="form-input"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Grand Total (₹)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editForm.grand_total}
+                    onChange={(e) => setEditForm({ ...editForm, grand_total: e.target.value })}
+                    className="form-input"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="form-label">Payment Account</label>
+                  <select
+                    value={editForm.payment_account}
+                    onChange={(e) => setEditForm({ ...editForm, payment_account: e.target.value })}
+                    className="form-select"
+                  >
+                    <option value="">Select Account</option>
+                    <option value="Bank of India - THE HERITAGE TRAVEL">Bank of India — Heritage Travel</option>
+                    <option value="ICICI Bank - THE HERITAGE GROUP">ICICI Bank — Heritage Group</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.5rem", justifyContent: "flex-end" }}>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="btn btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

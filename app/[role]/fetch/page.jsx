@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 
 export default function FetchInvoice() {
   const [invoices, setInvoices] = useState([]);
+  const [paymentRequests, setPaymentRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -12,22 +13,29 @@ export default function FetchInvoice() {
   const isAdmin = role === "admin";
 
   useEffect(() => {
-    fetchAllInvoices();
+    fetchData();
   }, []);
 
-  const fetchAllInvoices = async () => {
+  const fetchData = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    // Fetch invoices
+    const { data: invoicesData, error: invoicesError } = await supabase
       .from("billdata")
       .select("*")
       .eq("active_status", "active")
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching invoices:", error);
+    // Fetch payment requests
+    const { data: reqsData, error: reqsError } = await supabase
+      .from("payment_acknowledgement_requests")
+      .select("*");
+
+    if (invoicesError || reqsError) {
+      console.error("Error fetching data:", invoicesError || reqsError);
       alert("Could not load invoices.");
     } else {
-      setInvoices(data);
+      setInvoices(invoicesData || []);
+      setPaymentRequests(reqsData || []);
     }
     setLoading(false);
   };
@@ -47,8 +55,26 @@ export default function FetchInvoice() {
       alert("Failed to delete invoice.");
       setLoading(false);
     } else {
-      fetchAllInvoices();
+      fetchData();
     }
+  };
+
+  const getInvoicePaymentStatus = (invoice) => {
+    // If invoice says received, it is received
+    if (invoice.payment_status === "Received") {
+      return { label: "Received", style: { backgroundColor: "#111111", color: "#ffffff" } };
+    }
+
+    // Otherwise check if there is a pending request
+    const pendingReq = paymentRequests.find(
+      (r) => r.invoice_no === invoice.invoice_no && r.status === "pending"
+    );
+    if (pendingReq) {
+      return { label: "Pending Approval", style: { backgroundColor: "#f59e0b", color: "#ffffff" } };
+    }
+
+    // Default
+    return { label: "Not Received", style: { backgroundColor: "#e5e7eb", color: "#6b7280" } };
   };
 
   const filteredInvoices = invoices.filter((invoice) => {
@@ -74,7 +100,8 @@ export default function FetchInvoice() {
     return date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
   };
 
-  const fmt = (num) => `₹${parseFloat(num || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+  const fmt = (num) =>
+    `₹${parseFloat(num || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
 
   return (
     <div className="page-content">
@@ -83,13 +110,14 @@ export default function FetchInvoice() {
           <div>
             <h1 className="page-title">All Invoices</h1>
             <p className="page-subtitle">
-              {loading ? "Loading..." : `${filteredInvoices.length} invoice${filteredInvoices.length !== 1 ? "s" : ""}${searchTerm ? " found" : " total"}`}
+              {loading
+                ? "Loading..."
+                : `${filteredInvoices.length} invoice${filteredInvoices.length !== 1 ? "s" : ""}${
+                    searchTerm ? " found" : " total"
+                  }`}
             </p>
           </div>
-          <button
-            onClick={() => router.push(`/${role}/add-invoice`)}
-            className="btn btn-primary"
-          >
+          <button onClick={() => router.push(`/${role}/add-invoice`)} className="btn btn-primary">
             + New Invoice
           </button>
         </div>
@@ -134,49 +162,63 @@ export default function FetchInvoice() {
                   <th>Customer</th>
                   <th>GST No.</th>
                   <th>Date</th>
+                  <th>Payment</th>
                   <th style={{ textAlign: "right" }}>Grand Total</th>
                   <th style={{ textAlign: "center" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredInvoices.map((inv) => (
-                  <tr key={inv.invoice_no} className="fade-in">
-                    <td>
-                      <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{inv.invoice_no}</span>
-                    </td>
-                    <td style={{ fontWeight: 500 }}>{inv.customer_name}</td>
-                    <td style={{ color: "#9ca3af", fontFamily: "monospace", fontSize: "0.8rem" }}>{inv.customer_gst}</td>
-                    <td style={{ color: "#6b7280" }}>{formatDate(inv.created_at)}</td>
-                    <td style={{ textAlign: "right", fontWeight: 600, color: "#1a1d23" }}>
-                      {fmt(inv.grand_total)}
-                    </td>
-                    <td style={{ textAlign: "center" }}>
-                      <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                        <button
-                          onClick={() => handleView(inv.invoice_no)}
-                          className="btn btn-sm btn-secondary"
+                {filteredInvoices.map((inv) => {
+                  const pStatus = getInvoicePaymentStatus(inv);
+                  return (
+                    <tr key={inv.invoice_no} className="fade-in">
+                      <td>
+                        <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{inv.invoice_no}</span>
+                      </td>
+                      <td style={{ fontWeight: 500 }}>{inv.customer_name}</td>
+                      <td style={{ color: "#9ca3af", fontFamily: "monospace", fontSize: "0.8rem" }}>
+                        {inv.customer_gst}
+                      </td>
+                      <td style={{ color: "#6b7280" }}>{formatDate(inv.bill_date)}</td>
+                      <td>
+                        <span
+                          style={{
+                            padding: "0.25rem 0.6rem",
+                            borderRadius: "100px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            ...pStatus.style,
+                          }}
                         >
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleEdit(inv.invoice_no)}
-                          className="btn btn-sm btn-outline"
-                        >
-                          Edit
-                        </button>
-                        {isAdmin && (
-                          <button
-                            onClick={() => handleDelete(inv.invoice_no)}
-                            className="btn btn-sm btn-outline"
-                            style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)" }}
-                          >
-                            Delete
+                          {pStatus.label}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "right", fontWeight: 600, color: "#1a1d23" }}>
+                        {fmt(inv.grand_total)}
+                      </td>
+                      <td style={{ textAlign: "center" }}>
+                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", alignItems: "center" }}>
+                          <button onClick={() => handleView(inv.invoice_no)} className="btn btn-sm btn-secondary">
+                            View
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <button onClick={() => handleEdit(inv.invoice_no)} className="btn btn-sm btn-outline">
+                            Edit
+                          </button>
+
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDelete(inv.invoice_no)}
+                              className="btn btn-sm btn-outline"
+                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)" }}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

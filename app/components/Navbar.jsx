@@ -1,32 +1,35 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { usePathname, useParams } from "next/navigation";
+import { useState, useEffect, useRef } from "react";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const params = useParams();
+  const role = params.role || (pathname.startsWith("/admin") ? "admin" : "staff");
+  const isStaff = role === "staff";
+  const isAdmin = role === "admin";
+  const prefix = `/${role}`;
+
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null); // 'invoice', 'requests', 'track'
+  const dropdownRef = useRef(null);
 
-  const isStaff = pathname.startsWith("/staff");
-  const prefix = isStaff ? "/staff" : "/admin";
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  const navLinks = [
-    { href: `${prefix}`, label: "Home" },
-    { href: `${prefix}/add-invoice`, label: "New Invoice" },
-    { href: `${prefix}/fetch`, label: "All Invoices" },
-    { href: `${prefix}/edit`, label: "Edit" },
-    { href: `${prefix}/duplicate`, label: "Duplicate" },
-    { href: `${prefix}/print`, label: "Download" },
-    { href: `${prefix}/requests`, label: "Requests" },
-  ];
-
-  if (!isStaff) {
-    navLinks.push({ href: "/admin/recycle-bin", label: "Recycle Bin" });
-  }
-
-  // Close drawer on route change
+  // Close drawer/dropdowns on route change
   useEffect(() => {
     setDrawerOpen(false);
+    setActiveDropdown(null);
   }, [pathname]);
 
   // Prevent body scroll when drawer is open
@@ -39,25 +42,112 @@ export default function Navbar() {
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
+  // Dropdown Items Definition
+  const invoiceItems = [
+    { href: `${prefix}/add-invoice`, label: "New Invoice" },
+    { href: `${prefix}/fetch`, label: "All Invoices" },
+    { href: `${prefix}/edit`, label: "Edit Invoice" },
+    { href: `${prefix}/duplicate`, label: "Duplicate Invoice" },
+    { href: `${prefix}/view`, label: "View Invoice" },
+    { href: `${prefix}/print`, label: "Download PDF" },
+  ];
+  if (isAdmin) {
+    invoiceItems.push({ href: `${prefix}/recycle-bin`, label: "Recycle Bin" });
+  }
+
+  const requestItems = [
+    { href: `${prefix}/expenses/add`, label: "Add Expense" },
+    { href: `${prefix}/payment-request/add`, label: "Add Payment Request" },
+  ];
+
+  const trackItems = [
+    { href: `${prefix}/requests`, label: "Invoice Requests" },
+    { href: `${prefix}/expenses`, label: "Expense Requests" },
+    { href: `${prefix}/payment-request`, label: "Payment Requests" },
+    { href: `${prefix}/audit-log`, label: "Audit Log" },
+  ];
+
+  const toggleDropdown = (name) => {
+    if (activeDropdown === name) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(name);
+    }
+  };
+
   return (
     <>
-      <nav className="navbar">
+      <nav className="navbar" ref={dropdownRef}>
         <Link href={prefix} className="navbar-brand">
           <div className="navbar-brand-icon">H</div>
           <span className="navbar-brand-text">Heritage Invoice</span>
         </Link>
 
-        {/* Desktop links */}
-        <div className="navbar-links desktop-nav">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`nav-link ${pathname === link.href ? "active" : ""}`}
+        {/* Desktop links with Dropdowns */}
+        <div className="navbar-links desktop-nav" style={{ gap: "1rem", alignItems: "center" }}>
+          <Link href={prefix} className={`nav-link ${pathname === prefix ? "active" : ""}`}>
+            Home
+          </Link>
+
+          {/* 1. Invoice Dropdown */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => toggleDropdown("invoice")}
+              className={`nav-link ${activeDropdown === "invoice" ? "active" : ""}`}
+              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.25rem" }}
             >
-              {link.label}
-            </Link>
-          ))}
+              Invoice ▾
+            </button>
+            {activeDropdown === "invoice" && (
+              <div className="dropdown-menu">
+                {invoiceItems.map((item) => (
+                  <Link key={item.href} href={item.href} className="dropdown-item">
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 2. Requests Dropdown */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => toggleDropdown("requests")}
+              className={`nav-link ${activeDropdown === "requests" ? "active" : ""}`}
+              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.25rem" }}
+            >
+              Requests ▾
+            </button>
+            {activeDropdown === "requests" && (
+              <div className="dropdown-menu">
+                {requestItems.map((item) => (
+                  <Link key={item.href} href={item.href} className="dropdown-item">
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 3. Track Dropdown */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => toggleDropdown("track")}
+              className={`nav-link ${activeDropdown === "track" ? "active" : ""}`}
+              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.25rem" }}
+            >
+              Track ▾
+            </button>
+            {activeDropdown === "track" && (
+              <div className="dropdown-menu" style={{ right: 0, left: "auto" }}>
+                {trackItems.map((item) => (
+                  <Link key={item.href} href={item.href} className="dropdown-item">
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Hamburger button — mobile only */}
@@ -78,7 +168,7 @@ export default function Navbar() {
         onClick={() => setDrawerOpen(false)}
       />
 
-      {/* Side Drawer */}
+      {/* Side Drawer (Mobile Menu) */}
       <div className={`drawer ${drawerOpen ? "drawer--open" : ""}`}>
         <div className="drawer-header">
           <div className="drawer-brand">
@@ -90,24 +180,88 @@ export default function Navbar() {
           </button>
         </div>
 
-        <div className="drawer-section-label">Navigation</div>
+        <nav className="drawer-nav" style={{ overflowY: "auto", maxHeight: "calc(100vh - 120px)", padding: "1rem" }}>
+          <Link href={prefix} className="drawer-link" style={{ fontWeight: 600 }}>
+            Home
+          </Link>
 
-        <nav className="drawer-nav">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`drawer-link ${pathname === link.href ? "drawer-link--active" : ""}`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {/* Collapsible Mobile Invoice */}
+          <div style={{ margin: "0.5rem 0" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", padding: "0.5rem 0.75rem 0.25rem" }}>
+              Invoice Operations
+            </div>
+            {invoiceItems.map((item) => (
+              <Link key={item.href} href={item.href} className="drawer-link" style={{ paddingLeft: "1.5rem", fontSize: "0.85rem" }}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Collapsible Mobile Requests */}
+          <div style={{ margin: "0.5rem 0" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", padding: "0.5rem 0.75rem 0.25rem" }}>
+              Submit New Request
+            </div>
+            {requestItems.map((item) => (
+              <Link key={item.href} href={item.href} className="drawer-link" style={{ paddingLeft: "1.5rem", fontSize: "0.85rem" }}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Collapsible Mobile Track */}
+          <div style={{ margin: "0.5rem 0" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", padding: "0.5rem 0.75rem 0.25rem" }}>
+              Track &amp; Review Logs
+            </div>
+            {trackItems.map((item) => (
+              <Link key={item.href} href={item.href} className="drawer-link" style={{ paddingLeft: "1.5rem", fontSize: "0.85rem" }}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </nav>
 
         <div className="drawer-footer">
-          © 2025 The Heritage Group
+          © 2026 The Heritage Group
         </div>
       </div>
+
+      {/* Styled dropdown rules */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        .dropdown-menu {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          border-radius: 8px;
+          min-width: 180px;
+          z-index: 100;
+          display: flex;
+          flex-direction: column;
+          padding: 0.5rem 0;
+          margin-top: 0.25rem;
+          animation: navFadeIn 0.15s ease-out;
+        }
+        .dropdown-item {
+          padding: 0.5rem 1rem;
+          font-size: 0.85rem;
+          color: #374151;
+          text-decoration: none;
+          transition: background 0.1s, color 0.1s;
+        }
+        .dropdown-item:hover {
+          background: #f3f4f6;
+          color: #111111;
+        }
+        @keyframes navFadeIn {
+          from { opacity: 0; transform: translateY(-5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}} />
     </>
   );
 }

@@ -147,7 +147,22 @@ export default function Information({ initialData = null, mode = "default" }) {
         status: "pending",
         requested_by: "staff",
         data: bill
-      }]);
+      }]).select();
+
+      if (!result.error && result.data && result.data[0]) {
+        try {
+          const { logAudit } = await import("@/utils/supabase/audit");
+          await logAudit({
+            requestId: result.data[0].id,
+            requestType: `bill_pass_${reqType}`,
+            submittedBy: "staff",
+            status: "Pending",
+            payload: bill
+          });
+        } catch (auditErr) {
+          console.error("Failed to write to audit log:", auditErr);
+        }
+      }
     } else {
       if (mode === "duplicate") {
         result = await supabase.from("billdata").insert([bill]);
