@@ -11,6 +11,7 @@ export default function LogDriverLeavePage() {
   const isAdmin = role === "admin";
 
   const [driver, setDriver] = useState(null);
+  const [leavesHistory, setLeavesHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,23 +21,34 @@ export default function LogDriverLeavePage() {
 
   useEffect(() => {
     if (driverId) {
-      fetchDriverDetails();
+      fetchDriverDetailsAndLeaves();
     }
   }, [driverId]);
 
-  const fetchDriverDetails = async () => {
+  const fetchDriverDetailsAndLeaves = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch driver name
+      const { data: driverData, error: driverErr } = await supabase
         .from("drivers")
         .select("name")
         .eq("id", driverId)
         .single();
-      if (error) throw error;
-      setDriver(data);
+      if (driverErr) throw driverErr;
+      setDriver(driverData);
+
+      // Fetch leave history logs
+      const { data: leaves, error: leavesErr } = await supabase
+        .from("driver_leaves")
+        .select("*")
+        .eq("driver_id", driverId)
+        .order("start_date", { ascending: false });
+      if (leavesErr) throw leavesErr;
+      setLeavesHistory(leaves || []);
+
     } catch (err) {
       console.error(err);
-      alert("Failed to load driver profile.");
+      alert("Failed to load driver leaves info.");
     }
     setLoading(false);
   };
@@ -82,70 +94,102 @@ export default function LogDriverLeavePage() {
     setSubmitting(false);
   };
 
-  if (loading) {
-    return <div className="page-content">Loading driver details...</div>;
+  if (loading && !driver) {
+    return <div className="page-content">Loading leave records...</div>;
   }
 
   return (
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
-      {/* Breadcrumb & Header */}
-      <div style={{ padding: "1.5rem 0 1rem" }}>
-        <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.5rem" }}>
-          <Link href={`/${role}`} style={{ color: "#6b7280" }}>Home</Link> / 
-          <Link href={`/${role}/drivers`} style={{ color: "#6b7280" }}>Drivers</Link> /
-          <Link href={`/${role}/drivers/${driverId}`} style={{ color: "#6b7280" }}>Profile</Link> /
-          <span>Log Leave</span>
+      {/* breadcrumbs removed as per request */}
+      <div style={{ padding: "1.5rem 0 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "#111827" }}>
+            {driver?.name}
+          </h1>
+          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+            {isAdmin ? "Log Leave Directly" : "Request Leave Record"}
+          </p>
         </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
-              {isAdmin ? "Log Leave Directly" : "Request Leave Record"}
-            </h1>
-            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-              Logging leave for driver: <strong>{driver?.name}</strong>
-            </p>
-          </div>
-          <Link href={`/${role}/drivers/${driverId}`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
-            ← Back to Profile
-          </Link>
-        </div>
+        <Link href={`/${role}/drivers/${driverId}`} className="btn btn-secondary" style={{ fontSize: "0.8rem", background: "#111827", color: "#ffffff", borderColor: "#111827" }}>
+          ← Back to Profile
+        </Link>
       </div>
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
-      <div className="card" style={{ padding: "2rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
+      {/* Log Leave Form */}
+      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>New Leave Form</h2>
         <form onSubmit={handleLeaveSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}>
           <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>Start Date *</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>Start Date *</label>
             <input type="date" className="form-input" value={leaveStartDate} onChange={(e) => setLeaveStartDate(e.target.value)} required />
           </div>
 
           <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>End Date *</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>End Date *</label>
             <input type="date" className="form-input" value={leaveEndDate} onChange={(e) => setLeaveEndDate(e.target.value)} required />
           </div>
 
           <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-            <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>Reason / Remarks</label>
-            <input type="text" className="form-input" placeholder="Leave remarks (e.g. Personal work, Sick leave)" value={leaveReason} onChange={(e) => setLeaveReason(e.target.value)} />
+            <label className="form-label" style={{ fontWeight: 600 }}>Reason / Remarks</label>
+            <input type="text" className="form-input" placeholder="e.g. Family emergency, Sick leave" value={leaveReason} onChange={(e) => setLeaveReason(e.target.value)} />
           </div>
 
-          <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
-            <Link href={`/${role}/drivers/${driverId}`} className="btn btn-secondary" style={{ padding: "0.625rem 1.5rem" }}>
-              Cancel
-            </Link>
+          <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
             <button
               type="submit"
               disabled={submitting}
               className="btn btn-primary"
-              style={{ padding: "0.625rem 2rem", fontSize: "0.875rem", fontWeight: 600, background: "#f59e0b", borderColor: "#f59e0b" }}
+              style={{ fontSize: "0.85rem", padding: "0.6rem 2rem", background: "#111827", color: "#ffffff", borderColor: "#111827" }}
             >
               {submitting ? "Processing..." : isAdmin ? "Save Record" : "Submit Request"}
             </button>
           </div>
         </form>
       </div>
+
+      {/* Leaves History Ledger */}
+      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Leave History Records</h2>
+        {leavesHistory.length === 0 ? (
+          <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>No leave logs recorded.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {leavesHistory.map((leave) => {
+              const sDate = new Date(leave.start_date);
+              const eDate = new Date(leave.end_date);
+              const days = Math.ceil(Math.abs(eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
+
+              return (
+                <div key={leave.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.6rem" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>
+                        {days} {days === 1 ? "Day" : "Days"} Leave
+                      </span>
+                      <span style={{
+                        fontSize: "0.65rem",
+                        fontWeight: 700,
+                        color: "#92400e",
+                        background: "#fffbeb",
+                        padding: "0.15rem 0.4rem",
+                        borderRadius: "4px"
+                      }}>
+                        {sDate.toLocaleDateString()} - {eDate.toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "0.15rem" }}>
+                      {leave.reason || "No reason specified"}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

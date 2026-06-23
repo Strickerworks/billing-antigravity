@@ -11,6 +11,7 @@ export default function LogDriverPaymentPage() {
   const isAdmin = role === "admin";
 
   const [driver, setDriver] = useState(null);
+  const [paymentsHistory, setPaymentsHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -21,23 +22,34 @@ export default function LogDriverPaymentPage() {
 
   useEffect(() => {
     if (driverId) {
-      fetchDriverDetails();
+      fetchDriverDetailsAndPayments();
     }
   }, [driverId]);
 
-  const fetchDriverDetails = async () => {
+  const fetchDriverDetailsAndPayments = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch driver profile
+      const { data: driverData, error: driverErr } = await supabase
         .from("drivers")
         .select("name")
         .eq("id", driverId)
         .single();
-      if (error) throw error;
-      setDriver(data);
+      if (driverErr) throw driverErr;
+      setDriver(driverData);
+
+      // Fetch payment history logs
+      const { data: payments, error: paymentsErr } = await supabase
+        .from("driver_payments")
+        .select("*")
+        .eq("driver_id", driverId)
+        .order("payment_date", { ascending: false });
+      if (paymentsErr) throw paymentsErr;
+      setPaymentsHistory(payments || []);
+
     } catch (err) {
       console.error(err);
-      alert("Failed to load driver profile.");
+      alert("Failed to load driver payment info.");
     }
     setLoading(false);
   };
@@ -93,52 +105,45 @@ export default function LogDriverPaymentPage() {
     setSubmitting(false);
   };
 
-  if (loading) {
-    return <div className="page-content">Loading driver details...</div>;
+  if (loading && !driver) {
+    return <div className="page-content">Loading payment records...</div>;
   }
 
   return (
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
-      {/* Breadcrumb & Header */}
-      <div style={{ padding: "1.5rem 0 1rem" }}>
-        <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.5rem" }}>
-          <Link href={`/${role}`} style={{ color: "#6b7280" }}>Home</Link> / 
-          <Link href={`/${role}/drivers`} style={{ color: "#6b7280" }}>Drivers</Link> /
-          <Link href={`/${role}/drivers/${driverId}`} style={{ color: "#6b7280" }}>Profile</Link> /
-          <span>Log Payment</span>
+      {/* breadcrumbs removed as per request */}
+      <div style={{ padding: "1.5rem 0 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "#111827" }}>
+            {driver?.name}
+          </h1>
+          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+            {isAdmin ? "Log Salary/Payment Activity Directly" : "Request Salary/Payment Activity"}
+          </p>
         </div>
-
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
-              {isAdmin ? "Log Salary/Payment Activity Directly" : "Request Salary/Payment Activity"}
-            </h1>
-            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-              Logging finance activity for driver: <strong>{driver?.name}</strong>
-            </p>
-          </div>
-          <Link href={`/${role}/drivers/${driverId}`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
-            ← Back to Profile
-          </Link>
-        </div>
+        <Link href={`/${role}/drivers/${driverId}`} className="btn btn-secondary" style={{ fontSize: "0.8rem", background: "#111827", color: "#ffffff", borderColor: "#111827" }}>
+          ← Back to Profile
+        </Link>
       </div>
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
-      <div className="card" style={{ padding: "2rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-        <form onSubmit={handlePaymentSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}>
+      {/* Log Payment Form */}
+      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>New Payment Form</h2>
+        <form onSubmit={handlePaymentSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.25rem" }}>
           <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>Amount (₹) *</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>Amount (₹) *</label>
             <input type="number" className="form-input" placeholder="Enter amount" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} required />
           </div>
 
           <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>Payment Date *</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>Payment Date *</label>
             <input type="date" className="form-input" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} required />
           </div>
 
           <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>Activity Type *</label>
+            <label className="form-label" style={{ fontWeight: 600 }}>Activity Type *</label>
             <select className="form-input" value={paymentType} onChange={(e) => setPaymentType(e.target.value)} required>
               <option value="salary_paid">Salary Paid</option>
               <option value="advance">Advance Taken</option>
@@ -147,25 +152,76 @@ export default function LogDriverPaymentPage() {
           </div>
 
           <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-            <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>Remarks / Description</label>
-            <input type="text" className="form-input" placeholder="Details (e.g. June Month Salary, Advance for trip)" value={paymentComment} onChange={(e) => setPaymentComment(e.target.value)} />
+            <label className="form-label" style={{ fontWeight: 600 }}>Remarks / Description</label>
+            <input type="text" className="form-input" placeholder="e.g. Salary, trip advance" value={paymentComment} onChange={(e) => setPaymentComment(e.target.value)} />
           </div>
 
-          <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1rem" }}>
-            <Link href={`/${role}/drivers/${driverId}`} className="btn btn-secondary" style={{ padding: "0.625rem 1.5rem" }}>
-              Cancel
-            </Link>
+          <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
             <button
               type="submit"
               disabled={submitting}
               className="btn btn-primary"
-              style={{ padding: "0.625rem 2rem", fontSize: "0.875rem", fontWeight: 600, background: "#10b981", borderColor: "#10b981" }}
+              style={{ fontSize: "0.85rem", padding: "0.6rem 2rem", background: "#111827", color: "#ffffff", borderColor: "#111827" }}
             >
               {submitting ? "Processing..." : isAdmin ? "Save Record" : "Submit Request"}
             </button>
           </div>
         </form>
       </div>
+
+      {/* Payment & Advances Ledger */}
+      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Payment & Advances History</h2>
+        {paymentsHistory.length === 0 ? (
+          <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>No payments logs recorded.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {paymentsHistory.map((p) => {
+              let badgeColor = "#047857";
+              let bgBadge = "#d1fae5";
+              let label = "Salary Paid";
+
+              if (p.type === "advance") {
+                badgeColor = "#b45309";
+                bgBadge = "#fef3c7";
+                label = "Advance Taken";
+              } else if (p.type === "deduction") {
+                badgeColor = "#b91c1c";
+                bgBadge = "#fee2e2";
+                label = "Deduction";
+              }
+
+              return (
+                <div key={p.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.6rem" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>
+                        ₹{parseFloat(p.amount).toLocaleString()}
+                      </span>
+                      <span style={{
+                        fontSize: "0.7rem",
+                        fontWeight: 700,
+                        color: badgeColor,
+                        background: bgBadge,
+                        padding: "0.15rem 0.4rem",
+                        borderRadius: "4px",
+                        textTransform: "uppercase"
+                      }}>{label}</span>
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "0.15rem" }}>
+                      {p.comment || "No comment"}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#9ca3af", textAlign: "right" }}>
+                    <div>Log Date: {new Date(p.payment_date).toLocaleDateString()}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
