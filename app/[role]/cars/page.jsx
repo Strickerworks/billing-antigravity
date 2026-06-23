@@ -180,7 +180,12 @@ export default function CarsPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 960, paddingBottom: "3rem" }}>
-      <div style={{ padding: "1.5rem 0 1rem" }}>
+      <div style={{ paddingTop: "1rem" }}>
+        <Link href={`/${role}`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+          ← Back to Home
+        </Link>
+      </div>
+      <div style={{ padding: "1rem 0" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
           Fleet Registry
         </h1>
