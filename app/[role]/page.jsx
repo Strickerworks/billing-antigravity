@@ -14,7 +14,7 @@ export default function AdminPage() {
     pendingInvoicesCount: 0,
     pendingExpensesCount: 0,
     pendingPaymentsCount: 0,
-    totalCarsCount: 0,
+    pendingFleetCount: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -49,17 +49,18 @@ export default function AdminPage() {
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
 
-      // 5. Total Cars
-      const { count: carsCount } = await supabase
-        .from("cars")
-        .select("*", { count: "exact", head: true });
+      // 5. Pending Fleet Requests
+      const { count: pendingFleet } = await supabase
+        .from("fleet_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
         
       setStats({
         approvedBillsCount: billsCount || 0,
         pendingInvoicesCount: pendingInvoices || 0,
         pendingExpensesCount: pendingExpenses || 0,
         pendingPaymentsCount: pendingPayments || 0,
-        totalCarsCount: carsCount || 0,
+        pendingFleetCount: pendingFleet || 0,
       });
     } catch (err) {
       console.error("Error loading dashboard stats:", err);
@@ -220,23 +221,23 @@ export default function AdminPage() {
             </span>
           </div>
 
-          {/* Card 5: Fleet Vehicles */}
+          {/* Card 5: Fleet Requests */}
           <div className="card fade-in" style={{
-            background: "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-            border: "1px solid #d1d5db",
+            background: "linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)",
+            border: "1px solid #fde68a",
             display: "flex",
             flexDirection: "column",
             gap: "0.25rem",
             padding: "1.25rem"
           }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Fleet Vehicles
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Pending Fleet
             </span>
-            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1f2937" }}>
-              {stats.totalCarsCount}
+            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#78350f" }}>
+              {stats.pendingFleetCount}
             </span>
-            <span style={{ fontSize: "0.7rem", color: "#4b5563", fontWeight: 500 }}>
-              Registered Fleet
+            <span style={{ fontSize: "0.7rem", color: "#b45309", fontWeight: 500 }}>
+              Awaiting Approval
             </span>
           </div>
         </div>
