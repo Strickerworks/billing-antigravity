@@ -13,9 +13,14 @@ export default function CarsPage() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Form State
+  // Form State (New registration)
   const [name, setName] = useState("");
   const [registrationName, setRegistrationName] = useState("");
+
+  // Edit Form State
+  const [editingCar, setEditingCar] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editRegistrationName, setEditRegistrationName] = useState("");
 
   useEffect(() => {
     fetchCarsData();
@@ -24,7 +29,6 @@ export default function CarsPage() {
   const fetchCarsData = async () => {
     setLoading(true);
     try {
-      // 1. Get all cars
       const { data: carsList, error: carsErr } = await supabase
         .from("cars")
         .select("*")
@@ -35,7 +39,6 @@ export default function CarsPage() {
       const carsWithDetails = [];
 
       for (const car of (carsList || [])) {
-        // Fetch latest KM
         const { data: kmData } = await supabase
           .from("car_km_history")
           .select("km_clocked")
@@ -43,7 +46,6 @@ export default function CarsPage() {
           .order("created_at", { ascending: false })
           .limit(1);
 
-        // Fetch latest Driver Assignment
         const { data: driverData } = await supabase
           .from("car_driver_history")
           .select("assigned_at, drivers(name)")
@@ -80,7 +82,6 @@ export default function CarsPage() {
     };
 
     if (isAdmin) {
-      // Admin writes directly
       const { error } = await supabase.from("cars").insert([carPayload]);
       if (error) {
         alert("Failed to register car: " + error.message);
@@ -91,7 +92,6 @@ export default function CarsPage() {
         fetchCarsData();
       }
     } else {
-      // Staff creates request
       const { error } = await supabase.from("fleet_requests").insert([{
         request_type: "add_car",
         payload: carPayload,
@@ -107,6 +107,59 @@ export default function CarsPage() {
       }
     }
     setSubmitting(false);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editName.trim() || !editRegistrationName.trim()) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    setSubmitting(true);
+    const carPayload = {
+      car_id: editingCar.id,
+      name: editName.trim(),
+      registration_name: editRegistrationName.trim().toUpperCase()
+    };
+
+    if (isAdmin) {
+      const { error } = await supabase
+        .from("cars")
+        .update({
+          name: carPayload.name,
+          registration_name: carPayload.registration_name
+        })
+        .eq("id", editingCar.id);
+
+      if (error) {
+        alert("Failed to modify vehicle details: " + error.message);
+      } else {
+        alert("Vehicle details updated successfully.");
+        setEditingCar(null);
+        fetchCarsData();
+      }
+    } else {
+      const { error } = await supabase.from("fleet_requests").insert([{
+        request_type: "edit_car",
+        payload: carPayload,
+        requested_by: "staff",
+        status: "pending"
+      }]);
+      if (error) {
+        alert("Failed to submit update request: " + error.message);
+      } else {
+        alert("Vehicle update request submitted to Admin for approval.");
+        setEditingCar(null);
+      }
+    }
+    setSubmitting(false);
+  };
+
+  const handleStartEdit = (car) => {
+    setEditingCar(car);
+    setEditName(car.name || "");
+    setEditRegistrationName(car.registration_name || "");
   };
 
   const handleDeleteCar = async (carId, carReg) => {
@@ -126,13 +179,12 @@ export default function CarsPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 960, paddingBottom: "3rem" }}>
-      {/* Header */}
       <div style={{ padding: "1.5rem 0 1rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
           Fleet Registry
         </h1>
         <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-          {isAdmin ? "Admin Fleet Registry & Controls" : "Submit Vehicle Addition Requests"}
+          {isAdmin ? "Admin Fleet Registry & Controls" : "Submit Vehicle Addition/Modification Requests"}
         </p>
       </div>
 
@@ -242,12 +294,20 @@ export default function CarsPage() {
                     <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{car.currentDriver}</span>
                   </div>
 
-                  <div style={{ display: "flex", gap: "0.5rem", marginLeft: "1rem" }}>
+                  <div style={{ display: "flex", gap: "0.35rem", marginLeft: "1rem" }}>
                     <Link href={`/${role}/cars/${car.id}`}>
                       <button className="btn btn-primary" style={{ fontSize: "0.8rem", padding: "0.45rem 1rem" }}>
                         View Logs
                       </button>
                     </Link>
+
+                    <button
+                      onClick={() => handleStartEdit(car)}
+                      className="btn btn-secondary"
+                      style={{ fontSize: "0.8rem", padding: "0.45rem 0.85rem" }}
+                    >
+                      ✎ Edit
+                    </button>
 
                     {isAdmin && (
                       <button
@@ -271,6 +331,55 @@ export default function CarsPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Vehicle Modal */}
+      {editingCar && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999
+        }}>
+          <div className="card" style={{ width: "90%", maxWidth: "500px", padding: "1.5rem", background: "#ffffff" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>
+              {isAdmin ? "Modify Vehicle Profile" : "Request Vehicle Modification"}
+            </h3>
+            <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div className="form-group">
+                <label className="form-label">Car Model / Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Registration Number</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editRegistrationName}
+                  onChange={(e) => setEditRegistrationName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setEditingCar(null)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
+                <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
+                  {submitting ? "Processing..." : isAdmin ? "Save Directly" : "Submit Request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

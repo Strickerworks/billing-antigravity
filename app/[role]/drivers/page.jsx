@@ -22,6 +22,16 @@ export default function DriversPage() {
   const [licenseNumber, setLicenseNumber] = useState("");
   const [dateOfJoining, setDateOfJoining] = useState("");
 
+  // Edit State
+  const [editingDriver, setEditingDriver] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editDob, setEditDob] = useState("");
+  const [editAadharNumber, setEditAadharNumber] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editLicenseNumber, setEditLicenseNumber] = useState("");
+  const [editDateOfJoining, setEditDateOfJoining] = useState("");
+
   useEffect(() => {
     fetchDriversAndAssignments();
   }, []);
@@ -84,7 +94,6 @@ export default function DriversPage() {
     };
 
     if (isAdmin) {
-      // Admins write directly to drivers table
       const { error } = await supabase.from("drivers").insert([driverPayload]);
       if (error) {
         alert("Failed to add driver: " + error.message);
@@ -94,7 +103,6 @@ export default function DriversPage() {
         fetchDriversAndAssignments();
       }
     } else {
-      // Staff submits a request
       const { error } = await supabase.from("fleet_requests").insert([{
         request_type: "add_driver",
         payload: driverPayload,
@@ -111,6 +119,63 @@ export default function DriversPage() {
     setSubmitting(false);
   };
 
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editName.trim() || !editPhone.trim()) {
+      alert("Please fill name and phone.");
+      return;
+    }
+
+    setSubmitting(true);
+    const driverPayload = {
+      driver_id: editingDriver.id,
+      name: editName.trim(),
+      phone: editPhone.trim(),
+      dob: editDob || null,
+      aadhar_number: editAadharNumber.trim() || null,
+      address: editAddress.trim() || null,
+      license_number: editLicenseNumber.trim() || null,
+      date_of_joining: editDateOfJoining || null
+    };
+
+    if (isAdmin) {
+      const { error } = await supabase
+        .from("drivers")
+        .update({
+          name: driverPayload.name,
+          phone: driverPayload.phone,
+          dob: driverPayload.dob,
+          aadhar_number: driverPayload.aadhar_number,
+          address: driverPayload.address,
+          license_number: driverPayload.license_number,
+          date_of_joining: driverPayload.date_of_joining
+        })
+        .eq("id", editingDriver.id);
+
+      if (error) {
+        alert("Failed to edit driver: " + error.message);
+      } else {
+        alert("Driver profile modified successfully.");
+        setEditingDriver(null);
+        fetchDriversAndAssignments();
+      }
+    } else {
+      const { error } = await supabase.from("fleet_requests").insert([{
+        request_type: "edit_driver",
+        payload: driverPayload,
+        requested_by: "staff",
+        status: "pending"
+      }]);
+      if (error) {
+        alert("Failed to submit update request: " + error.message);
+      } else {
+        alert("Driver modification request submitted to Admin for approval.");
+        setEditingDriver(null);
+      }
+    }
+    setSubmitting(false);
+  };
+
   const clearForm = () => {
     setName("");
     setPhone("");
@@ -119,6 +184,17 @@ export default function DriversPage() {
     setAddress("");
     setLicenseNumber("");
     setDateOfJoining("");
+  };
+
+  const handleStartEdit = (driver) => {
+    setEditingDriver(driver);
+    setEditName(driver.name || "");
+    setEditPhone(driver.phone || "");
+    setEditDob(driver.dob || "");
+    setEditAadharNumber(driver.aadhar_number || "");
+    setEditAddress(driver.address || "");
+    setEditLicenseNumber(driver.license_number || "");
+    setEditDateOfJoining(driver.date_of_joining || "");
   };
 
   const handleDeleteDriver = async (driverId, driverName) => {
@@ -142,13 +218,12 @@ export default function DriversPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 900, paddingBottom: "3rem" }}>
-      {/* Title */}
       <div style={{ padding: "1.5rem 0 1rem" }}>
         <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
           Drivers Portal
         </h1>
         <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
-          {isAdmin ? "Admin Registry & Controls" : "Submit Driver Registry Requests"}
+          {isAdmin ? "Admin Registry & Controls" : "Submit Driver Registry/Edit Requests"}
         </p>
       </div>
 
@@ -282,24 +357,34 @@ export default function DriversPage() {
                         {isExpanded ? "▲" : "▼"}
                       </span>
 
-                      {isAdmin && (
+                      <div style={{ display: "flex", gap: "0.35rem" }} onClick={(e) => e.stopPropagation()}>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteDriver(driver.id, driver.name);
-                          }}
+                          onClick={() => handleStartEdit(driver)}
                           className="btn btn-secondary"
                           style={{
                             padding: "0.35rem 0.5rem",
-                            fontSize: "0.75rem",
-                            color: "#b91c1c",
-                            border: "1px solid #fee2e2",
-                            background: "#fef2f2"
+                            fontSize: "0.75rem"
                           }}
                         >
-                          🗑 Delete
+                          ✎ Edit
                         </button>
-                      )}
+
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDeleteDriver(driver.id, driver.name)}
+                            className="btn btn-secondary"
+                            style={{
+                              padding: "0.35rem 0.5rem",
+                              fontSize: "0.75rem",
+                              color: "#b91c1c",
+                              border: "1px solid #fee2e2",
+                              background: "#fef2f2"
+                            }}
+                          >
+                            🗑 Delete
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -355,6 +440,68 @@ export default function DriversPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Driver Modal */}
+      {editingDriver && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999
+        }}>
+          <div className="card" style={{ width: "90%", maxWidth: "600px", padding: "1.5rem", background: "#ffffff" }}>
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>
+              {isAdmin ? "Modify Driver Profile" : "Request Driver Modification"}
+            </h3>
+            <form onSubmit={handleEditSubmit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div className="form-group">
+                <label className="form-label">Full Name</label>
+                <input type="text" className="form-input" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Phone Number</label>
+                <input type="text" className="form-input" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Date of Birth</label>
+                <input type="date" className="form-input" value={editDob} onChange={(e) => setEditDob(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Aadhar Card</label>
+                <input type="text" className="form-input" value={editAadharNumber} onChange={(e) => setEditAadharNumber(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">License Number</label>
+                <input type="text" className="form-input" value={editLicenseNumber} onChange={(e) => setEditLicenseNumber(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Date of Joining</label>
+                <input type="date" className="form-input" value={editDateOfJoining} onChange={(e) => setEditDateOfJoining(e.target.value)} />
+              </div>
+
+              <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                <label className="form-label">Home Address</label>
+                <textarea className="form-input" rows="2" value={editAddress} onChange={(e) => setEditAddress(e.target.value)} />
+              </div>
+
+              <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <button type="button" onClick={() => setEditingDriver(null)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
+                <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
+                  {submitting ? "Processing..." : isAdmin ? "Save Directly" : "Submit Request"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
