@@ -16,6 +16,7 @@ export default function CarDetailPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("km");
   const [submitting, setSubmitting] = useState(false);
+  const [currentMonthExpensesTotal, setCurrentMonthExpensesTotal] = useState(0);
 
   // History states
   const [kmLogs, setKmLogs] = useState([]);
@@ -84,7 +85,8 @@ export default function CarDetailPage() {
         { data: insurances },
         { data: miscs },
         { data: assigns },
-        { data: allPending }
+        { data: allPending },
+        { data: approvedExpenses }
       ] = await Promise.all([
         supabase.from("car_km_history").select("*").eq("car_id", carId).order("created_at", { ascending: false }),
         supabase.from("car_service_history").select("*").eq("car_id", carId).order("service_date", { ascending: false }),
@@ -92,7 +94,8 @@ export default function CarDetailPage() {
         supabase.from("car_insurance_history").select("*").eq("car_id", carId).order("insurance_date", { ascending: false }),
         supabase.from("car_misc_history").select("*").eq("car_id", carId).order("created_at", { ascending: false }),
         supabase.from("car_driver_history").select("*, drivers(name, phone)").eq("car_id", carId).order("assigned_at", { ascending: false }),
-        supabase.from("fleet_requests").select("*").eq("status", "pending")
+        supabase.from("fleet_requests").select("*").eq("status", "pending"),
+        supabase.from("expense_reports").select("amount, created_at").eq("status", "approved").ilike("comment", `%[${carData.registration_name}]%`)
       ]);
 
       setKmLogs(kms || []);
@@ -105,6 +108,22 @@ export default function CarDetailPage() {
       // Filter pending requests for this specific car
       const carPending = (allPending || []).filter(req => req.payload && req.payload.car_id === carId);
       setPendingRequests(carPending);
+
+      // Compute current month expenses total
+      let monthTotal = 0;
+      if (approvedExpenses) {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+        const currentMonthExpenses = approvedExpenses.filter(exp => {
+          const expDate = new Date(exp.created_at);
+          return expDate >= startOfMonth && expDate <= endOfMonth;
+        });
+
+        monthTotal = currentMonthExpenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
+      }
+      setCurrentMonthExpensesTotal(monthTotal);
 
       // 3. Compile current info summary
       const currentKm = kms?.[0]?.km_clocked || "0";
@@ -183,7 +202,6 @@ export default function CarDetailPage() {
         let table = "";
         let insertData = { ...payload };
 
-        // Remove extra UI cost fields not in DB schema before inserting to history tables
         if (type === "service") {
           table = "car_service_history";
           delete insertData.service_cost;
@@ -198,7 +216,7 @@ export default function CarDetailPage() {
         const { error } = await supabase.from(table).insert([insertData]);
         if (error) throw error;
 
-        // Auto raise expense ticket for costs
+        // Auto raise expense ticket
         const carReg = car.registration_name;
         if (type === "fuel") {
           await supabase.from("expense_reports").insert([{
@@ -236,7 +254,6 @@ export default function CarDetailPage() {
 
         alert("Record logged successfully and expense report ticket created.");
       } else {
-        // Staff requests
         const { error } = await supabase.from("fleet_requests").insert([{
           request_type: `log_${type}`,
           payload,
@@ -300,13 +317,40 @@ export default function CarDetailPage() {
               {car.registration_name}
             </span>
           </div>
-          <Link href={`/${role}/cars`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
-            ➔ Fleet Registry
-          </Link>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link href={`/${role}/cars/${car.id}/expenses`} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#1f2937", border: "1px solid #1f2937" }}>
+              💳 Expense Ledger
+            </Link>
+            <Link href={`/${role}/cars`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
+              ➔ Fleet Registry
+            </Link>
+          </div>
         </div>
       </div>
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
+
+      {/* Monthly Expense Top Banner */}
+      <div className="card" style={{
+        padding: "1rem 1.25rem",
+        background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+        border: "1px solid #fde68a",
+        borderRadius: "8px",
+        marginBottom: "1.5rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+        <div>
+          <span style={{ fontSize: "0.75rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.03em" }}>Current Month Fleet Costs ({new Date().toLocaleString('default', { month: 'long' })})</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>₹{currentMonthExpensesTotal.toLocaleString()}</div>
+        </div>
+        <Link href={`/${role}/cars/${car.id}/expenses`}>
+          <button className="btn btn-secondary" style={{ fontSize: "0.75rem", padding: "0.4rem 0.75rem", background: "#ffffff", border: "1px solid #fde68a", color: "#78350f" }}>
+            View Cost History ➔
+          </button>
+        </Link>
+      </div>
 
       {/* Pending requests warning indicator for Staff */}
       {pendingRequests.length > 0 && (
