@@ -67,6 +67,11 @@ export default function Navbar() {
     { href: `${prefix}/audit-log`, label: "Audit Log" },
   ];
 
+  const vehicleItems = [
+    { href: `${prefix}/cars`, label: "Cars Profile" },
+    { href: `${prefix}/drivers`, label: "Drivers" },
+  ];
+
   const toggleDropdown = (name) => {
     if (activeDropdown === name) {
       setActiveDropdown(null);
@@ -139,8 +144,28 @@ export default function Navbar() {
               Track ▾
             </button>
             {activeDropdown === "track" && (
-              <div className="dropdown-menu" style={{ right: 0, left: "auto" }}>
+              <div className="dropdown-menu">
                 {trackItems.map((item) => (
+                  <Link key={item.href} href={item.href} className="dropdown-item">
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 4. Vehicles Dropdown */}
+          <div style={{ position: "relative" }}>
+            <button
+              onClick={() => toggleDropdown("vehicles")}
+              className={`nav-link ${activeDropdown === "vehicles" ? "active" : ""}`}
+              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.25rem" }}
+            >
+              Vehicles ▾
+            </button>
+            {activeDropdown === "vehicles" && (
+              <div className="dropdown-menu" style={{ right: 0, left: "auto" }}>
+                {vehicleItems.map((item) => (
                   <Link key={item.href} href={item.href} className="dropdown-item">
                     {item.label}
                   </Link>
@@ -215,6 +240,18 @@ export default function Navbar() {
               Track &amp; Review Logs
             </div>
             {trackItems.map((item) => (
+              <Link key={item.href} href={item.href} className="drawer-link" style={{ paddingLeft: "1.5rem", fontSize: "0.85rem" }}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Collapsible Mobile Vehicles */}
+          <div style={{ margin: "0.5rem 0" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", padding: "0.5rem 0.75rem 0.25rem" }}>
+              Cars &amp; Drivers
+            </div>
+            {vehicleItems.map((item) => (
               <Link key={item.href} href={item.href} className="drawer-link" style={{ paddingLeft: "1.5rem", fontSize: "0.85rem" }}>
                 {item.label}
               </Link>
