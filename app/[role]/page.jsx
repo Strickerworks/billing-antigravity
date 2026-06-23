@@ -161,85 +161,97 @@ export default function AdminPage() {
             </span>
           </div>
 
-          {/* Card 2 */}
-          <div className="card fade-in" style={{
-            background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-            border: "1px solid #fde68a",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.25rem",
-            padding: "1.25rem"
-          }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Pending Invoices
-            </span>
-            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#78350f" }}>
-              {stats.pendingInvoicesCount}
-            </span>
-            <span style={{ fontSize: "0.7rem", color: "#b45309", fontWeight: 500 }}>
-              Awaiting Approval
-            </span>
-          </div>
+          {/* Card 2: Pending Invoices */}
+          <Link href={`${prefix}/requests`} style={{ textDecoration: "none" }}>
+            <div className="card fade-in" style={{
+              background: stats.pendingInvoicesCount === 0 ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)" : "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+              border: stats.pendingInvoicesCount === 0 ? "1px solid #bbf7d0" : "1px solid #fde68a",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+              padding: "1.25rem",
+              cursor: "pointer"
+            }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: stats.pendingInvoicesCount === 0 ? "#166534" : "#92400e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Pending Invoices
+              </span>
+              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: stats.pendingInvoicesCount === 0 ? "#14532d" : "#78350f" }}>
+                {stats.pendingInvoicesCount}
+              </span>
+              <span style={{ fontSize: "0.7rem", color: stats.pendingInvoicesCount === 0 ? "#15803d" : "#b45309", fontWeight: 500 }}>
+                {stats.pendingInvoicesCount === 0 ? "✓ Clear" : "Awaiting Approval ➔"}
+              </span>
+            </div>
+          </Link>
 
-          {/* Card 3 */}
-          <div className="card fade-in" style={{
-            background: "linear-gradient(135deg, #fff5f5 0%, #ffe4e6 100%)",
-            border: "1px solid #fecdd3",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.25rem",
-            padding: "1.25rem"
-          }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#9f1239", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Pending Expenses
-            </span>
-            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#881337" }}>
-              {stats.pendingExpensesCount}
-            </span>
-            <span style={{ fontSize: "0.7rem", color: "#be123c", fontWeight: 500 }}>
-              Awaiting Approval
-            </span>
-          </div>
+          {/* Card 3: Pending Expenses */}
+          <Link href={`${prefix}/expenses`} style={{ textDecoration: "none" }}>
+            <div className="card fade-in" style={{
+              background: stats.pendingExpensesCount === 0 ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)" : "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+              border: stats.pendingExpensesCount === 0 ? "1px solid #bbf7d0" : "1px solid #fde68a",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+              padding: "1.25rem",
+              cursor: "pointer"
+            }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: stats.pendingExpensesCount === 0 ? "#166534" : "#92400e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Pending Expenses
+              </span>
+              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: stats.pendingExpensesCount === 0 ? "#14532d" : "#78350f" }}>
+                {stats.pendingExpensesCount}
+              </span>
+              <span style={{ fontSize: "0.7rem", color: stats.pendingExpensesCount === 0 ? "#15803d" : "#b45309", fontWeight: 500 }}>
+                {stats.pendingExpensesCount === 0 ? "✓ Clear" : "Awaiting Approval ➔"}
+              </span>
+            </div>
+          </Link>
 
-          {/* Card 4 */}
-          <div className="card fade-in" style={{
-            background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-            border: "1px solid #bbf7d0",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.25rem",
-            padding: "1.25rem"
-          }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Pending Payments
-            </span>
-            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#14532d" }}>
-              {stats.pendingPaymentsCount}
-            </span>
-            <span style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 500 }}>
-              Awaiting Approval
-            </span>
-          </div>
+          {/* Card 4: Pending Payments */}
+          <Link href={`${prefix}/payment-request`} style={{ textDecoration: "none" }}>
+            <div className="card fade-in" style={{
+              background: stats.pendingPaymentsCount === 0 ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)" : "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+              border: stats.pendingPaymentsCount === 0 ? "1px solid #bbf7d0" : "1px solid #fde68a",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+              padding: "1.25rem",
+              cursor: "pointer"
+            }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: stats.pendingPaymentsCount === 0 ? "#166534" : "#92400e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Pending Payments
+              </span>
+              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: stats.pendingPaymentsCount === 0 ? "#14532d" : "#78350f" }}>
+                {stats.pendingPaymentsCount}
+              </span>
+              <span style={{ fontSize: "0.7rem", color: stats.pendingPaymentsCount === 0 ? "#15803d" : "#b45309", fontWeight: 500 }}>
+                {stats.pendingPaymentsCount === 0 ? "✓ Clear" : "Awaiting Approval ➔"}
+              </span>
+            </div>
+          </Link>
 
           {/* Card 5: Fleet Requests */}
-          <div className="card fade-in" style={{
-            background: "linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)",
-            border: "1px solid #fde68a",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.25rem",
-            padding: "1.25rem"
-          }}>
-            <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Pending Fleet
-            </span>
-            <span style={{ fontSize: "1.5rem", fontWeight: 800, color: "#78350f" }}>
-              {stats.pendingFleetCount}
-            </span>
-            <span style={{ fontSize: "0.7rem", color: "#b45309", fontWeight: 500 }}>
-              Awaiting Approval
-            </span>
-          </div>
+          <Link href={`${prefix}/fleet-requests`} style={{ textDecoration: "none" }}>
+            <div className="card fade-in" style={{
+              background: stats.pendingFleetCount === 0 ? "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)" : "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+              border: stats.pendingFleetCount === 0 ? "1px solid #bbf7d0" : "1px solid #fde68a",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+              padding: "1.25rem",
+              cursor: "pointer"
+            }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: stats.pendingFleetCount === 0 ? "#166534" : "#92400e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                Pending Fleet
+              </span>
+              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: stats.pendingFleetCount === 0 ? "#14532d" : "#78350f" }}>
+                {stats.pendingFleetCount}
+              </span>
+              <span style={{ fontSize: "0.7rem", color: stats.pendingFleetCount === 0 ? "#15803d" : "#b45309", fontWeight: 500 }}>
+                {stats.pendingFleetCount === 0 ? "✓ Clear" : "Awaiting Approval ➔"}
+              </span>
+            </div>
+          </Link>
         </div>
       )}
 
