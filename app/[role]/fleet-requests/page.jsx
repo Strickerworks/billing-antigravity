@@ -69,7 +69,8 @@ export default function FleetRequestsPage() {
           aadhar_number: payload.aadhar_number || null,
           address: payload.address || null,
           license_number: payload.license_number || null,
-          date_of_joining: payload.date_of_joining || null
+          date_of_joining: payload.date_of_joining || null,
+          salary: payload.salary || 0
         }]);
         if (error) throw error;
 
@@ -81,7 +82,8 @@ export default function FleetRequestsPage() {
           aadhar_number: payload.aadhar_number || null,
           address: payload.address || null,
           license_number: payload.license_number || null,
-          date_of_joining: payload.date_of_joining || null
+          date_of_joining: payload.date_of_joining || null,
+          salary: payload.salary || 0
         }).eq("id", payload.driver_id);
         if (error) throw error;
 
@@ -523,6 +525,15 @@ export default function FleetRequestsPage() {
                       className="form-input"
                       value={editPayload.address || ""}
                       onChange={(e) => setEditPayload({ ...editPayload, address: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Base Salary (₹)</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={editPayload.salary || ""}
+                      onChange={(e) => setEditPayload({ ...editPayload, salary: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
                 </>
