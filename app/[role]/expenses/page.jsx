@@ -111,6 +111,39 @@ export default function ExpensesPage() {
     setLoading(false);
   };
 
+  const handleRevert = async (exp) => {
+    if (!confirm(`Are you sure you want to REVERT the status of this expense to pending?`)) {
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase
+      .from("expense_reports")
+      .update({
+        status: "pending",
+        approved_by: null,
+        approved_at: null,
+      })
+      .eq("id", exp.id);
+
+    if (error) {
+      console.error("Error reverting expense:", error);
+      alert("Failed to revert expense.");
+    } else {
+      await logAudit({
+        requestId: exp.id,
+        requestType: "expense_report",
+        submittedBy: exp.requested_by || "staff",
+        submittedAt: exp.created_at,
+        status: "Reverted",
+        actionBy: "admin",
+        actionAt: new Date().toISOString(),
+        payload: { amount: exp.amount, category: exp.category, comment: exp.comment },
+      });
+      fetchExpenses();
+    }
+    setLoading(false);
+  };
+
   const handleDelete = async (exp) => {
     if (!confirm("Are you sure you want to delete this expense report?")) {
       return;
@@ -291,7 +324,16 @@ export default function ExpensesPage() {
                             Cancel
                           </button>
                         ) : (
-                          <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>Processed</span>
+                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
+                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{exp.status}</span>
+                            <button
+                              onClick={() => handleRevert(exp)}
+                              className="btn btn-sm btn-outline"
+                              style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                            >
+                              Revert
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -359,7 +401,14 @@ export default function ExpensesPage() {
                           </div>
                         ) : (
                           <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
-                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>Processed</span>
+                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{exp.status}</span>
+                            <button
+                              onClick={() => handleRevert(exp)}
+                              className="btn btn-sm btn-outline"
+                              style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                            >
+                              Revert
+                            </button>
                             <button
                               onClick={() => handleDelete(exp)}
                               className="btn btn-sm btn-outline"

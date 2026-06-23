@@ -149,6 +149,60 @@ export default function PaymentRequestsHistoryPage() {
     setLoading(false);
   };
 
+  const handleRevert = async (req) => {
+    if (!confirm(`Are you sure you want to REVERT payment approval for Invoice #${req.invoice_no}?`)) {
+      return;
+    }
+    setLoading(true);
+
+    // 1. If it was approved, reset billdata payment fields
+    if (req.status === "approved") {
+      const { error: resetError } = await supabase
+        .from("billdata")
+        .update({
+          payment_status: "Not Received",
+          payment_mode: null,
+          payment_comment: null,
+        })
+        .eq("invoice_no", req.invoice_no);
+
+      if (resetError) {
+        console.error("Error resetting invoice payment status:", resetError);
+        alert("Failed to reset invoice fields: " + resetError.message);
+        setLoading(false);
+        return;
+      }
+    }
+
+    // 2. Set request status back to pending
+    const { error: updateError } = await supabase
+      .from("payment_acknowledgement_requests")
+      .update({ status: "pending" })
+      .eq("id", req.id);
+
+    if (updateError) {
+      console.error("Error reverting request status:", updateError);
+      alert("Failed to revert request: " + updateError.message);
+    } else {
+      await logAudit({
+        requestId: req.id,
+        requestType: "payment_acknowledgement",
+        submittedBy: req.requested_by || "staff",
+        submittedAt: req.created_at,
+        status: "Reverted",
+        actionBy: "admin",
+        actionAt: new Date().toISOString(),
+        payload: {
+          invoice_no: req.invoice_no,
+          payment_mode: req.payment_mode,
+          comment: req.comment,
+        },
+      });
+      fetchRequests();
+    }
+    setLoading(false);
+  };
+
   const handleDelete = async (req) => {
     if (!confirm("Are you sure you want to cancel and delete this pending request?")) {
       return;
@@ -376,110 +430,126 @@ export default function PaymentRequestsHistoryPage() {
                               onClick={() => handleReject(req)}
                               className="btn btn-sm btn-outline"
                               style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          ) : (
-                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>Processed</span>
-                          )
-                        )}
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
+                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{req.status}</span>
+                            <button
+                              onClick={() => handleRevert(req)}
+                              className="btn btn-sm btn-outline"
+                              style={{ padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                            >
+                              Revert
+                            </button>
+                            <button
+                              onClick={() => handleDelete(req)}
+                              className="btn btn-sm btn-outline"
+                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.1)", padding: "0.15rem 0.4rem", fontSize: "0.7rem" }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )
+                      )}
 
-                        {/* Staff actions */}
-                        {isStaff && (
-                          req.status === "pending" ? (
-                            <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
-                              <button onClick={() => openEditModal(req)} className="btn btn-sm btn-outline" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(req)}
-                                className="btn btn-sm btn-outline"
-                                style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>Processed</span>
-                          )
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-  
-        {/* Edit Modal */}
-        {isEditModalOpen && editingRequest && (
-          <div
-            style={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1000,
-            }}
-          >
-            <div
-              className="card fade-in"
-              style={{ width: "90%", maxWidth: "450px", padding: "1.5rem", position: "relative" }}
-            >
-              <p className="card-title" style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
-                Edit Pending Payment Request (Invoice #{editingRequest.invoice_no})
-              </p>
-              <form onSubmit={handleEditSubmit}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                  <div>
-                    <label className="form-label">Mode of Payment</label>
-                    <select
-                      value={editPaymentMode}
-                      onChange={(e) => setEditPaymentMode(e.target.value)}
-                      className="form-select"
-                      required
-                    >
-                      <option value="UPI">UPI</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="Cheque">Cheque</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="form-label">Comment</label>
-                    <textarea
-                      value={editComment}
-                      onChange={(e) => setEditComment(e.target.value)}
-                      className="form-textarea"
-                      placeholder="Update comments..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.5rem", justifyContent: "flex-end" }}>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="btn btn-secondary"
-                    disabled={updating}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn btn-primary" disabled={updating}>
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-            </div>
+                      {/* Staff actions */}
+                      {isStaff && (
+                        req.status === "pending" ? (
+                          <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
+                            <button onClick={() => openEditModal(req)} className="btn btn-sm btn-outline" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(req)}
+                              className="btn btn-sm btn-outline"
+                              style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>Processed</span>
+                        )
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
-    );
-  }
+
+      {/* Edit Modal */}
+      {isEditModalOpen && editingRequest && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            className="card fade-in"
+            style={{ width: "90%", maxWidth: "450px", padding: "1.5rem", position: "relative" }}
+          >
+            <p className="card-title" style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
+              Edit Pending Payment Request (Invoice #{editingRequest.invoice_no})
+            </p>
+            <form onSubmit={handleEditSubmit}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                <div>
+                  <label className="form-label">Mode of Payment</label>
+                  <select
+                    value={editPaymentMode}
+                    onChange={(e) => setEditPaymentMode(e.target.value)}
+                    className="form-select"
+                    required
+                  >
+                    <option value="UPI">UPI</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">Comment</label>
+                  <textarea
+                    value={editComment}
+                    onChange={(e) => setEditComment(e.target.value)}
+                    className="form-textarea"
+                    placeholder="Update comments..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.5rem", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="btn btn-secondary"
+                  disabled={updating}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={updating}>
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
