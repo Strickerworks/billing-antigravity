@@ -13,7 +13,9 @@ export default function DriverDetailPage() {
   const [driver, setDriver] = useState(null);
   const [vehicleHistory, setVehicleHistory] = useState([]);
   const [paymentsHistory, setPaymentsHistory] = useState([]);
+  const [leavesHistory, setLeavesHistory] = useState([]);
   const [pendingPayments, setPendingPayments] = useState([]);
+  const [pendingLeaves, setPendingLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -34,6 +36,12 @@ export default function DriverDetailPage() {
   const [paymentDate, setPaymentDate] = useState("");
   const [paymentType, setPaymentType] = useState("salary_paid"); // 'salary_paid', 'deduction', 'advance'
   const [paymentComment, setPaymentComment] = useState("");
+
+  // Leave Log Form state
+  const [showLeaveForm, setShowLeaveForm] = useState(false);
+  const [leaveStartDate, setLeaveStartDate] = useState("");
+  const [leaveEndDate, setLeaveEndDate] = useState("");
+  const [leaveReason, setLeaveReason] = useState("");
 
   useEffect(() => {
     if (driverId) {
@@ -81,15 +89,29 @@ export default function DriverDetailPage() {
         .order("payment_date", { ascending: false });
       setPaymentsHistory(payHistory || []);
 
-      // 4. Get pending fleet requests for payments
+      // 4. Get driver leaves logs
+      const { data: leaves } = await supabase
+        .from("driver_leaves")
+        .select("*")
+        .eq("driver_id", driverId)
+        .order("start_date", { ascending: false });
+      setLeavesHistory(leaves || []);
+
+      // 5. Get pending fleet requests
       const { data: allPending } = await supabase
         .from("fleet_requests")
         .select("*")
         .eq("status", "pending");
-      const driverPending = (allPending || []).filter(
-        (req) => req.payload && req.payload.driver_id === driverId
+      
+      const driverPendingPayments = (allPending || []).filter(
+        (req) => req.request_type === "log_driver_payment" && req.payload && req.payload.driver_id === driverId
       );
-      setPendingPayments(driverPending);
+      setPendingPayments(driverPendingPayments);
+
+      const driverPendingLeaves = (allPending || []).filter(
+        (req) => req.request_type === "log_driver_leave" && req.payload && req.payload.driver_id === driverId
+      );
+      setPendingLeaves(driverPendingLeaves);
 
     } catch (err) {
       console.error("Error loading driver details:", err);
@@ -210,6 +232,52 @@ export default function DriverDetailPage() {
     setSubmitting(false);
   };
 
+  const handleLeaveSubmit = async (e) => {
+    e.preventDefault();
+    if (!leaveStartDate || !leaveEndDate) {
+      alert("Please specify start and end dates.");
+      return;
+    }
+    if (new Date(leaveStartDate) > new Date(leaveEndDate)) {
+      alert("Start Date cannot be after End Date.");
+      return;
+    }
+    setSubmitting(true);
+
+    const payload = {
+      driver_id: driverId,
+      start_date: leaveStartDate,
+      end_date: leaveEndDate,
+      reason: leaveReason.trim()
+    };
+
+    try {
+      if (isAdmin) {
+        const { error } = await supabase.from("driver_leaves").insert([payload]);
+        if (error) throw error;
+        alert("Leave logged successfully.");
+      } else {
+        const { error } = await supabase.from("fleet_requests").insert([{
+          request_type: "log_driver_leave",
+          payload,
+          requested_by: "staff",
+          status: "pending"
+        }]);
+        if (error) throw error;
+        alert("Leave request submitted to Admin for approval.");
+      }
+
+      setLeaveStartDate("");
+      setLeaveEndDate("");
+      setLeaveReason("");
+      setShowLeaveForm(false);
+      fetchDriverDetails();
+    } catch (err) {
+      alert(err.message || "Failed to log leave record");
+    }
+    setSubmitting(false);
+  };
+
   if (loading && !driver) {
     return <div className="page-content">Loading driver profile...</div>;
   }
@@ -243,6 +311,26 @@ export default function DriverDetailPage() {
   const baseSalary = parseFloat(driver.salary || 0);
   const leftoverBalance = baseSalary - (totalPaid + totalDeductions + totalAdvances);
 
+  // Leave calculations
+  const totalLeaveDays = leavesHistory.reduce((sum, l) => {
+    const sDate = new Date(l.start_date);
+    const eDate = new Date(l.end_date);
+    const diff = Math.ceil(Math.abs(eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
+    return sum + diff;
+  }, 0);
+
+  const thisMonthLeaveDays = leavesHistory
+    .filter((l) => {
+      const sDate = new Date(l.start_date);
+      return sDate.getFullYear() === currentYear && sDate.getMonth() === currentMonth;
+    })
+    .reduce((sum, l) => {
+      const sDate = new Date(l.start_date);
+      const eDate = new Date(l.end_date);
+      const diff = Math.ceil(Math.abs(eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
+      return sum + diff;
+    }, 0);
+
   return (
     <div className="page-content" style={{ maxWidth: 900, paddingBottom: "3rem" }}>
       {/* Breadcrumb */}
@@ -263,7 +351,10 @@ export default function DriverDetailPage() {
             </p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={() => setShowPaymentForm(!showPaymentForm)} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#10b981", borderColor: "#10b981" }}>
+            <button onClick={() => { setShowLeaveForm(!showLeaveForm); setShowPaymentForm(false); }} className="btn btn-secondary" style={{ fontSize: "0.8rem", background: "#f59e0b", color: "#ffffff", borderColor: "#f59e0b" }}>
+              📅 Log Leave
+            </button>
+            <button onClick={() => { setShowPaymentForm(!showPaymentForm); setShowLeaveForm(false); }} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#10b981", borderColor: "#10b981" }}>
               💵 Log Payment
             </button>
             <button onClick={() => setShowEditModal(true)} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
@@ -279,41 +370,62 @@ export default function DriverDetailPage() {
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
       {/* Salary & Balance Summary Banner */}
-      <div className="card" style={{
-        padding: "1.25rem",
-        background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-        border: "1px solid #bbf7d0",
-        borderRadius: "8px",
-        marginBottom: "1.5rem"
-      }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "1rem" }}>
-          <div>
-            <div style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>Monthly Base Salary</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#166534", marginTop: "0.25rem" }}>₹{baseSalary.toLocaleString()}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>Salary Paid</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#166534", marginTop: "0.25rem" }}>₹{totalPaid.toLocaleString()}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "0.7rem", color: "#b45309", fontWeight: 700, textTransform: "uppercase" }}>Advances Taken</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#92400e", marginTop: "0.25rem" }}>₹{totalAdvances.toLocaleString()}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: "0.7rem", color: "#b91c1c", fontWeight: 700, textTransform: "uppercase" }}>Deductions</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#991b1b", marginTop: "0.25rem" }}>₹{totalDeductions.toLocaleString()}</div>
-          </div>
-          <div style={{ borderLeft: "1px solid #bbf7d0", paddingLeft: "1rem" }}>
-            <div style={{ fontSize: "0.7rem", color: "#1e40af", fontWeight: 700, textTransform: "uppercase" }}>Leftover Balance</div>
-            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: leftoverBalance >= 0 ? "#1e3a8a" : "#b91c1c", marginTop: "0.25rem" }}>
-              ₹{leftoverBalance.toLocaleString()}
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
+        {/* Row 1: Finance Summary */}
+        <div className="card" style={{
+          padding: "1.25rem",
+          background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+          border: "1px solid #bbf7d0",
+          borderRadius: "8px"
+        }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(135px, 1fr))", gap: "1rem" }}>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>Monthly Base Salary</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#166534", marginTop: "0.25rem" }}>₹{baseSalary.toLocaleString()}</div>
             </div>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>Salary Paid</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#166534", marginTop: "0.25rem" }}>₹{totalPaid.toLocaleString()}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "#b45309", fontWeight: 700, textTransform: "uppercase" }}>Advances Taken</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#92400e", marginTop: "0.25rem" }}>₹{totalAdvances.toLocaleString()}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.7rem", color: "#b91c1c", fontWeight: 700, textTransform: "uppercase" }}>Deductions</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#991b1b", marginTop: "0.25rem" }}>₹{totalDeductions.toLocaleString()}</div>
+            </div>
+            <div style={{ borderLeft: "1px solid #bbf7d0", paddingLeft: "1rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "#1e40af", fontWeight: 700, textTransform: "uppercase" }}>Leftover Balance</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: leftoverBalance >= 0 ? "#1e3a8a" : "#b91c1c", marginTop: "0.25rem" }}>
+                ₹{leftoverBalance.toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Leaves Summary */}
+        <div className="card" style={{
+          padding: "1rem 1.25rem",
+          background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+          border: "1px solid #fde68a",
+          borderRadius: "8px",
+          display: "flex",
+          gap: "2rem"
+        }}>
+          <div>
+            <span style={{ fontSize: "0.7rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase" }}>Leaves Taken (This Month)</span>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>{thisMonthLeaveDays} Days</div>
+          </div>
+          <div style={{ borderLeft: "1px solid #fde68a", paddingLeft: "2rem" }}>
+            <span style={{ fontSize: "0.7rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase" }}>Total Leaves (All Time)</span>
+            <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>{totalLeaveDays} Days</div>
           </div>
         </div>
       </div>
 
       {/* Pending payments warning indicator for Staff */}
-      {pendingPayments.length > 0 && (
+      {(pendingPayments.length > 0 || pendingLeaves.length > 0) && (
         <div style={{
           padding: "1rem",
           background: "#fffbeb",
@@ -325,12 +437,17 @@ export default function DriverDetailPage() {
           gap: "0.5rem"
         }}>
           <div style={{ fontWeight: 700, color: "#92400e", fontSize: "0.85rem" }}>
-            ⚠️ {pendingPayments.length} Pending Payment Request(s) Awaiting Approval:
+            ⚠️ Pending Fleet Request(s) Awaiting Approval:
           </div>
           <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#b45309" }}>
             {pendingPayments.map((req) => (
               <li key={req.id}>
                 <strong>{req.payload.type?.replace("_", " ").toUpperCase()}</strong> of <strong>₹{req.payload.amount?.toLocaleString()}</strong> requested on {new Date(req.created_at).toLocaleDateString()}
+              </li>
+            ))}
+            {pendingLeaves.map((req) => (
+              <li key={req.id}>
+                <strong>LEAVE LOG</strong> from {new Date(req.payload.start_date).toLocaleDateString()} to {new Date(req.payload.end_date).toLocaleDateString()} requested on {new Date(req.created_at).toLocaleDateString()}
               </li>
             ))}
           </ul>
@@ -378,8 +495,40 @@ export default function DriverDetailPage() {
         </div>
       )}
 
+      {/* Log Leave Form */}
+      {showLeaveForm && (
+        <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "1.5rem" }}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>
+            {isAdmin ? "Log Leave Directly" : "Request Leave Record"}
+          </h2>
+          <form onSubmit={handleLeaveSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+            <div className="form-group">
+              <label className="form-label">Start Date</label>
+              <input type="date" className="form-input" value={leaveStartDate} onChange={(e) => setLeaveStartDate(e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">End Date</label>
+              <input type="date" className="form-input" value={leaveEndDate} onChange={(e) => setLeaveEndDate(e.target.value)} required />
+            </div>
+
+            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+              <label className="form-label">Reason / Remarks</label>
+              <input type="text" className="form-input" placeholder="Leave remarks (e.g. Personal work, Sick leave)" value={leaveReason} onChange={(e) => setLeaveReason(e.target.value)} />
+            </div>
+
+            <div style={{ gridColumn: "1 / -1", display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <button type="button" onClick={() => setShowLeaveForm(false)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
+              <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem", background: "#f59e0b", borderColor: "#f59e0b" }}>
+                {submitting ? "Processing..." : isAdmin ? "Save Record" : "Submit Request"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1.2fr", gap: "2rem" }}>
-        {/* Left Card: Full profile details */}
+        {/* Left Column: Profile info + Ledger timeline logs */}
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
           <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Profile Information</h2>
@@ -423,6 +572,47 @@ export default function DriverDetailPage() {
                 <div style={{ fontSize: "0.95rem", color: "#374151", fontWeight: 600, marginTop: "0.25rem", whiteSpace: "pre-line" }}>{driver.address || "Not Provided"}</div>
               </div>
             </div>
+          </div>
+
+          {/* Leaves History Ledger */}
+          <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Leave History Records</h2>
+            {leavesHistory.length === 0 ? (
+              <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>No leave logs recorded.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {leavesHistory.map((leave) => {
+                  const sDate = new Date(leave.start_date);
+                  const eDate = new Date(leave.end_date);
+                  const days = Math.ceil(Math.abs(eDate - sDate) / (1000 * 60 * 60 * 24)) + 1;
+
+                  return (
+                    <div key={leave.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.6rem" }}>
+                      <div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>
+                            {days} {days === 1 ? "Day" : "Days"} Leave
+                          </span>
+                          <span style={{
+                            fontSize: "0.65rem",
+                            fontWeight: 700,
+                            color: "#92400e",
+                            background: "#fffbeb",
+                            padding: "0.15rem 0.4rem",
+                            borderRadius: "4px"
+                          }}>
+                            {sDate.toLocaleDateString()} - {eDate.toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "0.15rem" }}>
+                          {leave.reason || "No reason specified"}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Payment & Advances Ledger */}
@@ -479,7 +669,7 @@ export default function DriverDetailPage() {
           </div>
         </div>
 
-        {/* Right Card: Vehicle Assign History */}
+        {/* Right Column: Assigned Vehicle Logs */}
         <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", height: "fit-content" }}>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>Assigned Vehicle Logs</h2>
           {vehicleHistory.length === 0 ? (

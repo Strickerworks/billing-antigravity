@@ -207,6 +207,14 @@ export default function FleetRequestsPage() {
             requested_by: req.requested_by || "staff"
           }]);
         }
+      } else if (req.request_type === "log_driver_leave") {
+        const { error } = await supabase.from("driver_leaves").insert([{
+          driver_id: payload.driver_id,
+          start_date: payload.start_date,
+          end_date: payload.end_date,
+          reason: payload.reason
+        }]);
+        if (error) throw error;
       }
 
       // Mark request as approved
@@ -316,6 +324,8 @@ export default function FleetRequestsPage() {
         return `Assign Driver Assignment: Driver ID ${p.driver_id}`;
       case "log_driver_payment":
         return `Driver Payment Log: ${p.type?.replace("_", " ").toUpperCase()} of ₹${parseFloat(p.amount).toLocaleString()} on ${p.payment_date} [Comment: ${p.comment || 'None'}]`;
+      case "log_driver_leave":
+        return `Driver Leave Log: From ${p.start_date} to ${p.end_date} [Reason: ${p.reason || 'None'}]`;
       default:
         return JSON.stringify(p);
     }
@@ -735,6 +745,40 @@ export default function FleetRequestsPage() {
                       className="form-input"
                       value={editPayload.comment || ""}
                       onChange={(e) => setEditPayload({ ...editPayload, comment: e.target.value })}
+                    />
+                  </div>
+                </>
+              )}
+
+              {editingRequest.request_type === "log_driver_leave" && (
+                <>
+                  <div className="form-group">
+                    <label className="form-label">Start Date</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={editPayload.start_date || ""}
+                      onChange={(e) => setEditPayload({ ...editPayload, start_date: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">End Date</label>
+                    <input
+                      type="date"
+                      className="form-input"
+                      value={editPayload.end_date || ""}
+                      onChange={(e) => setEditPayload({ ...editPayload, end_date: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Reason</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={editPayload.reason || ""}
+                      onChange={(e) => setEditPayload({ ...editPayload, reason: e.target.value })}
                     />
                   </div>
                 </>
