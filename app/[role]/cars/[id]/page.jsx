@@ -8,24 +8,26 @@ export default function CarDetailPage() {
   const router = useRouter();
   const { role, id } = useParams();
   const carId = parseInt(id);
+  const isAdmin = role === "admin";
 
   // States
   const [car, setCar] = useState(null);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("km"); // km, service, fuel, insurance, misc, drivers
+  const [activeTab, setActiveTab] = useState("km");
   const [submitting, setSubmitting] = useState(false);
 
-  // History states
+  // History states (Only holds approved logs)
   const [kmLogs, setKmLogs] = useState([]);
   const [serviceLogs, setServiceLogs] = useState([]);
   const [fuelLogs, setFuelLogs] = useState([]);
   const [insuranceLogs, setInsuranceLogs] = useState([]);
   const [miscLogs, setMiscLogs] = useState([]);
   const [driverLogs, setDriverLogs] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   // Form states
-  const [showLogForm, setShowLogForm] = useState(null); // 'km', 'service', 'fuel', 'insurance', 'misc', 'driver'
+  const [showLogForm, setShowLogForm] = useState(null);
 
   // Log Form fields
   const [kmVal, setKmVal] = useState("");
@@ -72,14 +74,15 @@ export default function CarDetailPage() {
 
       if (carErr) throw carErr;
 
-      // 2. Fetch history logs parallel
+      // 2. Fetch history logs (all entries in main tables are approved)
       const [
         { data: kms },
         { data: services },
         { data: fuels },
         { data: insurances },
         { data: miscs },
-        { data: assigns }
+        { data: assigns },
+        { data: allPending }
       ] = await Promise.all([
         supabase.from("car_km_history").select("*").eq("car_id", carId).order("created_at", { ascending: false }),
         supabase.from("car_service_history").select("*").eq("car_id", carId).order("service_date", { ascending: false }),
@@ -87,6 +90,7 @@ export default function CarDetailPage() {
         supabase.from("car_insurance_history").select("*").eq("car_id", carId).order("insurance_date", { ascending: false }),
         supabase.from("car_misc_history").select("*").eq("car_id", carId).order("created_at", { ascending: false }),
         supabase.from("car_driver_history").select("*, drivers(name, phone)").eq("car_id", carId).order("assigned_at", { ascending: false }),
+        supabase.from("fleet_requests").select("*").eq("status", "pending")
       ]);
 
       setKmLogs(kms || []);
@@ -95,6 +99,10 @@ export default function CarDetailPage() {
       setInsuranceLogs(insurances || []);
       setMiscLogs(miscs || []);
       setDriverLogs(assigns || []);
+
+      // Filter pending requests for this specific car
+      const carPending = (allPending || []).filter(req => req.payload && req.payload.car_id === carId);
+      setPendingRequests(carPending);
 
       // 3. Compile current info summary
       const currentKm = kms?.[0]?.km_clocked || "0";
@@ -133,70 +141,64 @@ export default function CarDetailPage() {
   const handleLogSubmit = async (e, type) => {
     e.preventDefault();
     setSubmitting(true);
-    let error = null;
+    let payload = {};
 
     try {
       if (type === "km") {
         if (!kmVal) throw new Error("Please enter Odometer reading");
-        const { error: err } = await supabase
-          .from("car_km_history")
-          .insert([{ car_id: carId, km_clocked: parseFloat(kmVal), comment: kmComment }]);
-        error = err;
-        setKmVal("");
-        setKmComment("");
+        payload = { car_id: carId, km_clocked: parseFloat(kmVal), comment: kmComment };
       } else if (type === "service") {
         if (!serviceDate) throw new Error("Please enter service date");
-        const { error: err } = await supabase
-          .from("car_service_history")
-          .insert([{ car_id: carId, service_date: serviceDate, comment: serviceComment }]);
-        error = err;
-        setServiceDate("");
-        setServiceComment("");
+        payload = { car_id: carId, service_date: serviceDate, comment: serviceComment };
       } else if (type === "fuel") {
         if (!fuelLiters || !fuelMoney) throw new Error("Please fill fuel metrics");
-        const { error: err } = await supabase
-          .from("car_fuel_history")
-          .insert([{ car_id: carId, liters: parseFloat(fuelLiters), money: parseFloat(fuelMoney), comment: fuelComment }]);
-        error = err;
-        setFuelLiters("");
-        setFuelMoney("");
-        setFuelComment("");
+        payload = { car_id: carId, liters: parseFloat(fuelLiters), money: parseFloat(fuelMoney), comment: fuelComment };
       } else if (type === "insurance") {
         if (!insuranceDate || !insuranceFrom || !insuranceTo) throw new Error("Please specify dates");
-        const { error: err } = await supabase
-          .from("car_insurance_history")
-          .insert([{
-            car_id: carId,
-            insurance_date: insuranceDate,
-            insurance_from: insuranceFrom,
-            insurance_to: insuranceTo,
-            comment: insuranceComment
-          }]);
-        error = err;
-        setInsuranceDate("");
-        setInsuranceFrom("");
-        setInsuranceTo("");
-        setInsuranceComment("");
+        payload = { car_id: carId, insurance_date: insuranceDate, insurance_from: insuranceFrom, insurance_to: insuranceTo, comment: insuranceComment };
       } else if (type === "misc") {
         if (!miscAmount) throw new Error("Please specify charges amount");
-        const { error: err } = await supabase
-          .from("car_misc_history")
-          .insert([{ car_id: carId, amount: parseFloat(miscAmount), comment: miscComment }]);
-        error = err;
-        setMiscAmount("");
-        setMiscComment("");
+        payload = { car_id: carId, amount: parseFloat(miscAmount), comment: miscComment };
       } else if (type === "driver") {
         if (!assignDriverId) throw new Error("Please choose a driver");
-        const { error: err } = await supabase
-          .from("car_driver_history")
-          .insert([{ car_id: carId, driver_id: parseInt(assignDriverId) }]);
-        error = err;
-        setAssignDriverId("");
+        payload = { car_id: carId, driver_id: parseInt(assignDriverId) };
       }
 
-      if (error) throw error;
+      if (isAdmin) {
+        // Admin executes directly
+        let table = "";
+        let insertData = {};
+        if (type === "km") { table = "car_km_history"; insertData = payload; }
+        else if (type === "service") { table = "car_service_history"; insertData = payload; }
+        else if (type === "fuel") { table = "car_fuel_history"; insertData = payload; }
+        else if (type === "insurance") { table = "car_insurance_history"; insertData = payload; }
+        else if (type === "misc") { table = "car_misc_history"; insertData = payload; }
+        else if (type === "driver") { table = "car_driver_history"; insertData = payload; }
 
+        const { error } = await supabase.from(table).insert([insertData]);
+        if (error) throw error;
+        alert("Record logged successfully.");
+      } else {
+        // Staff requests
+        const { error } = await supabase.from("fleet_requests").insert([{
+          request_type: `log_${type}`,
+          payload,
+          requested_by: "staff",
+          status: "pending"
+        }]);
+        if (error) throw error;
+        alert("Log request submitted to Admin for approval.");
+      }
+
+      // Reset forms
+      setKmVal(""); setKmComment("");
+      setServiceDate(""); setServiceComment("");
+      setFuelLiters(""); setFuelMoney(""); setFuelComment("");
+      setInsuranceDate(""); setInsuranceFrom(""); setInsuranceTo(""); setInsuranceComment("");
+      setMiscAmount(""); setMiscComment("");
+      setAssignDriverId("");
       setShowLogForm(null);
+
       await fetchCarDetails();
     } catch (err) {
       alert(err.message || "Failed to log event");
@@ -214,7 +216,7 @@ export default function CarDetailPage() {
 
   return (
     <div className="page-content" style={{ maxWidth: 960, paddingBottom: "3rem" }}>
-      {/* Breadcrumb & Title */}
+      {/* Breadcrumb */}
       <div style={{ padding: "1.5rem 0 1rem" }}>
         <div style={{ display: "flex", gap: "0.5rem", fontSize: "0.8rem", color: "#6b7280", marginBottom: "0.5rem" }}>
           <Link href={`/${role}`} style={{ color: "#6b7280" }}>Home</Link> / 
@@ -224,7 +226,7 @@ export default function CarDetailPage() {
         
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "#111827", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "#111827" }}>
               {car.name}
             </h1>
             <span style={{
@@ -236,19 +238,43 @@ export default function CarDetailPage() {
               padding: "0.125rem 0.5rem",
               display: "inline-block",
               fontWeight: 700,
-              marginTop: "0.25rem",
-              letterSpacing: "0.03em"
+              marginTop: "0.25rem"
             }}>
               {car.registration_name}
             </span>
           </div>
           <Link href={`/${role}/cars`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
-            ➔ Fleet List
+            ➔ Fleet Registry
           </Link>
         </div>
       </div>
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
+
+      {/* Pending requests warning indicator for Staff */}
+      {pendingRequests.length > 0 && (
+        <div style={{
+          padding: "1rem",
+          background: "#fffbeb",
+          border: "1px solid #fef3c7",
+          borderRadius: "8px",
+          marginBottom: "1.5rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.5rem"
+        }}>
+          <div style={{ fontWeight: 700, color: "#92400e", fontSize: "0.85rem" }}>
+            ⚠️ {pendingRequests.length} Pending Approval Request(s) for this vehicle:
+          </div>
+          <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#b45309" }}>
+            {pendingRequests.map(req => (
+              <li key={req.id}>
+                <strong>{req.request_type.replace("log_", "").toUpperCase()} log</strong> requested on {new Date(req.created_at).toLocaleDateString()} (Awaiting Admin review)
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Profile Overview Stats */}
       <div style={{
@@ -284,7 +310,7 @@ export default function CarDetailPage() {
       {/* Action panel */}
       <div className="card" style={{ padding: "1.25rem", marginBottom: "2rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
         <h2 style={{ fontSize: "0.95rem", fontWeight: 700, textTransform: "uppercase", color: "#374151", margin: "0 0 1rem", letterSpacing: "0.02em" }}>
-          Log Entry &amp; Operations
+          {isAdmin ? "Log Vehicle Activity Directly" : "Request Vehicle Activity Log"}
         </h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
           <button onClick={() => setShowLogForm(showLogForm === "km" ? null : "km")} className="btn btn-primary" style={{ fontSize: "0.8rem", padding: "0.5rem 0.85rem" }}>⏱ Log Odometer</button>
@@ -295,34 +321,32 @@ export default function CarDetailPage() {
           <button onClick={() => setShowLogForm(showLogForm === "driver" ? null : "driver")} className="btn btn-secondary" style={{ fontSize: "0.8rem", padding: "0.5rem 0.85rem" }}>👤 Assign Driver</button>
         </div>
 
-        {/* Conditional forms based on showLogForm */}
+        {/* Form panel */}
         {showLogForm && (
           <div style={{ marginTop: "1.25rem", padding: "1.25rem", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px" }}>
             <h3 style={{ fontSize: "0.95rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>
-              {showLogForm === "km" && "Record Odometer Reading"}
-              {showLogForm === "service" && "Record Vehicle Servicing"}
-              {showLogForm === "fuel" && "Record Fuel Fill Up"}
-              {showLogForm === "insurance" && "Record OInsurance Policy Update"}
-              {showLogForm === "misc" && "Record Miscellaneous Fleet Cost"}
-              {showLogForm === "driver" && "Assign Driver to Vehicle"}
+              {showLogForm === "km" && (isAdmin ? "Record Odometer Reading" : "Request Odometer Record")}
+              {showLogForm === "service" && (isAdmin ? "Record Vehicle Servicing" : "Request Service Record")}
+              {showLogForm === "fuel" && (isAdmin ? "Record Fuel Fill Up" : "Request Fuel Record")}
+              {showLogForm === "insurance" && (isAdmin ? "Record Insurance Policy Update" : "Request Insurance Update")}
+              {showLogForm === "misc" && (isAdmin ? "Record Miscellaneous Fleet Cost" : "Request Misc Cost Record")}
+              {showLogForm === "driver" && (isAdmin ? "Assign Driver to Vehicle" : "Request Driver Assignment")}
             </h3>
 
             <form onSubmit={(e) => handleLogSubmit(e, showLogForm)} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {/* Odometer form */}
               {showLogForm === "km" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1rem" }}>
                   <div className="form-group">
                     <label className="form-label">Kilometer Clocked</label>
-                    <input type="number" className="form-input" placeholder="e.g. 154000" value={kmVal} onChange={(e) => setKmVal(e.target.value)} required />
+                    <input type="number" className="form-input" placeholder="Odometer value" value={kmVal} onChange={(e) => setKmVal(e.target.value)} required />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Optional Comment</label>
-                    <input type="text" className="form-input" placeholder="Servicing, driver trip shift, etc." value={kmComment} onChange={(e) => setKmComment(e.target.value)} />
+                    <input type="text" className="form-input" placeholder="Details/Reason" value={kmComment} onChange={(e) => setKmComment(e.target.value)} />
                   </div>
                 </div>
               )}
 
-              {/* Service form */}
               {showLogForm === "service" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1rem" }}>
                   <div className="form-group">
@@ -331,17 +355,16 @@ export default function CarDetailPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Details / Comment</label>
-                    <input type="text" className="form-input" placeholder="Engine oil change, tire rotation..." value={serviceComment} onChange={(e) => setServiceComment(e.target.value)} required />
+                    <input type="text" className="form-input" placeholder="Servicing details..." value={serviceComment} onChange={(e) => setServiceComment(e.target.value)} required />
                   </div>
                 </div>
               )}
 
-              {/* Fuel form */}
               {showLogForm === "fuel" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: "1rem" }}>
                   <div className="form-group">
                     <label className="form-label">Fuel Liter Quantity</label>
-                    <input type="number" step="0.01" className="form-input" placeholder="Liters filled" value={fuelLiters} onChange={(e) => setFuelLiters(e.target.value)} required />
+                    <input type="number" step="0.01" className="form-input" placeholder="Liters" value={fuelLiters} onChange={(e) => setFuelLiters(e.target.value)} required />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Amount Charged (Money)</label>
@@ -349,12 +372,11 @@ export default function CarDetailPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Optional Comment</label>
-                    <input type="text" className="form-input" placeholder="Full tank, petrol bunk name..." value={fuelComment} onChange={(e) => setFuelComment(e.target.value)} />
+                    <input type="text" className="form-input" placeholder="Remarks" value={fuelComment} onChange={(e) => setFuelComment(e.target.value)} />
                   </div>
                 </div>
               )}
 
-              {/* Insurance form */}
               {showLogForm === "insurance" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "1rem" }}>
                   <div className="form-group">
@@ -371,12 +393,11 @@ export default function CarDetailPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Provider / Policy Info</label>
-                    <input type="text" className="form-input" placeholder="HDFC Ergo policy details..." value={insuranceComment} onChange={(e) => setInsuranceComment(e.target.value)} />
+                    <input type="text" className="form-input" placeholder="Policy details" value={insuranceComment} onChange={(e) => setInsuranceComment(e.target.value)} />
                   </div>
                 </div>
               )}
 
-              {/* Misc form */}
               {showLogForm === "misc" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1rem" }}>
                   <div className="form-group">
@@ -385,17 +406,16 @@ export default function CarDetailPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Description / Remarks</label>
-                    <input type="text" className="form-input" placeholder="Toll tags, parking fee, fine..." value={miscComment} onChange={(e) => setMiscComment(e.target.value)} required />
+                    <input type="text" className="form-input" placeholder="Reason/remarks" value={miscComment} onChange={(e) => setMiscComment(e.target.value)} required />
                   </div>
                 </div>
               )}
 
-              {/* Assign driver form */}
               {showLogForm === "driver" && (
                 <div className="form-group">
                   <label className="form-label">Select Driver</label>
                   <select className="form-input" value={assignDriverId} onChange={(e) => setAssignDriverId(e.target.value)} required>
-                    <option value="">-- Choose registered driver --</option>
+                    <option value="">-- Select driver --</option>
                     {drivers.map(drv => (
                       <option key={drv.id} value={drv.id}>{drv.name} ({drv.phone})</option>
                     ))}
@@ -406,7 +426,7 @@ export default function CarDetailPage() {
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
                 <button type="button" onClick={() => setShowLogForm(null)} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>Cancel</button>
                 <button type="submit" disabled={submitting} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
-                  {submitting ? "Submitting..." : "Save Record"}
+                  {submitting ? "Submitting..." : isAdmin ? "Save Record" : "Submit Request"}
                 </button>
               </div>
             </form>
@@ -425,9 +445,8 @@ export default function CarDetailPage() {
           <button onClick={() => setActiveTab("drivers")} style={{ background: "none", border: "none", borderBottom: activeTab === "drivers" ? "3px solid #111827" : "none", color: activeTab === "drivers" ? "#111827" : "#6b7280", fontWeight: activeTab === "drivers" ? 700 : 500, padding: "0.75rem 1rem", cursor: "pointer", fontSize: "0.85rem", whiteSpace: "nowrap" }}>👤 Driver Assignments</button>
         </div>
 
-        {/* Tab contents */}
+        {/* Timelines content */}
         <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-          {/* Odometer history */}
           {activeTab === "km" && (
             <div>
               <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Odometer logs</h3>
@@ -437,7 +456,7 @@ export default function CarDetailPage() {
                     <div key={log.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.5rem" }}>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>{parseFloat(log.km_clocked).toLocaleString()} km</div>
-                        <div style={{ fontSize: "0.8rem", color: "#6b7280" }}>{log.comment || "No comment provided"}</div>
+                        <div style={{ fontSize: "0.8rem", color: "#6b7280" }}>{log.comment || "No comment"}</div>
                       </div>
                       <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
                         {new Date(log.created_at).toLocaleString()}
@@ -449,7 +468,6 @@ export default function CarDetailPage() {
             </div>
           )}
 
-          {/* Service logs */}
           {activeTab === "service" && (
             <div>
               <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Service logs</h3>
@@ -462,7 +480,7 @@ export default function CarDetailPage() {
                         <div style={{ fontSize: "0.8rem", color: "#374151" }}>{log.comment}</div>
                       </div>
                       <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
-                        Logged: {new Date(log.created_at).toLocaleDateString()}
+                        {new Date(log.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
@@ -471,7 +489,6 @@ export default function CarDetailPage() {
             </div>
           )}
 
-          {/* Fuel logs */}
           {activeTab === "fuel" && (
             <div>
               <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Fuel history</h3>
@@ -493,7 +510,6 @@ export default function CarDetailPage() {
             </div>
           )}
 
-          {/* Insurance logs */}
           {activeTab === "insurance" && (
             <div>
               <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Insurance logs</h3>
@@ -502,12 +518,12 @@ export default function CarDetailPage() {
                   {insuranceLogs.map(log => (
                     <div key={log.id} style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f3f4f6", paddingBottom: "0.5rem" }}>
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>Policy from {new Date(log.insurance_from).toLocaleDateString()} to {new Date(log.insurance_to).toLocaleDateString()}</div>
-                        <div style={{ fontSize: "0.8rem", color: "#374151" }}>Provider/Info: {log.comment || "None"}</div>
-                        <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>Insured at: {new Date(log.insurance_date).toLocaleDateString()}</div>
+                        <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>Policy: {new Date(log.insurance_from).toLocaleDateString()} to {new Date(log.insurance_to).toLocaleDateString()}</div>
+                        <div style={{ fontSize: "0.8rem", color: "#374151" }}>Provider: {log.comment || "None"}</div>
+                        <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>Insured Date: {new Date(log.insurance_date).toLocaleDateString()}</div>
                       </div>
                       <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
-                        Logged: {new Date(log.created_at).toLocaleDateString()}
+                        {new Date(log.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
@@ -516,7 +532,6 @@ export default function CarDetailPage() {
             </div>
           )}
 
-          {/* Misc logs */}
           {activeTab === "misc" && (
             <div>
               <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Miscellaneous costs log</h3>
@@ -538,7 +553,6 @@ export default function CarDetailPage() {
             </div>
           )}
 
-          {/* Drivers history */}
           {activeTab === "drivers" && (
             <div>
               <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem" }}>Driver assignment history</h3>

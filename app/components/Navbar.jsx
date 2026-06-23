@@ -64,6 +64,7 @@ export default function Navbar() {
     { href: `${prefix}/requests`, label: "Invoice Requests" },
     { href: `${prefix}/expenses`, label: "Expense Requests" },
     { href: `${prefix}/payment-request`, label: "Payment Requests" },
+    { href: `${prefix}/fleet-requests`, label: "Fleet Requests" },
     { href: `${prefix}/audit-log`, label: "Audit Log" },
   ];
 
