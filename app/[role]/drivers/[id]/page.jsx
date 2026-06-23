@@ -173,6 +173,11 @@ export default function DriverDetailPage() {
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
       {/* Title & Action Buttons Section */}
       <div style={{ padding: "1.5rem 0" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          <Link href={`/${role}/drivers`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+            ← Back to Registry
+          </Link>
+        </div>
         <div>
           <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: 0, color: "#111827" }}>
             {driver.name}
@@ -184,9 +189,6 @@ export default function DriverDetailPage() {
 
         {/* Buttons placed below the name in a clean row */}
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.50rem" }}>
-          <Link href={`/${role}/drivers`} style={buttonStyle}>
-            ← Back
-          </Link>
           <Link href={`/${role}/drivers/${driverId}/leave`} style={buttonStyle}>
             📅 Log Leave
           </Link>
