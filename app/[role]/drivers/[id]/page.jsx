@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function DriverDetailPage() {
   const { role, id } = useParams();
   const driverId = parseInt(id);
+  const router = useRouter();
   const isAdmin = role === "admin";
 
   const [driver, setDriver] = useState(null);
@@ -16,6 +17,20 @@ export default function DriverDetailPage() {
   const [pendingPayments, setPendingPayments] = useState([]);
   const [pendingLeaves, setPendingLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const handleDeleteDriver = async () => {
+    if (!confirm(`Are you sure you want to delete driver ${driver?.name} permanently?`)) {
+      return;
+    }
+    try {
+      const { error } = await supabase.from("drivers").delete().eq("id", driverId);
+      if (error) throw error;
+      alert("Driver profile deleted successfully.");
+      router.push(`/${role}/drivers`);
+    } catch (err) {
+      alert("Failed to delete driver: " + err.message);
+    }
+  };
 
   useEffect(() => {
     if (driverId) {
@@ -166,6 +181,20 @@ export default function DriverDetailPage() {
             <Link href={`/${role}/drivers/${driverId}/edit`} className="btn btn-primary" style={{ fontSize: "0.8rem" }}>
               ✎ Edit Profile
             </Link>
+            {isAdmin && (
+              <button
+                onClick={handleDeleteDriver}
+                className="btn btn-secondary"
+                style={{
+                  fontSize: "0.8rem",
+                  color: "#b91c1c",
+                  border: "1px solid #fee2e2",
+                  background: "#fef2f2"
+                }}
+              >
+                🗑 Delete Profile
+              </button>
+            )}
             <Link href={`/${role}/drivers`} className="btn btn-secondary" style={{ fontSize: "0.8rem" }}>
               ➔ Drivers List
             </Link>
