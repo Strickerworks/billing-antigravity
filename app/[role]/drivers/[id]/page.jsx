@@ -198,9 +198,6 @@ export default function DriverDetailPage() {
               🗑 Delete Profile
             </button>
           )}
-          <Link href={`/${role}/drivers`} style={{ ...buttonStyle, background: "#374151", borderColor: "#374151" }}>
-            ➔ Drivers List
-          </Link>
         </div>
       </div>
 
