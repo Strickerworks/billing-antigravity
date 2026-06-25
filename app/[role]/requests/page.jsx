@@ -479,7 +479,6 @@ export default function RequestsPage() {
                         className="fade-in"
                         style={selectedRequest?.id === req.id ? { backgroundColor: "var(--bg-elevated)" } : {}}
                       >
-                        <td style={{ fontWeight: 600 }}>#{req.id}</td>
                         <td style={{ textTransform: "capitalize", fontWeight: 500 }}>
                           <span
                             className={
