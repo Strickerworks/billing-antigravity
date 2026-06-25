@@ -19,6 +19,7 @@ export default function RequestsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingRequest, setEditingRequest] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // inline confirm state
 
   const router = useRouter();
   const { role } = useParams();
@@ -167,22 +168,21 @@ export default function RequestsPage() {
   };
 
   const handleDelete = async (req) => {
-    if (!window.confirm("Cancel this request? This cannot be undone.")) {
-      return;
-    }
+    setConfirmDeleteId(null);
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("billing_requests").delete().eq("id", req.id);
+      console.log("Deleting request id:", req.id);
+      const result = await supabase.from("billing_requests").delete().eq("id", req.id);
+      console.log("Delete result:", JSON.stringify(result));
 
-      if (error) {
-        console.error("Error deleting request:", error);
-        alert("Failed to cancel request: " + (error.message || JSON.stringify(error)));
+      if (result.error) {
+        console.error("Delete error:", result.error);
+        alert("Failed to cancel request: " + (result.error.message || JSON.stringify(result.error)));
         setLoading(false);
         return;
       }
 
-      // Log audit only after successful delete
       await logAudit({
         requestId: req.id,
         requestType: `bill_pass_${req.request_type}`,
@@ -547,13 +547,33 @@ export default function RequestsPage() {
                                 >
                                   Edit
                                 </button>
-                                <button
-                                  onClick={() => handleDelete(req)}
-                                  className="btn btn-sm btn-outline"
-                                  style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                                >
-                                  Cancel
-                                </button>
+                                {confirmDeleteId === req.id ? (
+                                  <>
+                                    <span style={{ fontSize: "0.72rem", color: "#dc2626", fontWeight: 600 }}>Sure?</span>
+                                    <button
+                                      onClick={() => handleDelete(req)}
+                                      className="btn btn-sm"
+                                      style={{ background: "#dc2626", color: "#fff", border: "none", padding: "0.25rem 0.5rem", fontSize: "0.72rem" }}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      onClick={() => setConfirmDeleteId(null)}
+                                      className="btn btn-sm btn-outline"
+                                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.72rem" }}
+                                    >
+                                      No
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => setConfirmDeleteId(req.id)}
+                                    className="btn btn-sm btn-outline"
+                                    style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
                               </>
                             )}
                           </div>
