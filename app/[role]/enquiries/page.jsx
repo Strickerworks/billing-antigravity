@@ -320,9 +320,13 @@ export default function EnquiriesPage() {
                             <a href={`tel:${eq.phone_number}`} className="contact-link">
                               📞 {eq.phone_number}
                             </a>
-                            <a href={`mailto:${eq.email}`} className="contact-link" style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
-                              ✉ {eq.email}
-                            </a>
+                            {eq.email ? (
+                              <a href={`mailto:${eq.email}`} className="contact-link" style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                                ✉ {eq.email}
+                              </a>
+                            ) : (
+                              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontStyle: "italic" }}>No Email</span>
+                            )}
                           </div>
                         </td>
                         <td style={{ fontWeight: 500, fontSize: "0.85rem" }}>
@@ -433,9 +437,13 @@ export default function EnquiriesPage() {
                   <a href={`tel:${selectedEnquiry.phone_number}`} className="contact-link" style={{ fontSize: "0.85rem", display: "block", marginBottom: "0.15rem" }}>
                     📞 {selectedEnquiry.phone_number}
                   </a>
-                  <a href={`mailto:${selectedEnquiry.email}`} className="contact-link" style={{ fontSize: "0.85rem", display: "block" }}>
-                    ✉ {selectedEnquiry.email}
-                  </a>
+                  {selectedEnquiry.email ? (
+                    <a href={`mailto:${selectedEnquiry.email}`} className="contact-link" style={{ fontSize: "0.85rem", display: "block" }}>
+                      ✉ {selectedEnquiry.email}
+                    </a>
+                  ) : (
+                    <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic", display: "block" }}>No Email Provided</span>
+                  )}
                 </div>
               </div>
 

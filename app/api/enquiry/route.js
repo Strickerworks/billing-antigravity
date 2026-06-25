@@ -22,7 +22,7 @@ export async function POST(request) {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email)) {
+    if (email && email.trim() !== "" && !emailRegex.test(email)) {
       return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
     }
 
@@ -52,7 +52,7 @@ export async function POST(request) {
       .insert([
         {
           full_name: fullName.trim(),
-          email: email.trim().toLowerCase(),
+          email: email && email.trim() !== "" ? email.trim().toLowerCase() : null,
           phone_number: phoneNumber.trim(),
           service_interested: serviceInterested,
           travel_date: sanitizedTravelDate,

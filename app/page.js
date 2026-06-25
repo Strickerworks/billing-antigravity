@@ -144,14 +144,7 @@ export default function Homepage() {
       }
     }
 
-    if (name === "email") {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!value || !emailRegex.test(value)) {
-        newErrors.email = "Please enter a valid email address.";
-      } else {
-        delete newErrors.email;
-      }
-    }
+
 
     if (name === "phoneNumber") {
       const phoneRegex = /^[6-9]\d{9}$/;
@@ -202,10 +195,7 @@ export default function Homepage() {
     if (!formData.fullName || formData.fullName.trim().length < 3) {
       formErrors.fullName = "Full Name must be at least 3 characters.";
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email || !emailRegex.test(formData.email)) {
-      formErrors.email = "Please enter a valid email address.";
-    }
+
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!formData.phoneNumber || !phoneRegex.test(formData.phoneNumber)) {
       formErrors.phoneNumber = "Please enter a valid 10-digit phone number.";
@@ -827,22 +817,6 @@ export default function Homepage() {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Email Address *</label>
-                    <input 
-                      type="email" 
-                      name="email"
-                      placeholder="e.g. rahul@gmail.com"
-                      className="form-input"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      style={{ borderColor: errors.email ? "rgba(239, 68, 68, 0.4)" : "var(--border)" }}
-                    />
-                    {errors.email && <span style={{ color: "#EF4444", fontSize: "0.7rem", marginTop: "0.25rem", display: "block" }}>{errors.email}</span>}
-                  </div>
-                </div>
-
-                <div className="form-grid-2">
-                  <div className="form-group">
                     <label className="form-label">Phone Number *</label>
                     <input 
                       type="tel" 
@@ -855,7 +829,9 @@ export default function Homepage() {
                     />
                     {errors.phoneNumber && <span style={{ color: "#EF4444", fontSize: "0.7rem", marginTop: "0.25rem", display: "block" }}>{errors.phoneNumber}</span>}
                   </div>
+                </div>
 
+                <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Service Interested In *</label>
                     <select 
@@ -876,9 +852,7 @@ export default function Homepage() {
                     </select>
                     {errors.serviceInterested && <span style={{ color: "#EF4444", fontSize: "0.7rem", marginTop: "0.25rem", display: "block" }}>{errors.serviceInterested}</span>}
                   </div>
-                </div>
 
-                <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Travel Date (Optional)</label>
                     <input 
@@ -889,7 +863,9 @@ export default function Homepage() {
                       onChange={handleInputChange}
                     />
                   </div>
+                </div>
 
+                <div className="form-grid-2">
                   <div className="form-group">
                     <label className="form-label">Number of Days (Optional)</label>
                     <input 
@@ -902,22 +878,22 @@ export default function Homepage() {
                       onChange={handleInputChange}
                     />
                   </div>
-                </div>
 
-                <div className="form-group">
-                  <label className="form-label">Preferred Vehicle Category</label>
-                  <select
-                    name="preferredVehicleType"
-                    className="form-select"
-                    value={formData.preferredVehicleType}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">-- Choose Category --</option>
-                    <option value="Budget Hatchback">Economy Hatchback (e.g. Swift)</option>
-                    <option value="Premium Sedan">Executive Sedan (e.g. Honda City)</option>
-                    <option value="Family SUV">Family SUV (e.g. Innova)</option>
-                    <option value="Luxury Sedan">Luxury Sedan (Audi/Mercedes)</option>
-                  </select>
+                  <div className="form-group">
+                    <label className="form-label">Preferred Vehicle Category</label>
+                    <select
+                      name="preferredVehicleType"
+                      className="form-select"
+                      value={formData.preferredVehicleType}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">-- Choose Category --</option>
+                      <option value="Budget Hatchback">Economy Hatchback (e.g. Swift)</option>
+                      <option value="Premium Sedan">Executive Sedan (e.g. Honda City)</option>
+                      <option value="Family SUV">Family SUV (e.g. Innova)</option>
+                      <option value="Luxury Sedan">Luxury Sedan (Audi/Mercedes)</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="form-group">
