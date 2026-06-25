@@ -51,7 +51,6 @@ html {
   font-family: 'Inter', sans-serif;
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
-  overflow-x: clip;
 }
 
 h1, h2, h3, h4, h5, h6, .navbar-brand-text {
@@ -63,7 +62,6 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow-x: clip;
   position: relative;
 }
 
@@ -122,14 +120,14 @@ body::after {
 .page-wrapper {
   min-height: 100vh;
   background: transparent;
-  /* No overflow hidden here — allows body to scroll normally */
+  /* overflow-x: clip here — safe because page-wrapper is NOT the scroll root */
+  overflow-x: clip;
 }
 
 .page-content {
   max-width: 1100px;
   margin: 0 auto;
   padding: 2.5rem 1.5rem 5rem;
-  /* Remove transform-based animation to avoid stacking context scroll lock */
   animation: pageFadeIn 0.4s ease forwards;
 }
 
@@ -405,8 +403,7 @@ body::after {
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45), 0 0 15px var(--accent-glow);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55), 0 0 18px var(--accent-glow);
   border-color: var(--border-hover);
 }
 
@@ -419,14 +416,9 @@ body::after {
   margin-bottom: 1.25rem;
 }
 
-/* Card Floating/Bobbing Animation helper */
+/* Card Floating/Bobbing Animation helper (removed transform to avoid scroll lock) */
 .card-bob {
-  animation: bobbing 4s ease-in-out infinite alternate;
-}
-
-@keyframes bobbing {
-  from { transform: translateY(0); }
-  to { transform: translateY(-4px); }
+  /* no-op: bobbing removed to prevent scroll lock in Chromium */
 }
 
 /* ===== FORM ELEMENTS ===== */
@@ -504,7 +496,6 @@ body::after {
   color: var(--text-primary);
   border-color: var(--text-primary);
   box-shadow: 0 5px 15px rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
 }
 
 /* Sophisticated Shimmer Sweep Overlay on Primary Button Hover */
@@ -534,7 +525,6 @@ body::after {
   border-color: var(--border-hover);
   color: var(--text-primary);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  transform: translateY(-2px);
 }
 
 /* Gold Accent Button Theme */
@@ -550,7 +540,6 @@ body::after {
   color: var(--accent);
   border-color: var(--accent);
   box-shadow: 0 6px 18px rgba(184, 134, 11, 0.4);
-  transform: translateY(-2px);
 }
 
 .btn-outline {
@@ -576,7 +565,6 @@ body::after {
   color: #FFFFFF;
   border-color: #EF4444;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
-  transform: translateY(-2px);
 }
 
 .btn-sm {
@@ -863,8 +851,7 @@ body::after {
 
 .action-card:hover {
   border-color: var(--border-hover);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45), 0 0 12px var(--accent-glow);
-  transform: translateY(-4px);
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.55), 0 0 16px var(--accent-glow);
 }
 
 .action-card-icon {
@@ -909,16 +896,15 @@ body::after {
 }
 
 /* Smooth reveal class applied via scroll interaction */
+/* NOTE: We use opacity only — no transform — to avoid scroll-height disruption
+   inside overflow-x: clip containers (Chromium bug) */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .reveal-on-scroll.revealed {
   opacity: 1;
-  transform: translateY(0);
 }
 
 /* ===== INVOICE PREVIEW ===== */
