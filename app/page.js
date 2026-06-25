@@ -603,12 +603,8 @@ export default function Homepage() {
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
                     Top-tier premium German engineering, luxury cabin, automatic climate control, and unmatched prestige. Ideal for VIP receptions, weddings, and premium business travels.
                   </p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
-                    <div>
-                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹45 / km</span>
-                    </div>
-                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                  <div style={{ display: "flex", justifyContent: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ width: "100%", textAlign: "center", padding: "0.45rem" }}>
                       Book Luxury
                     </a>
                   </div>
@@ -635,12 +631,8 @@ export default function Homepage() {
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
                     Active 4x4 drive, luxurious panoramic sunroof, and generous 7-seat capability. Perfect for premium family travels, outstation road trips, and rugged terrains.
                   </p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
-                    <div>
-                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹28 / km</span>
-                    </div>
-                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                  <div style={{ display: "flex", justifyContent: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ width: "100%", textAlign: "center", padding: "0.45rem" }}>
                       Book SUV
                     </a>
                   </div>
@@ -667,12 +659,8 @@ export default function Homepage() {
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
                     Executive comfort levels, state-of-the-art safety features, and expansive legroom. An excellent option for executive pick-ups, business transits, and airport runs.
                   </p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
-                    <div>
-                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹24 / km</span>
-                    </div>
-                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                  <div style={{ display: "flex", justifyContent: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ width: "100%", textAlign: "center", padding: "0.45rem" }}>
                       Book Sedan
                     </a>
                   </div>
@@ -699,12 +687,8 @@ export default function Homepage() {
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
                     The undisputed king of comfort. Powerful AC, spacious seating configuration, and smooth suspension. Bhopal's top choice for long-range family journeys.
                   </p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
-                    <div>
-                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹20 / km</span>
-                    </div>
-                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                  <div style={{ display: "flex", justifyContent: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ width: "100%", textAlign: "center", padding: "0.45rem" }}>
                       Book Crysta
                     </a>
                   </div>
@@ -731,12 +715,8 @@ export default function Homepage() {
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
                     Modern sporty design, high ground clearance, and sleek digital cockpit. Ideal for urban commutes and family holiday outings in style.
                   </p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
-                    <div>
-                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹16 / km</span>
-                    </div>
-                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                  <div style={{ display: "flex", justifyContent: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ width: "100%", textAlign: "center", padding: "0.45rem" }}>
                       Book Seltos
                     </a>
                   </div>
@@ -763,12 +743,8 @@ export default function Homepage() {
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
                     Highly fuel-efficient, spacious boot capacity, and comfortable leather seating. An excellent budget sedan for local and inter-city commutes.
                   </p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
-                    <div>
-                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹14 / km</span>
-                    </div>
-                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                  <div style={{ display: "flex", justifyContent: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ width: "100%", textAlign: "center", padding: "0.45rem" }}>
                       Book Ciaz
                     </a>
                   </div>
@@ -776,157 +752,6 @@ export default function Homepage() {
               </div>
             </div>
 
-            {/* SHOWROOM GALLERY CAROUSEL */}
-            <div className="card reveal-section" style={{ padding: "2rem", border: "1px solid var(--border)", background: "var(--bg-card)" }}>
-              <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-                <span className="badge badge-blue" style={{ marginBottom: "0.5rem" }}>FLEET SHOWROOM</span>
-                <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text-primary)" }}>Our Actual Vehicle Gallery</h4>
-              </div>
-
-              {/* Slider View */}
-              <div style={{ position: "relative", width: "100%", height: "clamp(250px, 45vw, 480px)", borderRadius: "8px", overflow: "hidden", background: "#050505", border: "1px solid var(--border)" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src={galleryPhotos[activePhotoIdx].src} 
-                  alt={galleryPhotos[activePhotoIdx].caption} 
-                  style={{ width: "100%", height: "100%", objectFit: "contain", transition: "opacity 0.15s ease-in-out" }}
-                />
-                
-                {/* Text Overlay */}
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "1.25rem", background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
-                    {galleryPhotos[activePhotoIdx].caption}
-                  </span>
-                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>
-                    {activePhotoIdx + 1} / {galleryPhotos.length}
-                  </span>
-                </div>
-
-                {/* Left/Right Buttons */}
-                <button 
-                  onClick={handlePrevPhoto} 
-                  style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(20,20,20,0.8)", border: "1px solid var(--border)", color: "#fff", display: "flex", alignItems: "center", justify: "center", cursor: "pointer", zIndex: 5, transition: "background 0.2s" }}
-                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(184, 134, 11, 0.4)"}
-                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(20,20,20,0.8)"}
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button 
-                  onClick={handleNextPhoto} 
-                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(20,20,20,0.8)", border: "1px solid var(--border)", color: "#fff", display: "flex", alignItems: "center", justify: "center", cursor: "pointer", zIndex: 5, transition: "background 0.2s" }}
-                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(184, 134, 11, 0.4)"}
-                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(20,20,20,0.8)"}
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-
-              {/* Thumbnails indicator bar */}
-              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.5rem", marginTop: "1.25rem" }}>
-                {galleryPhotos.map((photo, index) => (
-                  <button 
-                    key={index} 
-                    onClick={() => setActivePhotoIdx(index)}
-                    style={{ 
-                      width: "6px", 
-                      height: "6px", 
-                      borderRadius: "50%", 
-                      padding: 0,
-                      border: "none", 
-                      background: activePhotoIdx === index ? "var(--accent)" : "var(--border)", 
-                      cursor: "pointer",
-                      transition: "background 0.2s"
-                    }} 
-                    aria-label={`Show photo ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* ================= ABOUT US SECTION ================= */}
-        <section id="about" className="reveal-section" style={{ padding: "4rem 1.5rem", background: "rgba(10,10,10,0.5)" }}>
-          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-            <div className="info-grid-2" style={{ alignItems: "center" }}>
-              <div>
-                <h2 className="section-title" style={{ textAlign: "left" }}>About The Heritage Travels</h2>
-                <h3 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0.25rem 0 1.25rem", color: "var(--text-primary)" }}>
-                  Crafting Reliable Passenger Journeys Since 2017
-                </h3>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.7, marginBottom: "1rem" }}>
-                  The Heritage Travels is Bhopal's trusted car rental partner, dedicated to providing premium vehicles and exceptional service. We believe every journey deserves absolute comfort and uncompromised safety.
-                </p>
-                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.7, marginBottom: "1.5rem" }}>
-                  Whether you are traveling for local business meetings, holiday excursions around Madhya Pradesh, airport transits, or wedding events, our well-supervised fleet and disciplined drivers ensure your travel itineraries execute flawlessly.
-                </p>
-                
-                <div style={{ display: "flex", gap: "1.5rem", marginTop: "1rem" }}>
-                  <div style={{ borderLeft: "2px solid var(--accent)", paddingLeft: "1rem" }}>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase" }}>Our Core Mission</div>
-                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Provide reliable, clean vehicles at highly reasonable pricing packages.</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Graphical Box indicating experience stats */}
-              <div className="card" style={{ 
-                padding: "2.5rem 2rem", 
-                background: "linear-gradient(135deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.8) 100%)",
-                border: "1px solid var(--border)",
-                textAlign: "center"
-              }}>
-                <span className="badge badge-blue" style={{ marginBottom: "1rem" }}>FLEET &amp; TEAM METRICS</span>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginTop: "1rem" }}>
-                  <div>
-                    <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)" }}>20+</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", textTransform: "uppercase" }}>Active Fleet Cars</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)" }}>15+</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", textTransform: "uppercase" }}>Trained Drivers</div>
-                  </div>
-                  <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--border)", paddingTop: "1.5rem" }}>
-                    <div style={{ fontSize: "2.25rem", fontWeight: 800, color: "var(--accent)" }}>10+ Years</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", textTransform: "uppercase" }}>Combined Service Experience</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ================= TESTIMONIALS SECTION ================= */}
-        <section id="testimonials" className="reveal-section" style={{ padding: "4rem 1.5rem" }}>
-          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
-              <h2 className="section-title">What Our Customers Say</h2>
-              <h3 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0.25rem 0 0.5rem" }}>Authentic Client Experiences</h3>
-              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Reviews left by our daily, corporate, and tourism travelers.</p>
-            </div>
-
-            <div className="grid-3" style={{ gap: "1.25rem" }}>
-              {testimonials.map((test, index) => (
-                <div key={index} className="card testimonial-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                  <div>
-                    {/* Stars */}
-                    <div style={{ display: "flex", gap: "0.15rem", marginBottom: "1rem" }}>
-                      {[...Array(test.rating)].map((_, i) => (
-                        <Star key={i} size={14} style={{ fill: "var(--accent)", color: "var(--accent)" }} />
-                      ))}
-                    </div>
-                    <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontStyle: "italic", lineHeight: 1.6 }}>
-                      "{test.text}"
-                    </p>
-                  </div>
-                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.85rem", marginTop: "1.25rem" }}>
-                    <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{test.name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{test.role}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
 
@@ -1131,6 +956,161 @@ export default function Homepage() {
                   {submitting ? "Submitting Inquiry..." : "Submit Inquiry Request"}
                 </button>
               </form>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= ABOUT US SECTION ================= */}
+        <section id="about" className="reveal-section" style={{ padding: "4rem 1.5rem", background: "rgba(10,10,10,0.5)" }}>
+          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+            <div className="info-grid-2" style={{ alignItems: "center" }}>
+              <div>
+                <h2 className="section-title" style={{ textAlign: "left" }}>About The Heritage Travels</h2>
+                <h3 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0.25rem 0 1.25rem", color: "var(--text-primary)" }}>
+                  Crafting Reliable Passenger Journeys Since 2017
+                </h3>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.7, marginBottom: "1rem" }}>
+                  The Heritage Travels is Bhopal's trusted car rental partner, dedicated to providing premium vehicles and exceptional service. We believe every journey deserves absolute comfort and uncompromised safety.
+                </p>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.7, marginBottom: "1.5rem" }}>
+                  Whether you are traveling for local business meetings, holiday excursions around Madhya Pradesh, airport transits, or wedding events, our well-supervised fleet and disciplined drivers ensure your travel itineraries execute flawlessly.
+                </p>
+                
+                <div style={{ display: "flex", gap: "1.5rem", marginTop: "1rem" }}>
+                  <div style={{ borderLeft: "2px solid var(--accent)", paddingLeft: "1rem" }}>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", textTransform: "uppercase" }}>Our Core Mission</div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.2rem" }}>Provide reliable, clean vehicles at highly reasonable pricing packages.</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Graphical Box indicating experience stats */}
+              <div className="card" style={{ 
+                padding: "2.5rem 2rem", 
+                background: "linear-gradient(135deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.8) 100%)",
+                border: "1px solid var(--border)",
+                textAlign: "center"
+              }}>
+                <span className="badge badge-blue" style={{ marginBottom: "1rem" }}>FLEET &amp; TEAM METRICS</span>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", marginTop: "1rem" }}>
+                  <div>
+                    <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)" }}>20+</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", textTransform: "uppercase" }}>Active Fleet Cars</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)" }}>15+</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", textTransform: "uppercase" }}>Trained Drivers</div>
+                  </div>
+                  <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--border)", paddingTop: "1.5rem" }}>
+                    <div style={{ fontSize: "2.25rem", fontWeight: 800, color: "var(--accent)" }}>10+ Years</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", textTransform: "uppercase" }}>Combined Service Experience</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= TESTIMONIALS SECTION ================= */}
+        <section id="testimonials" className="reveal-section" style={{ padding: "4rem 1.5rem" }}>
+          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+              <h2 className="section-title">What Our Customers Say</h2>
+              <h3 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0.25rem 0 0.5rem" }}>Authentic Client Experiences</h3>
+              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Reviews left by our daily, corporate, and tourism travelers.</p>
+            </div>
+
+            <div className="grid-3" style={{ gap: "1.25rem" }}>
+              {testimonials.map((test, index) => (
+                <div key={index} className="card testimonial-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    {/* Stars */}
+                    <div style={{ display: "flex", gap: "0.15rem", marginBottom: "1rem" }}>
+                      {[...Array(test.rating)].map((_, i) => (
+                        <Star key={i} size={14} style={{ fill: "var(--accent)", color: "var(--accent)" }} />
+                      ))}
+                    </div>
+                    <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontStyle: "italic", lineHeight: 1.6 }}>
+                      "{test.text}"
+                    </p>
+                  </div>
+                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.85rem", marginTop: "1.25rem" }}>
+                    <div style={{ fontWeight: 700, fontSize: "0.9rem" }}>{test.name}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{test.role}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ================= SHOWROOM GALLERY CAROUSEL ================= */}
+        <section id="showroom" className="reveal-section" style={{ padding: "4rem 1.5rem" }}>
+          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+            <div className="card" style={{ padding: "2rem", border: "1px solid var(--border)", background: "var(--bg-card)" }}>
+              <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+                <span className="badge badge-blue" style={{ marginBottom: "0.5rem" }}>FLEET SHOWROOM</span>
+                <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text-primary)" }}>Our Actual Vehicle Gallery</h4>
+              </div>
+
+              {/* Slider View */}
+              <div style={{ position: "relative", width: "100%", height: "clamp(250px, 45vw, 480px)", borderRadius: "8px", overflow: "hidden", background: "#050505", border: "1px solid var(--border)" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={galleryPhotos[activePhotoIdx].src} 
+                  alt={galleryPhotos[activePhotoIdx].caption} 
+                  style={{ width: "100%", height: "100%", objectFit: "contain", transition: "opacity 0.15s ease-in-out" }}
+                />
+                
+                {/* Text Overlay */}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "1.25rem", background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+                    {galleryPhotos[activePhotoIdx].caption}
+                  </span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>
+                    {activePhotoIdx + 1} / {galleryPhotos.length}
+                  </span>
+                </div>
+
+                {/* Left/Right Buttons */}
+                <button 
+                  onClick={handlePrevPhoto} 
+                  style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(20,20,20,0.8)", border: "1px solid var(--border)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 5, transition: "background 0.2s" }}
+                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(184, 134, 11, 0.4)"}
+                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(20,20,20,0.8)"}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button 
+                  onClick={handleNextPhoto} 
+                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(20,20,20,0.8)", border: "1px solid var(--border)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 5, transition: "background 0.2s" }}
+                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(184, 134, 11, 0.4)"}
+                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(20,20,20,0.8)"}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
+              {/* Thumbnails indicator bar */}
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.5rem", marginTop: "1.25rem" }}>
+                {galleryPhotos.map((photo, index) => (
+                  <button 
+                    key={index} 
+                    onClick={() => setActivePhotoIdx(index)}
+                    style={{ 
+                      width: "6px", 
+                      height: "6px", 
+                      borderRadius: "50%", 
+                      padding: 0,
+                      border: "none", 
+                      background: activePhotoIdx === index ? "var(--accent)" : "var(--border)", 
+                      cursor: "pointer",
+                      transition: "background 0.2s"
+                    }} 
+                    aria-label={`Show photo ${index + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </section>
