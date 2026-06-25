@@ -69,20 +69,6 @@ export async function POST(request) {
       throw new Error(error.message);
     }
 
-    // 3. Mock Email Confirmation Log
-    console.log("====================================================");
-    console.log("📨 CONFIRMATION EMAIL MOCK DELIVERY LOG");
-    console.log("----------------------------------------------------");
-    console.log(`TO: ${email}`);
-    console.log(`SUBJECT: Inquiry Received - The Heritage Travels`);
-    console.log(`CONTENT:`);
-    console.log(`Dear ${fullName},`);
-    console.log(`Thank you for reaching out to The Heritage Travels! We have successfully received your inquiry for: "${serviceInterested}".`);
-    console.log(`Our team will review your details (Phone: ${phoneNumber}) and contact you within 24 hours.`);
-    console.log(`Safe Travels!`);
-    console.log(`The Heritage Travels Team`);
-    console.log("====================================================");
-
     return NextResponse.json({ success: true, message: "Enquiry submitted successfully!", data }, { status: 200 });
 
   } catch (err) {
