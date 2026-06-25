@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useParams, useRouter } from "next/navigation";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function FleetRequestsPage() {
   const { role } = useParams();
@@ -19,6 +20,8 @@ export default function FleetRequestsPage() {
   // Edit Modal State
   const [editingRequest, setEditingRequest] = useState(null);
   const [editPayload, setEditPayload] = useState({});
+
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
 
   useEffect(() => {
     fetchRequests();
@@ -50,10 +53,19 @@ export default function FleetRequestsPage() {
     setLoading(false);
   };
 
-  const handleApprove = async (req) => {
-    if (!confirm(`Are you sure you want to approve this "${req.request_type}" request?`)) {
-      return;
-    }
+  const handleApprove = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Approve Request?",
+      message: `Are you sure you want to approve this "${req.request_type}" request?`,
+      confirmText: "Yes, Approve",
+      type: "success",
+      onConfirm: () => executeApprove(req)
+    });
+  };
+
+  const executeApprove = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setSubmitting(true);
     try {
       const payload = req.payload;
@@ -250,10 +262,19 @@ export default function FleetRequestsPage() {
     setSubmitting(false);
   };
 
-  const handleReject = async (req) => {
-    if (!confirm(`Are you sure you want to reject this request?`)) {
-      return;
-    }
+  const handleReject = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Reject Request?",
+      message: `Are you sure you want to reject this request?`,
+      confirmText: "Yes, Reject",
+      type: "warning",
+      onConfirm: () => executeReject(req)
+    });
+  };
+
+  const executeReject = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setSubmitting(true);
     const { error } = await supabase
       .from("fleet_requests")
@@ -273,10 +294,19 @@ export default function FleetRequestsPage() {
     setSubmitting(false);
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this request permanently?")) {
-      return;
-    }
+  const handleDelete = (id) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Permanently?",
+      message: "Are you sure you want to delete this request permanently?",
+      confirmText: "Yes, Delete",
+      type: "danger",
+      onConfirm: () => executeDelete(id)
+    });
+  };
+
+  const executeDelete = async (id) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setSubmitting(true);
     const { error } = await supabase.from("fleet_requests").delete().eq("id", id);
     if (error) {
@@ -829,6 +859,11 @@ export default function FleetRequestsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        {...confirmConfig}
+        onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+      />
     </div>
   );
 }

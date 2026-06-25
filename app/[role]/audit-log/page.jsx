@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function AuditLogPage() {
   const [logs, setLogs] = useState([]);
@@ -11,6 +12,8 @@ export default function AuditLogPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
+  
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
 
   const router = useRouter();
   const { role } = useParams();
@@ -60,10 +63,19 @@ export default function AuditLogPage() {
     setCurrentPage(1);
   };
 
-  const handleDeleteLog = async (logId) => {
-    if (!confirm("Are you sure you want to permanently delete this audit log record? This cannot be undone.")) {
-      return;
-    }
+  const handleDeleteLog = (logId) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Log?",
+      message: "Are you sure you want to permanently delete this audit log record? This cannot be undone.",
+      confirmText: "Yes, Delete",
+      type: "danger",
+      onConfirm: () => executeDeleteLog(logId)
+    });
+  };
+
+  const executeDeleteLog = async (logId) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
     const { error } = await supabase.from("audit_logs").delete().eq("id", logId);
     if (error) {
@@ -378,6 +390,11 @@ export default function AuditLogPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        {...confirmConfig}
+        onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+      />
     </div>
   );
 }

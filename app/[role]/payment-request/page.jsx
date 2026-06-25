@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import { logAudit } from "@/utils/supabase/audit";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function PaymentRequestsHistoryPage() {
   const [requests, setRequests] = useState([]);
@@ -20,6 +21,8 @@ export default function PaymentRequestsHistoryPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
+  
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
 
   const router = useRouter();
   const { role } = useParams();
@@ -83,10 +86,19 @@ export default function PaymentRequestsHistoryPage() {
     setLoading(false);
   };
 
-  const handleApprove = async (req) => {
-    if (!confirm(`Are you sure you want to approve payment of Invoice #${req.invoice_no}?`)) {
-      return;
-    }
+  const handleApprove = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Approve Payment?",
+      message: `Are you sure you want to approve payment of Invoice #${req.invoice_no}?`,
+      confirmText: "Yes, Approve",
+      type: "success",
+      onConfirm: () => executeApprove(req)
+    });
+  };
+
+  const executeApprove = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
 
     const { error: saveError } = await supabase
@@ -132,10 +144,19 @@ export default function PaymentRequestsHistoryPage() {
     setLoading(false);
   };
 
-  const handleReject = async (req) => {
-    if (!confirm(`Are you sure you want to reject payment of Invoice #${req.invoice_no}?`)) {
-      return;
-    }
+  const handleReject = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Reject Payment?",
+      message: `Are you sure you want to reject payment of Invoice #${req.invoice_no}?`,
+      confirmText: "Yes, Reject",
+      type: "warning",
+      onConfirm: () => executeReject(req)
+    });
+  };
+
+  const executeReject = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
 
     const { error } = await supabase
@@ -166,10 +187,19 @@ export default function PaymentRequestsHistoryPage() {
     setLoading(false);
   };
 
-  const handleRevert = async (req) => {
-    if (!confirm(`Are you sure you want to REVERT payment approval for Invoice #${req.invoice_no}?`)) {
-      return;
-    }
+  const handleRevert = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Revert Approval?",
+      message: `Are you sure you want to REVERT payment approval for Invoice #${req.invoice_no}?`,
+      confirmText: "Yes, Revert",
+      type: "warning",
+      onConfirm: () => executeRevert(req)
+    });
+  };
+
+  const executeRevert = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
 
     if (req.status === "approved") {
@@ -218,10 +248,19 @@ export default function PaymentRequestsHistoryPage() {
     setLoading(false);
   };
 
-  const handleDelete = async (req) => {
-    if (!confirm("Are you sure you want to cancel and delete this pending request?")) {
-      return;
-    }
+  const handleDelete = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Cancel Request?",
+      message: "Are you sure you want to cancel and delete this pending request?",
+      confirmText: "Yes, Delete",
+      type: "danger",
+      onConfirm: () => executeDelete(req)
+    });
+  };
+
+  const executeDelete = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
 
     await logAudit({
@@ -592,6 +631,10 @@ export default function PaymentRequestsHistoryPage() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        {...confirmConfig}
+        onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+      />
     </div>
   );
 }

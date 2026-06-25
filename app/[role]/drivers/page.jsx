@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function DriversPage() {
   const { role } = useParams();
@@ -13,6 +14,8 @@ export default function DriversPage() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [driverCarMap, setDriverCarMap] = useState({});
+
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
 
   useEffect(() => {
     fetchDriversAndAssignments();
@@ -57,10 +60,19 @@ export default function DriversPage() {
     setLoading(false);
   };
 
-  const handleDeleteDriver = async (driverId, driverName) => {
-    if (!confirm(`Are you sure you want to delete driver ${driverName} permanently?`)) {
-      return;
-    }
+  const handleDeleteDriver = (driverId, driverName) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Driver?",
+      message: `Are you sure you want to delete driver ${driverName} permanently?`,
+      confirmText: "Yes, Delete",
+      type: "danger",
+      onConfirm: () => executeDeleteDriver(driverId)
+    });
+  };
+
+  const executeDeleteDriver = async (driverId) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setSubmitting(true);
     const { error } = await supabase.from("drivers").delete().eq("id", driverId);
     if (error) {
@@ -194,6 +206,11 @@ export default function DriversPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        {...confirmConfig}
+        onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+      />
     </div>
   );
 }

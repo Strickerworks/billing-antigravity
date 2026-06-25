@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function FetchInvoice() {
   const [invoices, setInvoices] = useState([]);
@@ -9,8 +10,8 @@ export default function FetchInvoice() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
 
   const router = useRouter();
   const { role } = useParams();
@@ -68,10 +69,19 @@ export default function FetchInvoice() {
     setCurrentPage(1);
   };
 
-  const handleDelete = async (invoice_no) => {
-    if (!confirm(`Are you sure you want to move invoice #${invoice_no} to the Recycle Bin?`)) {
-      return;
-    }
+  const handleDelete = (invoice_no) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Move to Recycle Bin?",
+      message: `Are you sure you want to move invoice #${invoice_no} to the Recycle Bin?`,
+      confirmText: "Yes, Delete",
+      type: "warning",
+      onConfirm: () => executeDelete(invoice_no)
+    });
+  };
+
+  const executeDelete = async (invoice_no) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
     const { error } = await supabase
       .from("billdata")

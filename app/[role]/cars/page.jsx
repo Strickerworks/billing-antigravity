@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function CarsPage() {
   const router = useRouter();
@@ -17,6 +18,8 @@ export default function CarsPage() {
   const [editingCar, setEditingCar] = useState(null);
   const [editName, setEditName] = useState("");
   const [editRegistrationName, setEditRegistrationName] = useState("");
+
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
 
   useEffect(() => {
     fetchCarsData();
@@ -118,10 +121,19 @@ export default function CarsPage() {
     setEditRegistrationName(car.registration_name || "");
   };
 
-  const handleDeleteCar = async (carId, carReg) => {
-    if (!confirm(`Are you sure you want to delete vehicle ${carReg} permanently?`)) {
-      return;
-    }
+  const handleDeleteCar = (carId, carReg) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Vehicle?",
+      message: `Are you sure you want to delete vehicle ${carReg} permanently?`,
+      confirmText: "Yes, Delete",
+      type: "danger",
+      onConfirm: () => executeDeleteCar(carId)
+    });
+  };
+
+  const executeDeleteCar = async (carId) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setSubmitting(true);
     const { error } = await supabase.from("cars").delete().eq("id", carId);
     if (error) {
@@ -310,6 +322,11 @@ export default function CarsPage() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        {...confirmConfig}
+        onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useRouter, useParams, notFound } from "next/navigation";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function RecycleBin() {
   const { role } = useParams();
@@ -13,6 +14,7 @@ export default function RecycleBin() {
   const [invoices, setInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
   const router = useRouter();
 
   useEffect(() => {
@@ -36,10 +38,19 @@ export default function RecycleBin() {
     setLoading(false);
   };
 
-  const handleRecover = async (invoice_no) => {
-    if (!confirm(`Are you sure you want to recover invoice #${invoice_no}?`)) {
-      return;
-    }
+  const handleRecover = (invoice_no) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Recover Invoice?",
+      message: `Are you sure you want to recover invoice #${invoice_no}?`,
+      confirmText: "Yes, Recover",
+      type: "success",
+      onConfirm: () => executeRecover(invoice_no)
+    });
+  };
+
+  const executeRecover = async (invoice_no) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
     const { error } = await supabase
       .from("billdata")
@@ -56,10 +67,19 @@ export default function RecycleBin() {
     }
   };
 
-  const handlePermanentDelete = async (invoice_no) => {
-    if (!confirm(`WARNING: Are you sure you want to PERMANENTLY delete invoice #${invoice_no}? This action cannot be undone.`)) {
-      return;
-    }
+  const handlePermanentDelete = (invoice_no) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Permanently?",
+      message: `WARNING: Are you sure you want to PERMANENTLY delete invoice #${invoice_no}? This action cannot be undone.`,
+      confirmText: "Yes, Delete",
+      type: "danger",
+      onConfirm: () => executePermanentDelete(invoice_no)
+    });
+  };
+
+  const executePermanentDelete = async (invoice_no) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
     const { error } = await supabase
       .from("billdata")
@@ -191,6 +211,10 @@ export default function RecycleBin() {
           </div>
         )}
       </div>
+      <ConfirmModal
+        {...confirmConfig}
+        onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+      />
     </div>
   );
 }

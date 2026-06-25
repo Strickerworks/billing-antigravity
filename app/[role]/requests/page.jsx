@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import { logAudit } from "@/utils/supabase/audit";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function RequestsPage() {
   const [requests, setRequests] = useState([]);
@@ -19,8 +20,7 @@ export default function RequestsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingRequest, setEditingRequest] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // inline confirm state - DEPRECATED
-  const [deleteTarget, setDeleteTarget] = useState(null); // themed modal confirm
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
 
   const router = useRouter();
   const { role } = useParams();
@@ -95,10 +95,19 @@ export default function RequestsPage() {
     setLoadingOriginal(false);
   };
 
-  const handleApprove = async (req) => {
-    if (!confirm(`Are you sure you want to APPROVE invoice #${req.invoice_no}? This will apply changes to the live invoices database.`)) {
-      return;
-    }
+  const handleApprove = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Approve Request?",
+      message: `Are you sure you want to APPROVE invoice #${req.invoice_no}? This will apply changes to the live invoices database.`,
+      confirmText: "Yes, Approve",
+      type: "success",
+      onConfirm: () => executeApprove(req)
+    });
+  };
+
+  const executeApprove = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
 
     const { error: saveError } = await supabase
@@ -137,10 +146,19 @@ export default function RequestsPage() {
     fetchRequests();
   };
 
-  const handleReject = async (req) => {
-    if (!confirm(`Are you sure you want to REJECT invoice #${req.invoice_no}? This change will be permanently ignored.`)) {
-      return;
-    }
+  const handleReject = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Reject Request?",
+      message: `Are you sure you want to REJECT invoice #${req.invoice_no}? This change will be permanently ignored.`,
+      confirmText: "Yes, Reject",
+      type: "warning",
+      onConfirm: () => executeReject(req)
+    });
+  };
+
+  const executeReject = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
 
     const { error } = await supabase
@@ -168,8 +186,19 @@ export default function RequestsPage() {
     fetchRequests();
   };
 
-  const handleDelete = async (req) => {
-    setDeleteTarget(null);
+  const handleDelete = (req) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Cancel Request?",
+      message: `This will permanently delete the pending request for <br/><b>Invoice #${req.invoice_no}</b>.`,
+      confirmText: "Yes, Cancel It",
+      type: "danger",
+      onConfirm: () => executeDelete(req)
+    });
+  };
+
+  const executeDelete = async (req) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
 
     try {
@@ -549,7 +578,7 @@ export default function RequestsPage() {
                                   Edit
                                 </button>
                                 <button
-                                  onClick={() => setDeleteTarget(req)}
+                                  onClick={() => handleDelete(req)}
                                   className="btn btn-sm btn-outline"
                                   style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
                                 >
@@ -769,76 +798,10 @@ export default function RequestsPage() {
           </div>
         </div>
       )}
-      {/* Delete Confirmation Modal */}
-      {deleteTarget && (
-        <div
-          onClick={() => setDeleteTarget(null)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 2000,
-            background: "rgba(0,0,0,0.7)",
-            backdropFilter: "blur(6px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "1rem",
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="fade-in"
-            style={{
-              background: "var(--bg-card-solid)",
-              border: "1px solid rgba(220,38,38,0.3)",
-              borderRadius: "16px",
-              padding: "2rem 2rem 1.75rem",
-              maxWidth: "420px",
-              width: "100%",
-              boxShadow: "0 25px 60px rgba(0,0,0,0.7), 0 0 30px rgba(220,38,38,0.08)",
-            }}
-          >
-            {/* Icon */}
-            <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
-              <div style={{
-                display: "inline-flex", alignItems: "center", justifyContent: "center",
-                width: 56, height: 56, borderRadius: "50%",
-                background: "rgba(220,38,38,0.12)",
-                border: "1px solid rgba(220,38,38,0.25)",
-                fontSize: "1.5rem",
-              }}>🗑️</div>
-            </div>
-
-            {/* Title */}
-            <h3 style={{ textAlign: "center", fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
-              Cancel Request?
-            </h3>
-            <p style={{ textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.35rem" }}>
-              This will permanently delete the pending request for
-            </p>
-            <p style={{ textAlign: "center", fontWeight: 700, color: "var(--text-primary)", fontSize: "0.95rem", marginBottom: "1.75rem" }}>
-              Invoice #{deleteTarget.invoice_no}
-            </p>
-
-            {/* Divider */}
-            <div style={{ borderTop: "1px solid var(--border)", marginBottom: "1.25rem" }} />
-
-            {/* Actions */}
-            <div style={{ display: "flex", gap: "0.75rem" }}>
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="btn btn-secondary"
-                style={{ flex: 1 }}
-              >
-                Go Back
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="btn"
-                style={{ flex: 1, background: "#dc2626", color: "#fff", border: "1px solid #dc2626", fontWeight: 700 }}
-              >
-                Yes, Cancel It
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        {...confirmConfig}
+        onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+      />
     </div>
   );
 }

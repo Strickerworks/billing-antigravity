@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import { logAudit } from "@/utils/supabase/audit";
+import ConfirmModal from "@/components/ConfirmModal";
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState([]);
@@ -15,6 +16,8 @@ export default function ExpensesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const itemsPerPage = 10;
+
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, title: "", message: "", confirmText: "", type: "danger", onConfirm: () => {} });
 
   const router = useRouter();
   const { role } = useParams();
@@ -81,10 +84,19 @@ export default function ExpensesPage() {
     setCurrentPage(1);
   };
 
-  const handleApprove = async (exp) => {
-    if (!confirm(`Are you sure you want to approve this expense of ₹${exp.amount}?`)) {
-      return;
-    }
+  const handleApprove = (exp) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Approve Expense?",
+      message: `Are you sure you want to approve this expense of ₹${exp.amount}?`,
+      confirmText: "Yes, Approve",
+      type: "success",
+      onConfirm: () => executeApprove(exp)
+    });
+  };
+
+  const executeApprove = async (exp) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
     const { error } = await supabase
       .from("expense_reports")
@@ -114,10 +126,19 @@ export default function ExpensesPage() {
     setLoading(false);
   };
 
-  const handleReject = async (exp) => {
-    if (!confirm(`Are you sure you want to reject this expense of ₹${exp.amount}?`)) {
-      return;
-    }
+  const handleReject = (exp) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Reject Expense?",
+      message: `Are you sure you want to reject this expense of ₹${exp.amount}?`,
+      confirmText: "Yes, Reject",
+      type: "warning",
+      onConfirm: () => executeReject(exp)
+    });
+  };
+
+  const executeReject = async (exp) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
     const { error } = await supabase
       .from("expense_reports")
@@ -143,10 +164,19 @@ export default function ExpensesPage() {
     setLoading(false);
   };
 
-  const handleRevert = async (exp) => {
-    if (!confirm(`Are you sure you want to REVERT the status of this expense to pending?`)) {
-      return;
-    }
+  const handleRevert = (exp) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Revert Status?",
+      message: `Are you sure you want to REVERT the status of this expense to pending?`,
+      confirmText: "Yes, Revert",
+      type: "warning",
+      onConfirm: () => executeRevert(exp)
+    });
+  };
+
+  const executeRevert = async (exp) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
     const { error } = await supabase
       .from("expense_reports")
@@ -176,10 +206,19 @@ export default function ExpensesPage() {
     setLoading(false);
   };
 
-  const handleDelete = async (exp) => {
-    if (!confirm("Are you sure you want to delete this expense report?")) {
-      return;
-    }
+  const handleDelete = (exp) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: "Delete Expense?",
+      message: "Are you sure you want to delete this expense report?",
+      confirmText: "Yes, Delete",
+      type: "danger",
+      onConfirm: () => executeDelete(exp)
+    });
+  };
+
+  const executeDelete = async (exp) => {
+    setConfirmConfig(prev => ({ ...prev, isOpen: false }));
     setLoading(true);
     await logAudit({
       requestId: exp.id,
@@ -428,6 +467,11 @@ export default function ExpensesPage() {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        {...confirmConfig}
+        onCancel={() => setConfirmConfig({ ...confirmConfig, isOpen: false })}
+      />
     </div>
   );
 }
