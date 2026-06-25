@@ -120,8 +120,6 @@ body::after {
 .page-wrapper {
   min-height: 100vh;
   background: transparent;
-  /* overflow-x: clip here — safe because page-wrapper is NOT the scroll root */
-  overflow-x: clip;
 }
 
 .page-content {
@@ -600,7 +598,6 @@ body::after {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
-  min-width: 600px; /* prevents table from collapsing on small screens */
 }
 
 .data-table thead tr {

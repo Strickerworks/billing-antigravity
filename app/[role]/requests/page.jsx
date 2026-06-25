@@ -463,13 +463,10 @@ export default function RequestsPage() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>ID</th>
                       <th>Type</th>
-                      <th>Creator</th>
                       <th>Invoice No</th>
                       <th>Customer</th>
                       <th style={{ textAlign: "right" }}>Amount</th>
-                      <th>GST Detail</th>
                       <th>Status</th>
                       <th>Submitted At</th>
                       <th style={{ textAlign: "center" }}>Actions</th>
@@ -487,33 +484,29 @@ export default function RequestsPage() {
                           <span
                             className={
                               req.request_type === "create"
-                                ? "badge badge-green"
+                                ? "badge badge-success"
                                 : req.request_type === "duplicate"
                                 ? "badge badge-blue"
-                                : "badge badge-orange"
+                                : "badge badge-warning"
                             }
                             style={{ fontSize: "0.72rem" }}
                           >
                             {req.request_type}
                           </span>
                         </td>
-                        <td style={{ fontSize: "0.85rem", textTransform: "capitalize" }}>{req.requested_by}</td>
                         <td>
                           <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>#{req.invoice_no}</span>
                         </td>
-                        <td style={{ fontSize: "0.85rem" }}>
+                        <td style={{ fontSize: "0.85rem", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {req.data?.customer_name || req.customer_name || "—"}
                         </td>
                         <td style={{ textAlign: "right", fontWeight: 600, fontSize: "0.85rem" }}>
                           {fmt(req.data?.grand_total || req.grand_total)}
                         </td>
-                        <td style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                          {req.data?.customer_gst || req.customer_gst || "—"}
-                        </td>
                         <td>
                           <span style={getStatusStyle(req.status)}>{req.status}</span>
                         </td>
-                        <td style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
+                        <td style={{ color: "var(--text-secondary)", fontSize: "0.8rem", whiteSpace: "nowrap" }}>{formatDate(req.created_at)}</td>
                         <td style={{ textAlign: "center" }}>
                           <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
                             <button onClick={() => setSelectedRequest(req)} className="btn btn-sm btn-secondary">
