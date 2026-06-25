@@ -167,33 +167,40 @@ export default function RequestsPage() {
   };
 
   const handleDelete = async (req) => {
-    if (!confirm("Are you sure you want to cancel and delete this pending invoice request? This cannot be undone.")) {
+    if (!window.confirm("Cancel this request? This cannot be undone.")) {
       return;
     }
     setLoading(true);
 
-    await logAudit({
-      requestId: req.id,
-      requestType: `bill_pass_${req.request_type}`,
-      submittedBy: req.requested_by || "staff",
-      submittedAt: req.created_at,
-      status: "Deleted",
-      actionBy: "staff",
-      actionAt: new Date().toISOString(),
-      payload: req.data,
-    });
+    try {
+      const { error } = await supabase.from("billing_requests").delete().eq("id", req.id);
 
-    const { error } = await supabase.from("billing_requests").delete().eq("id", req.id);
+      if (error) {
+        console.error("Error deleting request:", error);
+        alert("Failed to cancel request: " + (error.message || JSON.stringify(error)));
+        setLoading(false);
+        return;
+      }
 
-    if (error) {
-      console.error("Error deleting request:", error);
-      alert("Failed to delete request.");
-    } else {
-      alert("Request deleted successfully.");
+      // Log audit only after successful delete
+      await logAudit({
+        requestId: req.id,
+        requestType: `bill_pass_${req.request_type}`,
+        submittedBy: req.requested_by || "staff",
+        submittedAt: req.created_at,
+        status: "Deleted",
+        actionBy: "staff",
+        actionAt: new Date().toISOString(),
+        payload: req.data,
+      });
+
+      setSelectedRequest(null);
+      fetchRequests();
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("An unexpected error occurred: " + err.message);
+      setLoading(false);
     }
-
-    setSelectedRequest(null);
-    fetchRequests();
   };
 
   const openEditModal = (req) => {
