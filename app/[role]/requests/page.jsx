@@ -19,7 +19,8 @@ export default function RequestsPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingRequest, setEditingRequest] = useState(null);
   const [editForm, setEditForm] = useState({});
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // inline confirm state
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null); // inline confirm state - DEPRECATED
+  const [deleteTarget, setDeleteTarget] = useState(null); // themed modal confirm
 
   const router = useRouter();
   const { role } = useParams();
@@ -168,7 +169,7 @@ export default function RequestsPage() {
   };
 
   const handleDelete = async (req) => {
-    setConfirmDeleteId(null);
+    setDeleteTarget(null);
     setLoading(true);
 
     try {
@@ -547,33 +548,13 @@ export default function RequestsPage() {
                                 >
                                   Edit
                                 </button>
-                                {confirmDeleteId === req.id ? (
-                                  <>
-                                    <span style={{ fontSize: "0.72rem", color: "#dc2626", fontWeight: 600 }}>Sure?</span>
-                                    <button
-                                      onClick={() => handleDelete(req)}
-                                      className="btn btn-sm"
-                                      style={{ background: "#dc2626", color: "#fff", border: "none", padding: "0.25rem 0.5rem", fontSize: "0.72rem" }}
-                                    >
-                                      Yes
-                                    </button>
-                                    <button
-                                      onClick={() => setConfirmDeleteId(null)}
-                                      className="btn btn-sm btn-outline"
-                                      style={{ padding: "0.25rem 0.5rem", fontSize: "0.72rem" }}
-                                    >
-                                      No
-                                    </button>
-                                  </>
-                                ) : (
-                                  <button
-                                    onClick={() => setConfirmDeleteId(req.id)}
-                                    className="btn btn-sm btn-outline"
-                                    style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
-                                  >
-                                    Cancel
-                                  </button>
-                                )}
+                                <button
+                                  onClick={() => setDeleteTarget(req)}
+                                  className="btn btn-sm btn-outline"
+                                  style={{ color: "#dc2626", borderColor: "rgba(220, 38, 38, 0.25)", padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}
+                                >
+                                  Cancel
+                                </button>
                               </>
                             )}
                           </div>
@@ -785,6 +766,76 @@ export default function RequestsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div
+          onClick={() => setDeleteTarget(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 2000,
+            background: "rgba(0,0,0,0.7)",
+            backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "1rem",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fade-in"
+            style={{
+              background: "var(--bg-card-solid)",
+              border: "1px solid rgba(220,38,38,0.3)",
+              borderRadius: "16px",
+              padding: "2rem 2rem 1.75rem",
+              maxWidth: "420px",
+              width: "100%",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.7), 0 0 30px rgba(220,38,38,0.08)",
+            }}
+          >
+            {/* Icon */}
+            <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 56, height: 56, borderRadius: "50%",
+                background: "rgba(220,38,38,0.12)",
+                border: "1px solid rgba(220,38,38,0.25)",
+                fontSize: "1.5rem",
+              }}>🗑️</div>
+            </div>
+
+            {/* Title */}
+            <h3 style={{ textAlign: "center", fontFamily: "Montserrat,sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "var(--text-primary)", marginBottom: "0.5rem" }}>
+              Cancel Request?
+            </h3>
+            <p style={{ textAlign: "center", fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "0.35rem" }}>
+              This will permanently delete the pending request for
+            </p>
+            <p style={{ textAlign: "center", fontWeight: 700, color: "var(--text-primary)", fontSize: "0.95rem", marginBottom: "1.75rem" }}>
+              Invoice #{deleteTarget.invoice_no}
+            </p>
+
+            {/* Divider */}
+            <div style={{ borderTop: "1px solid var(--border)", marginBottom: "1.25rem" }} />
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="btn btn-secondary"
+                style={{ flex: 1 }}
+              >
+                Go Back
+              </button>
+              <button
+                onClick={() => handleDelete(deleteTarget)}
+                className="btn"
+                style={{ flex: 1, background: "#dc2626", color: "#fff", border: "1px solid #dc2626", fontWeight: 700 }}
+              >
+                Yes, Cancel It
+              </button>
+            </div>
           </div>
         </div>
       )}
