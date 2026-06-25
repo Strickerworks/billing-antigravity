@@ -310,14 +310,14 @@ export default function Information({ initialData = null, mode = "default" }) {
             <tbody>
               {contentRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: "center", padding: "2rem", color: "#9ca3af", fontSize: "0.82rem" }}>
+                  <td colSpan={6} style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)", fontSize: "0.82rem" }}>
                     No items added yet. Click &quot;Add Item&quot; below.
                   </td>
                 </tr>
               ) : (
                 contentRows.map((row, index) => (
                   <tr key={row.sno}>
-                    <td style={{ color: "#9ca3af", fontSize: "0.8rem", paddingLeft: "1rem" }}>{index + 1}</td>
+                    <td style={{ color: "var(--text-muted)", fontSize: "0.8rem", paddingLeft: "1rem" }}>{index + 1}</td>
                     <td>
                       <textarea
                         className="cell-input form-textarea"
@@ -342,7 +342,7 @@ export default function Information({ initialData = null, mode = "default" }) {
                         onChange={(e) => updateContentRow(index, "rate", e.target.value)}
                       />
                     </td>
-                    <td style={{ textAlign: "right", fontSize: "0.875rem", fontWeight: 500, color: "#374151", paddingRight: "0.75rem" }}>
+                    <td style={{ textAlign: "right", fontSize: "0.875rem", fontWeight: 500, color: "var(--text-primary)", paddingRight: "0.75rem" }}>
                       {parseFloat(row.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                     </td>
                     <td style={{ textAlign: "center" }}>
@@ -386,14 +386,14 @@ export default function Information({ initialData = null, mode = "default" }) {
             <tbody>
               {additionalRows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center", padding: "2rem", color: "#9ca3af", fontSize: "0.82rem" }}>
+                  <td colSpan={4} style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)", fontSize: "0.82rem" }}>
                     No additional charges.
                   </td>
                 </tr>
               ) : (
                 additionalRows.map((row, index) => (
                   <tr key={row.sno}>
-                    <td style={{ color: "#9ca3af", fontSize: "0.8rem", paddingLeft: "1rem" }}>{index + 1}</td>
+                    <td style={{ color: "var(--text-muted)", fontSize: "0.8rem", paddingLeft: "1rem" }}>{index + 1}</td>
                     <td>
                       <input
                         type="text"

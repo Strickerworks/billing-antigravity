@@ -89,17 +89,17 @@ export default function FetchInvoice() {
 
   const getInvoicePaymentStatus = (invoice) => {
     if (invoice.payment_status === "Received") {
-      return { label: "Received", style: { backgroundColor: "#111111", color: "#ffffff" } };
+      return { label: "Received", style: { backgroundColor: "var(--text-primary)", color: "var(--bg-card)" } };
     }
 
     const pendingReq = paymentRequests.find(
       (r) => r.invoice_no === invoice.invoice_no && r.status === "pending"
     );
     if (pendingReq) {
-      return { label: "Pending Approval", style: { backgroundColor: "#f59e0b", color: "#ffffff" } };
+      return { label: "Pending Approval", style: { backgroundColor: "#f59e0b", color: "var(--bg-card)" } };
     }
 
-    return { label: "Not Received", style: { backgroundColor: "#e5e7eb", color: "#6b7280" } };
+    return { label: "Not Received", style: { backgroundColor: "var(--border)", color: "var(--text-secondary)" } };
   };
 
   const handleView = (invoice_no) => {
@@ -189,13 +189,13 @@ export default function FetchInvoice() {
                   return (
                     <tr key={inv.invoice_no} className="fade-in">
                       <td>
-                        <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{inv.invoice_no}</span>
+                        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>#{inv.invoice_no}</span>
                       </td>
                       <td style={{ fontWeight: 500 }}>{inv.customer_name}</td>
-                      <td style={{ color: "#9ca3af", fontFamily: "monospace", fontSize: "0.8rem" }}>
+                      <td style={{ color: "var(--text-muted)", fontFamily: "monospace", fontSize: "0.8rem" }}>
                         {inv.customer_gst}
                       </td>
-                      <td style={{ color: "#6b7280" }}>{formatDate(inv.bill_date)}</td>
+                      <td style={{ color: "var(--text-secondary)" }}>{formatDate(inv.bill_date)}</td>
                       <td>
                         <span
                           style={{
@@ -209,7 +209,7 @@ export default function FetchInvoice() {
                           {pStatus.label}
                         </span>
                       </td>
-                      <td style={{ textAlign: "right", fontWeight: 600, color: "#1a1d23" }}>
+                      <td style={{ textAlign: "right", fontWeight: 600, color: "var(--text-primary)" }}>
                         {fmt(inv.grand_total)}
                       </td>
                       <td style={{ textAlign: "center" }}>

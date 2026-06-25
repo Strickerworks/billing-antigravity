@@ -92,19 +92,19 @@ export default function AuditLogPage() {
   const getStatusBadgeStyle = (status) => {
     switch (status.toLowerCase()) {
       case "approved":
-        return { backgroundColor: "#111111", color: "#ffffff", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
+        return { backgroundColor: "var(--text-primary)", color: "var(--bg-card)", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
       case "rejected":
         return { backgroundColor: "#fee2e2", color: "#991b1b", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
       case "pending":
-        return { backgroundColor: "#fef3c7", color: "#92400e", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
+        return { backgroundColor: "var(--badge-warning-bg)", color: "var(--badge-warning-text)", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
       case "deleted":
-        return { backgroundColor: "#f3f4f6", color: "#374151", textDecoration: "line-through", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
+        return { backgroundColor: "var(--bg-elevated)", color: "var(--text-primary)", textDecoration: "line-through", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
       case "edited":
         return { backgroundColor: "#e0f2fe", color: "#075985", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
       case "reverted":
-        return { backgroundColor: "#f5f5f5", color: "#6b7280", border: "1px dashed #d1d5db", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
+        return { backgroundColor: "var(--bg-elevated)", color: "var(--text-secondary)", border: "1px dashed #d1d5db", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
       default:
-        return { backgroundColor: "#e5e7eb", color: "#111111", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
+        return { backgroundColor: "var(--border)", color: "var(--text-primary)", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.72rem", fontWeight: 600 };
     }
   };
 
@@ -206,23 +206,23 @@ export default function AuditLogPage() {
                       <tr
                         key={log.id}
                         className="fade-in"
-                        style={selectedLog?.id === log.id ? { backgroundColor: "#f9fafb" } : {}}
+                        style={selectedLog?.id === log.id ? { backgroundColor: "var(--bg-card)" } : {}}
                       >
                         <td style={{ fontWeight: 600 }}>{getRequestTypeLabel(log.request_type)}</td>
                         <td>
                           <span style={{ textTransform: "capitalize", fontWeight: 500 }}>{log.submitted_by}</span>
                         </td>
-                        <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(log.submitted_at)}</td>
+                        <td style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>{formatDate(log.submitted_at)}</td>
                         <td>
                           <span style={getStatusBadgeStyle(log.status)}>{log.status}</span>
                         </td>
                         <td>
                           {log.action_by ? (
                             <span style={{ fontSize: "0.82rem", fontWeight: 500 }}>
-                              {log.action_by} <span style={{ color: "#9ca3af", fontSize: "0.75rem" }}>({formatDate(log.action_at)})</span>
+                              {log.action_by} <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>({formatDate(log.action_at)})</span>
                             </span>
                           ) : (
-                            <span style={{ color: "#9ca3af" }}>—</span>
+                            <span style={{ color: "var(--text-muted)" }}>—</span>
                           )}
                         </td>
                         <td>
@@ -277,17 +277,17 @@ export default function AuditLogPage() {
 
         {/* Sidebar Details Panel */}
         {selectedLog && (
-          <div className="card fade-in" style={{ border: "1px solid #e5e7eb", padding: "1.25rem" }}>
+          <div className="card fade-in" style={{ border: "1px solid var(--border)", padding: "1.25rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <div>
                 <p style={{ fontWeight: 700, margin: 0, fontSize: "0.95rem" }}>Log Payload Details</p>
-                <span style={{ fontSize: "0.72rem", color: "#6b7280" }}>
+                <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
                   Log #{selectedLog.id} ({getRequestTypeLabel(selectedLog.request_type)})
                 </span>
               </div>
               <button
                 onClick={() => setSelectedLog(null)}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "#9ca3af" }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--text-muted)" }}
               >
                 ✕
               </button>
@@ -295,14 +295,14 @@ export default function AuditLogPage() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.825rem" }}>
               <div>
-                <p style={{ fontWeight: 600, color: "#6b7280", margin: "0 0 0.25rem", fontSize: "0.75rem" }}>
+                <p style={{ fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 0.25rem", fontSize: "0.75rem" }}>
                   Request Identifier
                 </p>
                 <strong>{selectedLog.request_id || "—"}</strong>
               </div>
 
               <div>
-                <p style={{ fontWeight: 600, color: "#6b7280", margin: "0 0 0.25rem", fontSize: "0.75rem" }}>
+                <p style={{ fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 0.25rem", fontSize: "0.75rem" }}>
                   Status Trail
                 </p>
                 <span style={getStatusBadgeStyle(selectedLog.status)}>{selectedLog.status}</span>
@@ -315,7 +315,7 @@ export default function AuditLogPage() {
                   Payload Submitted Values:
                 </p>
                 <div style={{
-                  background: "#f9fafb", borderRadius: "6px", padding: "0.75rem", border: "1px solid #e5e7eb",
+                  background: "var(--bg-card)", borderRadius: "6px", padding: "0.75rem", border: "1px solid var(--border)",
                   maxHeight: "300px", overflowY: "auto", fontFamily: "monospace", fontSize: "0.78rem", whiteSpace: "pre-wrap"
                 }}>
                   {selectedLog.payload ? (
@@ -344,7 +344,7 @@ export default function AuditLogPage() {
                           <strong>Comment:</strong> {selectedLog.payload.comment || "—"}
                         </div>
                       )}
-                      <div style={{ marginTop: "1rem", borderTop: "1px dashed #d1d5db", paddingTop: "0.5rem", fontSize: "0.7rem", color: "#6b7280" }}>
+                      <div style={{ marginTop: "1rem", borderTop: "1px dashed #d1d5db", paddingTop: "0.5rem", fontSize: "0.7rem", color: "var(--text-secondary)" }}>
                         Raw JSON:<br />
                         {JSON.stringify(selectedLog.payload, null, 2)}
                       </div>

@@ -9,8 +9,8 @@ export default function LandingPage() {
         <div style={{
           width: "40px",
           height: "40px",
-          background: "#ffffff",
-          color: "#0b0c0e",
+          background: "var(--bg-card)",
+          color: "var(--bg-primary)",
           borderRadius: "10px",
           display: "flex",
           alignItems: "center",
@@ -24,7 +24,7 @@ export default function LandingPage() {
         <h2 style={{ fontSize: "1.25rem", fontWeight: 700, margin: "0 0 0.5rem", letterSpacing: "-0.01em" }}>
           The Heritage Group
         </h2>
-        <p style={{ fontSize: "0.875rem", color: "#8e939f", margin: "0 0 1.75rem", maxWidth: "260px", lineHeight: 1.5 }}>
+        <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", margin: "0 0 1.75rem", maxWidth: "260px", lineHeight: 1.5 }}>
           Staff invoicing and billing management system entrance.
         </p>
         <Link 
@@ -34,8 +34,8 @@ export default function LandingPage() {
             width: "100%",
             padding: "0.75rem 2rem",
             borderRadius: "8px",
-            backgroundColor: "#ffffff",
-            color: "#0b0c0e",
+            backgroundColor: "var(--bg-card)",
+            color: "var(--bg-primary)",
             textDecoration: "none",
             fontWeight: 600,
             fontSize: "0.9rem",

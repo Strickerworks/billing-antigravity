@@ -317,11 +317,11 @@ export default function PaymentRequestsHistoryPage() {
   const getStatusStyle = (status) => {
     switch (status) {
       case "approved":
-        return { backgroundColor: "#111111", color: "#ffffff", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
+        return { backgroundColor: "var(--text-primary)", color: "var(--bg-card)", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
       case "rejected":
-        return { backgroundColor: "#e5e7eb", color: "#6b7280", textDecoration: "line-through", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
+        return { backgroundColor: "var(--border)", color: "var(--text-secondary)", textDecoration: "line-through", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
       default:
-        return { backgroundColor: "#e5e7eb", color: "#111111", border: "1px solid #d1d5db", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
+        return { backgroundColor: "var(--border)", color: "var(--text-primary)", border: "1px solid #d1d5db", padding: "0.25rem 0.6rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600 };
     }
   };
 
@@ -353,34 +353,34 @@ export default function PaymentRequestsHistoryPage() {
       }}>
         {/* Total Payments Received */}
         <div className="card fade-in" style={{
-          background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-          border: "1px solid #bbf7d0",
+          background: "linear-gradient(135deg, var(--badge-success-bg) 0%, var(--badge-success-bg) 100%)",
+          border: "1px solid var(--badge-success-border)",
           display: "flex",
           flexDirection: "column",
           gap: "0.25rem",
           padding: "1rem 1.25rem"
         }}>
-          <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--badge-success-text)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Total Payments Confirmed
           </span>
-          <span style={{ fontSize: "1.375rem", fontWeight: 800, color: "#14532d" }}>
+          <span style={{ fontSize: "1.375rem", fontWeight: 800, color: "var(--badge-success-text)" }}>
             {fmt(totalReceivedAmount)}
           </span>
         </div>
 
         {/* Pending Reviews */}
         <div className="card fade-in" style={{
-          background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-          border: "1px solid #fde68a",
+          background: "linear-gradient(135deg, var(--badge-warning-bg) 0%, var(--badge-warning-bg) 100%)",
+          border: "1px solid var(--badge-warning-border)",
           display: "flex",
           flexDirection: "column",
           gap: "0.25rem",
           padding: "1rem 1.25rem"
         }}>
-          <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#92400e", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--badge-warning-text)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Pending to be Reviewed
           </span>
-          <span style={{ fontSize: "1.375rem", fontWeight: 800, color: "#78350f" }}>
+          <span style={{ fontSize: "1.375rem", fontWeight: 800, color: "var(--badge-warning-text)" }}>
             {pendingCount} request{pendingCount !== 1 ? "s" : ""}
           </span>
         </div>
@@ -423,7 +423,7 @@ export default function PaymentRequestsHistoryPage() {
                   {requests.map((req) => (
                     <tr key={req.id} className="fade-in">
                       <td>
-                        <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{req.invoice_no}</span>
+                        <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>#{req.invoice_no}</span>
                       </td>
                       <td style={{ fontWeight: 600 }}>{req.payment_mode}</td>
                       <td>
@@ -433,7 +433,7 @@ export default function PaymentRequestsHistoryPage() {
                         {req.comment || "—"}
                       </td>
                       <td style={{ textTransform: "capitalize", fontWeight: 500 }}>{req.requested_by}</td>
-                      <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
+                      <td style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
                       <td style={{ textAlign: "center" }}>
                         {/* Admin actions */}
                         {isAdmin && (
@@ -452,7 +452,7 @@ export default function PaymentRequestsHistoryPage() {
                             </div>
                           ) : (
                             <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", alignItems: "center" }}>
-                              <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>{req.status}</span>
+                              <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>{req.status}</span>
                               <button
                                 onClick={() => handleRevert(req)}
                                 className="btn btn-sm btn-outline"
@@ -487,7 +487,7 @@ export default function PaymentRequestsHistoryPage() {
                               </button>
                             </div>
                           ) : (
-                            <span style={{ color: "#9ca3af", fontSize: "0.8rem" }}>Processed</span>
+                            <span style={{ color: "var(--text-muted)", fontSize: "0.8rem" }}>Processed</span>
                           )
                         )}
                       </td>

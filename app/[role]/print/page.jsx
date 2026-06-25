@@ -100,7 +100,7 @@ export default function PrintInvoice() {
         </div>
         <table style="border-collapse:collapse; width:100%; font-size:13px;">
           <thead>
-            <tr style="background:#f5f5f5;">
+            <tr style="background:var(--bg-elevated);">
               <th style="border:1px solid #ccc; padding:7px; text-align:center; width:40px;">S.No</th>
               <th style="border:1px solid #ccc; padding:7px; text-align:left;">Description</th>
               <th style="border:1px solid #ccc; padding:7px; text-align:center; width:50px;">Unit</th>
@@ -171,7 +171,7 @@ export default function PrintInvoice() {
             {loading ? "Generating..." : "↓ Download"}
           </button>
         </div>
-        <p style={{ fontSize: "0.78rem", color: "#9ca3af", marginTop: "0.75rem", marginBottom: 0 }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "0.75rem", marginBottom: 0 }}>
           The PDF will be downloaded automatically to your device.
         </p>
       </div>

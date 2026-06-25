@@ -102,15 +102,15 @@ export default function LogDriverLeavePage() {
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
       <div style={{ paddingTop: "1rem" }}>
         <div style={{ marginBottom: "1rem" }}>
-          <Link href={`/${role}/drivers/${driverId}`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+          <Link href={`/${role}/drivers/${driverId}`} style={{ textDecoration: "none", color: "var(--text-primary)", fontWeight: 600, fontSize: "0.9rem" }}>
             ← Back to Profile
           </Link>
         </div>
         <div>
-          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "#111827" }}>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
             {driver?.name}
           </h1>
-          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: "0.25rem 0 0" }}>
             {isAdmin ? "Log Leave Directly" : "Request Leave Record"}
           </p>
         </div>
@@ -119,8 +119,8 @@ export default function LogDriverLeavePage() {
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
       {/* Log Leave Form */}
-      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>New Leave Form</h2>
+      <div className="card" style={{ padding: "1.5rem", background: "var(--bg-card)", border: "1px solid var(--border)", marginBottom: "2rem" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>New Leave Form</h2>
         <form onSubmit={handleLeaveSubmit} className="form-grid-2">
           <div className="form-group">
             <label className="form-label" style={{ fontWeight: 600 }}>Start Date *</label>
@@ -142,7 +142,7 @@ export default function LogDriverLeavePage() {
               type="submit"
               disabled={submitting}
               className="btn btn-primary"
-              style={{ fontSize: "0.85rem", padding: "0.6rem 2rem", background: "#111827", color: "#ffffff", borderColor: "#111827" }}
+              style={{ fontSize: "0.85rem", padding: "0.6rem 2rem", background: "var(--text-primary)", color: "var(--bg-card)", borderColor: "var(--text-primary)" }}
             >
               {submitting ? "Processing..." : isAdmin ? "Save Record" : "Submit Request"}
             </button>
@@ -151,10 +151,10 @@ export default function LogDriverLeavePage() {
       </div>
 
       {/* Leaves History Ledger */}
-      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Leave History Records</h2>
+      <div className="card" style={{ padding: "1.5rem", background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-primary)" }}>Leave History Records</h2>
         {leavesHistory.length === 0 ? (
-          <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>No leave logs recorded.</p>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>No leave logs recorded.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {leavesHistory.map((leave) => {
@@ -166,21 +166,21 @@ export default function LogDriverLeavePage() {
                 <div key={leave.id} className="log-row" style={{ paddingBottom: "0.6rem" }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)" }}>
                         {days} {days === 1 ? "Day" : "Days"} Leave
                       </span>
                       <span style={{
                         fontSize: "0.65rem",
                         fontWeight: 700,
-                        color: "#92400e",
-                        background: "#fffbeb",
+                        color: "var(--badge-warning-text)",
+                        background: "var(--badge-warning-bg)",
                         padding: "0.15rem 0.4rem",
                         borderRadius: "4px"
                       }}>
                         {sDate.toLocaleDateString()} - {eDate.toLocaleDateString()}
                       </span>
                     </div>
-                    <div style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "0.15rem" }}>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.15rem" }}>
                       {leave.reason || "No reason specified"}
                     </div>
                   </div>

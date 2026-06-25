@@ -108,7 +108,7 @@ export default function ViewInvoice() {
         </div>
         <table style="border-collapse:collapse; width:100%; font-size:13px;">
           <thead>
-            <tr style="background:#f5f5f5;">
+            <tr style="background:var(--bg-elevated);">
               <th style="border:1px solid #ccc; padding:7px; text-align:center; width:40px;">S.No</th>
               <th style="border:1px solid #ccc; padding:7px; text-align:left;">Description</th>
               <th style="border:1px solid #ccc; padding:7px; text-align:center; width:50px;">Unit</th>
@@ -187,8 +187,8 @@ export default function ViewInvoice() {
 
       {fetchedData && (
         <div style={{ marginBottom: "0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <p style={{ fontSize: "0.875rem", color: "#6b7280", margin: 0 }}>
-            Viewing Invoice <strong style={{ color: "#1a1d23" }}>#{fetchedData.invoice_no}</strong> — {fetchedData.customer_name}
+          <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", margin: 0 }}>
+            Viewing Invoice <strong style={{ color: "var(--text-primary)" }}>#{fetchedData.invoice_no}</strong> — {fetchedData.customer_name}
           </p>
           <button
             onClick={() => { setFetchedData(null); setPdfUrl(null); setInvoiceNo(""); }}

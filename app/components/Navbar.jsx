@@ -199,7 +199,7 @@ export default function Navbar() {
         <div className="drawer-header">
           <div className="drawer-brand">
             <div className="navbar-brand-icon" style={{ width: 28, height: 28, fontSize: 12 }}>H</div>
-            <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "#111111" }}>Heritage Invoice</span>
+            <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)" }}>Heritage Invoice</span>
           </div>
           <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label="Close menu">
             ✕
@@ -213,7 +213,7 @@ export default function Navbar() {
 
           {/* Collapsible Mobile Invoice */}
           <div style={{ margin: "0.5rem 0" }}>
-            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", padding: "0.5rem 0.75rem 0.25rem" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", padding: "0.5rem 0.75rem 0.25rem" }}>
               Invoice Operations
             </div>
             {invoiceItems.map((item) => (
@@ -225,7 +225,7 @@ export default function Navbar() {
 
           {/* Collapsible Mobile Requests */}
           <div style={{ margin: "0.5rem 0" }}>
-            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", padding: "0.5rem 0.75rem 0.25rem" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", padding: "0.5rem 0.75rem 0.25rem" }}>
               Submit New Request
             </div>
             {requestItems.map((item) => (
@@ -237,7 +237,7 @@ export default function Navbar() {
 
           {/* Collapsible Mobile Track */}
           <div style={{ margin: "0.5rem 0" }}>
-            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", padding: "0.5rem 0.75rem 0.25rem" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", padding: "0.5rem 0.75rem 0.25rem" }}>
               Track &amp; Review Logs
             </div>
             {trackItems.map((item) => (
@@ -249,7 +249,7 @@ export default function Navbar() {
 
           {/* Collapsible Mobile Vehicles */}
           <div style={{ margin: "0.5rem 0" }}>
-            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#9ca3af", padding: "0.5rem 0.75rem 0.25rem" }}>
+            <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-muted)", padding: "0.5rem 0.75rem 0.25rem" }}>
               Cars &amp; Drivers
             </div>
             {vehicleItems.map((item) => (
@@ -272,8 +272,8 @@ export default function Navbar() {
           position: absolute;
           top: 100%;
           left: 0;
-          background: #ffffff;
-          border: 1px solid #e5e7eb;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
           box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
           border-radius: 8px;
           min-width: 180px;
@@ -287,13 +287,13 @@ export default function Navbar() {
         .dropdown-item {
           padding: 0.5rem 1rem;
           font-size: 0.85rem;
-          color: #374151;
+          color: var(--text-primary);
           text-decoration: none;
           transition: background 0.1s, color 0.1s;
         }
         .dropdown-item:hover {
-          background: #f3f4f6;
-          color: #111111;
+          background: var(--bg-elevated);
+          color: var(--text-primary);
         }
         @keyframes navFadeIn {
           from { opacity: 0; transform: translateY(-5px); }

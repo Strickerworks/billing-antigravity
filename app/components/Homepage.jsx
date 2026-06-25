@@ -93,20 +93,20 @@ export default function Homepage() {
       <div style={{ padding: "2.5rem 0 2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
           <div style={{
-            width: 40, height: 40, background: "#2c2c2c", borderRadius: 10,
+            width: 40, height: 40, background: "var(--bg-elevated)", borderRadius: 10,
             display: "flex", alignItems: "center", justifyContent: "center",
             color: "white", fontSize: 18, fontWeight: 700
           }}>H</div>
           <div>
-            <h1 style={{ fontSize: "1.375rem", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", color: "#1a1d23" }}>
+            <h1 style={{ fontSize: "1.375rem", fontWeight: 700, margin: 0, letterSpacing: "-0.02em", color: "var(--text-primary)" }}>
               Heritage Invoice
             </h1>
-            <p style={{ fontSize: "0.8rem", color: "#9ca3af", margin: 0 }}>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: 0 }}>
               The Heritage Group
             </p>
           </div>
         </div>
-        <p style={{ fontSize: "0.9rem", color: "#6b7280", margin: "1rem 0 0", maxWidth: 460, lineHeight: 1.6 }}>
+        <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", margin: "1rem 0 0", maxWidth: 460, lineHeight: 1.6 }}>
           A professional invoicing platform for managing tax invoices, generating PDFs and tracking billing records.
         </p>
       </div>

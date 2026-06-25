@@ -346,10 +346,10 @@ export default function FleetRequestsPage() {
   return (
     <div className="page-content" style={{ maxWidth: 960, paddingBottom: "3rem" }}>
       <div style={{ padding: "1.5rem 0 1rem" }}>
-        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+        <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
           Fleet Approval Queue
         </h1>
-        <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+        <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: "0.25rem 0 0" }}>
           Track and review staff requests for vehicle registrations, edits, and logging activity
         </p>
       </div>
@@ -376,8 +376,8 @@ export default function FleetRequestsPage() {
                   key={req.id}
                   style={{
                     padding: "1.25rem",
-                    background: "#ffffff",
-                    borderBottom: "1px solid #e5e7eb",
+                    background: "var(--bg-card)",
+                    borderBottom: "1px solid var(--border)",
                     display: "flex",
                     flexDirection: "column",
                     gap: "0.75rem"
@@ -390,17 +390,17 @@ export default function FleetRequestsPage() {
                         fontWeight: 700,
                         textTransform: "uppercase",
                         color: "#4b5563",
-                        background: "#f3f4f6",
+                        background: "var(--bg-elevated)",
                         padding: "0.25rem 0.5rem",
                         borderRadius: "4px",
                         letterSpacing: "0.02em"
                       }}>
                         {req.request_type.replace("_", " ")}
                       </span>
-                      <div style={{ fontWeight: 600, color: "#111827", fontSize: "1rem", marginTop: "0.5rem" }}>
+                      <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: "1rem", marginTop: "0.5rem" }}>
                         {renderPayloadSummary(req)}
                       </div>
-                      <div style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "0.25rem" }}>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
                         Requested by: <span style={{ fontWeight: 600, color: "#4b5563" }}>{req.requested_by}</span> on {new Date(req.created_at).toLocaleString()}
                       </div>
                     </div>
@@ -411,8 +411,8 @@ export default function FleetRequestsPage() {
                         fontWeight: 700,
                         padding: "0.25rem 0.5rem",
                         borderRadius: "4px",
-                        color: req.status === "pending" ? "#92400e" : req.status === "approved" ? "#166534" : "#991b1b",
-                        background: req.status === "pending" ? "#fffbeb" : req.status === "approved" ? "#f0fdf4" : "#fef2f2"
+                        color: req.status === "pending" ? "var(--badge-warning-text)" : req.status === "approved" ? "var(--badge-success-text)" : "#991b1b",
+                        background: req.status === "pending" ? "var(--badge-warning-bg)" : req.status === "approved" ? "var(--badge-success-bg)" : "#fef2f2"
                       }}>
                         {req.status.toUpperCase()}
                       </span>
@@ -425,7 +425,7 @@ export default function FleetRequestsPage() {
                               onClick={() => handleApprove(req)}
                               disabled={submitting}
                               className="btn btn-primary"
-                              style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", background: "#166534", border: "1px solid #166534" }}
+                              style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", background: "var(--badge-success-text)", border: "1px solid var(--badge-success-text)" }}
                             >
                               Approve
                             </button>
@@ -506,7 +506,7 @@ export default function FleetRequestsPage() {
           justifyContent: "center",
           zIndex: 9999
         }}>
-          <div className="card" style={{ width: "90%", maxWidth: "500px", padding: "1.5rem", background: "#ffffff" }}>
+          <div className="card" style={{ width: "90%", maxWidth: "500px", padding: "1.5rem", background: "var(--bg-card)" }}>
             <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>Edit Fleet Request</h3>
             <form onSubmit={handleEditSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {/* Dynamic inputs based on request_type */}

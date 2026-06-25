@@ -156,9 +156,9 @@ export default function DriverDetailPage() {
   const buttonStyle = {
     fontSize: "0.85rem",
     fontWeight: 600,
-    background: "#111827",
-    color: "#ffffff",
-    border: "1px solid #111827",
+    background: "var(--text-primary)",
+    color: "var(--bg-card)",
+    border: "1px solid var(--text-primary)",
     padding: "0.5rem 1.25rem",
     borderRadius: "6px",
     cursor: "pointer",
@@ -174,15 +174,15 @@ export default function DriverDetailPage() {
       {/* Title & Action Buttons Section */}
       <div style={{ padding: "1.5rem 0" }}>
         <div style={{ marginBottom: "1rem" }}>
-          <Link href={`/${role}/drivers`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+          <Link href={`/${role}/drivers`} style={{ textDecoration: "none", color: "var(--text-primary)", fontWeight: 600, fontSize: "0.9rem" }}>
             ← Back to Registry
           </Link>
         </div>
         <div>
-          <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: 0, color: "#111827" }}>
+          <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
             {driver.name}
           </h1>
-          <p style={{ fontSize: "0.9rem", color: "#6b7280", margin: "0.25rem 0 1.25rem" }}>
+          <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", margin: "0.25rem 0 1.25rem" }}>
             Contact: {driver.phone}
           </p>
         </div>
@@ -213,29 +213,29 @@ export default function DriverDetailPage() {
         {/* Row 1: Finance Summary */}
         <div className="card" style={{
           padding: "1.25rem",
-          background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-          border: "1px solid #bbf7d0",
+          background: "linear-gradient(135deg, var(--badge-success-bg) 0%, var(--badge-success-bg) 100%)",
+          border: "1px solid var(--badge-success-border)",
           borderRadius: "8px"
         }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "1rem" }}>
             <div>
-              <div style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>Monthly Base Salary</div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#166534", marginTop: "0.25rem" }}>₹{baseSalary.toLocaleString()}</div>
+              <div style={{ fontSize: "0.7rem", color: "var(--badge-success-text)", fontWeight: 700, textTransform: "uppercase" }}>Monthly Base Salary</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--badge-success-text)", marginTop: "0.25rem" }}>₹{baseSalary.toLocaleString()}</div>
             </div>
             <div>
-              <div style={{ fontSize: "0.7rem", color: "#15803d", fontWeight: 700, textTransform: "uppercase" }}>Salary Paid</div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#166534", marginTop: "0.25rem" }}>₹{totalPaid.toLocaleString()}</div>
+              <div style={{ fontSize: "0.7rem", color: "var(--badge-success-text)", fontWeight: 700, textTransform: "uppercase" }}>Salary Paid</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--badge-success-text)", marginTop: "0.25rem" }}>₹{totalPaid.toLocaleString()}</div>
             </div>
             <div>
-              <div style={{ fontSize: "0.7rem", color: "#b45309", fontWeight: 700, textTransform: "uppercase" }}>Advances Taken</div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#92400e", marginTop: "0.25rem" }}>₹{totalAdvances.toLocaleString()}</div>
+              <div style={{ fontSize: "0.7rem", color: "var(--badge-warning-text)", fontWeight: 700, textTransform: "uppercase" }}>Advances Taken</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--badge-warning-text)", marginTop: "0.25rem" }}>₹{totalAdvances.toLocaleString()}</div>
             </div>
             <div>
               <div style={{ fontSize: "0.7rem", color: "#b91c1c", fontWeight: 700, textTransform: "uppercase" }}>Deductions</div>
               <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#991b1b", marginTop: "0.25rem" }}>₹{totalDeductions.toLocaleString()}</div>
             </div>
-            <div style={{ borderLeft: "1px solid #bbf7d0", paddingLeft: "1rem" }}>
-              <div style={{ fontSize: "0.7rem", color: "#1e40af", fontWeight: 700, textTransform: "uppercase" }}>Leftover Balance</div>
+            <div style={{ borderLeft: "1px solid var(--badge-success-border)", paddingLeft: "1rem" }}>
+              <div style={{ fontSize: "0.7rem", color: "var(--badge-blue-text)", fontWeight: 700, textTransform: "uppercase" }}>Leftover Balance</div>
               <div style={{ fontSize: "1.2rem", fontWeight: 800, color: leftoverBalance >= 0 ? "#1e3a8a" : "#b91c1c", marginTop: "0.25rem" }}>
                 ₹{leftoverBalance.toLocaleString()}
               </div>
@@ -246,18 +246,18 @@ export default function DriverDetailPage() {
         {/* Row 2: Leaves Summary */}
         <div className="card" style={{
           padding: "1rem 1.25rem",
-          background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-          border: "1px solid #fde68a",
+          background: "linear-gradient(135deg, var(--badge-warning-bg) 0%, var(--badge-warning-bg) 100%)",
+          border: "1px solid var(--badge-warning-border)",
           borderRadius: "8px",
         }}>
           <div className="stats-banner">
             <div>
-              <span style={{ fontSize: "0.7rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase" }}>Leaves Taken (This Month)</span>
-              <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>{thisMonthLeaveDays} Days</div>
+              <span style={{ fontSize: "0.7rem", color: "var(--badge-warning-text)", fontWeight: 700, textTransform: "uppercase" }}>Leaves Taken (This Month)</span>
+              <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--badge-warning-text)", marginTop: "0.15rem" }}>{thisMonthLeaveDays} Days</div>
             </div>
             <div className="stats-banner-divider">
-              <span style={{ fontSize: "0.7rem", color: "#92400e", fontWeight: 700, textTransform: "uppercase" }}>Total Leaves (All Time)</span>
-              <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#78350f", marginTop: "0.15rem" }}>{totalLeaveDays} Days</div>
+              <span style={{ fontSize: "0.7rem", color: "var(--badge-warning-text)", fontWeight: 700, textTransform: "uppercase" }}>Total Leaves (All Time)</span>
+              <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--badge-warning-text)", marginTop: "0.15rem" }}>{totalLeaveDays} Days</div>
             </div>
           </div>
         </div>
@@ -267,18 +267,18 @@ export default function DriverDetailPage() {
       {(pendingPayments.length > 0 || pendingLeaves.length > 0) && (
         <div style={{
           padding: "1rem",
-          background: "#fffbeb",
-          border: "1px solid #fef3c7",
+          background: "var(--badge-warning-bg)",
+          border: "1px solid var(--badge-warning-bg)",
           borderRadius: "8px",
           marginBottom: "1.5rem",
           display: "flex",
           flexDirection: "column",
           gap: "0.5rem"
         }}>
-          <div style={{ fontWeight: 700, color: "#92400e", fontSize: "0.85rem" }}>
+          <div style={{ fontWeight: 700, color: "var(--badge-warning-text)", fontSize: "0.85rem" }}>
             ⚠️ Pending Fleet Request(s) Awaiting Approval:
           </div>
-          <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.8rem", color: "#b45309" }}>
+          <ul style={{ margin: 0, paddingLeft: "1.25rem", fontSize: "0.8rem", color: "var(--badge-warning-text)" }}>
             {pendingPayments.map((req) => (
               <li key={req.id}>
                 <strong>{req.payload.type?.replace("_", " ").toUpperCase()}</strong> of <strong>₹{req.payload.amount?.toLocaleString()}</strong> requested on {new Date(req.created_at).toLocaleDateString()}
@@ -297,66 +297,66 @@ export default function DriverDetailPage() {
       <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
         
         {/* 1. Profile Information */}
-        <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Profile Information</h2>
+        <div className="card" style={{ padding: "1.5rem", background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-primary)" }}>Profile Information</h2>
           <div className="info-grid-2">
             <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Full Name</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.name}</div>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Full Name</span>
+              <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600, marginTop: "0.25rem" }}>{driver.name}</div>
             </div>
 
             <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Phone Number</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.phone}</div>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Phone Number</span>
+              <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600, marginTop: "0.25rem" }}>{driver.phone}</div>
             </div>
 
             <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Date of Birth</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Date of Birth</span>
+              <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600, marginTop: "0.25rem" }}>
                 {driver.dob ? new Date(driver.dob).toLocaleDateString() : "Not Provided"}
               </div>
             </div>
 
             <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Aadhar Card</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.aadhar_number || "Not Provided"}</div>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Aadhar Card</span>
+              <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600, marginTop: "0.25rem" }}>{driver.aadhar_number || "Not Provided"}</div>
             </div>
 
             <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>License Number</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>{driver.license_number || "Not Provided"}</div>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>License Number</span>
+              <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600, marginTop: "0.25rem" }}>{driver.license_number || "Not Provided"}</div>
             </div>
 
             <div>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Date of Joining</span>
-              <div style={{ fontSize: "0.95rem", color: "#111827", fontWeight: 600, marginTop: "0.25rem" }}>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Date of Joining</span>
+              <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600, marginTop: "0.25rem" }}>
                 {driver.date_of_joining ? new Date(driver.date_of_joining).toLocaleDateString() : "Not Provided"}
               </div>
             </div>
 
             <div style={{ gridColumn: "1 / -1" }}>
-              <span style={{ fontSize: "0.75rem", color: "#9ca3af", fontWeight: 700, textTransform: "uppercase" }}>Permanent Address</span>
-              <div style={{ fontSize: "0.95rem", color: "#374151", fontWeight: 600, marginTop: "0.25rem", whiteSpace: "pre-line" }}>{driver.address || "Not Provided"}</div>
+              <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>Permanent Address</span>
+              <div style={{ fontSize: "0.95rem", color: "var(--text-primary)", fontWeight: 600, marginTop: "0.25rem", whiteSpace: "pre-line" }}>{driver.address || "Not Provided"}</div>
             </div>
           </div>
         </div>
 
         {/* 2. Assigned Vehicle Logs */}
-        <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>Assigned Vehicle Logs</h2>
+        <div className="card" style={{ padding: "1.5rem", background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+          <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>Assigned Vehicle Logs</h2>
           {vehicleHistory.length === 0 ? (
-            <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>No vehicle assignment records.</p>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>No vehicle assignment records.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
               {vehicleHistory.map((hist, i) => (
-                <div key={i} style={{ borderBottom: "1px solid #f3f4f6", paddingBottom: "0.5rem" }}>
-                  <div style={{ fontWeight: 600, color: "#111827", fontSize: "0.9rem" }}>
+                <div key={i} style={{ borderBottom: "1px solid var(--bg-elevated)", paddingBottom: "0.5rem" }}>
+                  <div style={{ fontWeight: 600, color: "var(--text-primary)", fontSize: "0.9rem" }}>
                     🚗 {hist.cars?.name}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#1e40af", fontWeight: 700, marginTop: "0.1rem" }}>
+                  <div style={{ fontSize: "0.75rem", color: "var(--badge-blue-text)", fontWeight: 700, marginTop: "0.1rem" }}>
                     {hist.cars?.registration_name}
                   </div>
-                  <div style={{ fontSize: "0.7rem", color: "#9ca3af", marginTop: "0.15rem" }}>
+                  <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "0.15rem" }}>
                     Assigned: {new Date(hist.assigned_at).toLocaleDateString()}
                   </div>
                 </div>

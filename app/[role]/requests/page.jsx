@@ -268,8 +268,8 @@ export default function RequestsPage() {
     switch (status) {
       case "approved":
         return {
-          backgroundColor: "#111111",
-          color: "#ffffff",
+          backgroundColor: "var(--text-primary)",
+          color: "var(--bg-card)",
           padding: "0.25rem 0.6rem",
           borderRadius: "100px",
           fontSize: "0.75rem",
@@ -277,8 +277,8 @@ export default function RequestsPage() {
         };
       case "rejected":
         return {
-          backgroundColor: "#e5e7eb",
-          color: "#6b7280",
+          backgroundColor: "var(--border)",
+          color: "var(--text-secondary)",
           textDecoration: "line-through",
           padding: "0.25rem 0.6rem",
           borderRadius: "100px",
@@ -287,8 +287,8 @@ export default function RequestsPage() {
         };
       default:
         return {
-          backgroundColor: "#e5e7eb",
-          color: "#111111",
+          backgroundColor: "var(--border)",
+          color: "var(--text-primary)",
           border: "1px solid #d1d5db",
           padding: "0.25rem 0.6rem",
           borderRadius: "100px",
@@ -476,10 +476,10 @@ export default function RequestsPage() {
                       <tr
                         key={req.id}
                         className="fade-in"
-                        style={selectedRequest?.id === req.id ? { backgroundColor: "#f9fafb" } : {}}
+                        style={selectedRequest?.id === req.id ? { backgroundColor: "var(--bg-card)" } : {}}
                       >
                         <td>
-                          <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{req.invoice_no}</span>
+                          <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>#{req.invoice_no}</span>
                         </td>
                         <td style={{ fontWeight: 500 }}>{req.data?.customer_name || "—"}</td>
                         <td>
@@ -488,7 +488,7 @@ export default function RequestsPage() {
                         <td>
                           <span style={getStatusStyle(req.status)}>{req.status}</span>
                         </td>
-                        <td style={{ color: "#6b7280", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
+                        <td style={{ color: "var(--text-secondary)", fontSize: "0.8rem" }}>{formatDate(req.created_at)}</td>
                         <td style={{ textAlign: "center" }}>
                           <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center" }}>
                             <button onClick={() => setSelectedRequest(req)} className="btn btn-sm btn-secondary">
@@ -570,19 +570,19 @@ export default function RequestsPage() {
 
         {/* Sidebar Details Panel */}
         {selectedRequest && (
-          <div className="card fade-in" style={{ border: "1px solid #e5e7eb", padding: "1.25rem" }}>
+          <div className="card fade-in" style={{ border: "1px solid var(--border)", padding: "1.25rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
               <div>
                 <p style={{ fontWeight: 700, margin: 0, fontSize: "0.95rem" }}>
                   {selectedRequest.request_type === "update" ? "Proposed Changes" : "New Invoice Preview"}
                 </p>
-                <span style={{ fontSize: "0.72rem", color: "#6b7280" }}>
+                <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
                   Invoice #{selectedRequest.invoice_no} ({selectedRequest.request_type})
                 </span>
               </div>
               <button
                 onClick={() => setSelectedRequest(null)}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "#9ca3af" }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--text-muted)" }}
               >
                 ✕
               </button>
@@ -590,26 +590,26 @@ export default function RequestsPage() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.825rem" }}>
               {diffs.length === 0 ? (
-                <p style={{ color: "#6b7280", textAlign: "center", margin: "1rem 0" }}>
+                <p style={{ color: "var(--text-secondary)", textAlign: "center", margin: "1rem 0" }}>
                   No basic field differences detected.
                 </p>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
                   {diffs.map((diff, idx) => (
-                    <div key={idx} style={{ borderBottom: "1px solid #f3f4f6", paddingBottom: "0.5rem" }}>
+                    <div key={idx} style={{ borderBottom: "1px solid var(--bg-elevated)", paddingBottom: "0.5rem" }}>
                       <p style={{ fontWeight: 600, margin: "0 0 0.25rem", color: "#4b5563", fontSize: "0.78rem" }}>
                         {diff.field}
                       </p>
                       {selectedRequest.request_type === "update" && diff.oldVal !== undefined ? (
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                          <span style={{ color: "#9ca3af", textDecoration: "line-through", whiteSpace: "nowrap" }}>
+                          <span style={{ color: "var(--text-muted)", textDecoration: "line-through", whiteSpace: "nowrap" }}>
                             {diff.oldVal}
                           </span>
-                          <span style={{ color: "#9ca3af" }}>&rarr;</span>
-                          <strong style={{ color: "#111111" }}>{diff.newVal}</strong>
+                          <span style={{ color: "var(--text-muted)" }}>&rarr;</span>
+                          <strong style={{ color: "var(--text-primary)" }}>{diff.newVal}</strong>
                         </div>
                       ) : (
-                        <strong style={{ color: "#111111" }}>{diff.newVal}</strong>
+                        <strong style={{ color: "var(--text-primary)" }}>{diff.newVal}</strong>
                       )}
                     </div>
                   ))}
@@ -619,19 +619,19 @@ export default function RequestsPage() {
               {/* Items Summary (for Billing Create/Duplicate) */}
               {selectedRequest.request_type !== "update" && (
                 <div>
-                  <p style={{ fontWeight: 600, color: "#374151", margin: "0.5rem 0 0.25rem", fontSize: "0.8rem" }}>
+                  <p style={{ fontWeight: 600, color: "var(--text-primary)", margin: "0.5rem 0 0.25rem", fontSize: "0.8rem" }}>
                     Content Summary:
                   </p>
-                  <div style={{ maxHeight: "150px", overflowY: "auto", background: "#f9fafb", borderRadius: "6px", padding: "0.5rem", border: "1px solid #f3f4f6" }}>
+                  <div style={{ maxHeight: "150px", overflowY: "auto", background: "var(--bg-card)", borderRadius: "6px", padding: "0.5rem", border: "1px solid var(--bg-elevated)" }}>
                     {selectedRequest.data?.content?.map((item, idx) => (
-                      <div key={idx} style={{ padding: "0.25rem 0", fontSize: "0.75rem", borderBottom: idx < selectedRequest.data.content.length - 1 ? "1px dashed #e5e7eb" : "none" }}>
+                      <div key={idx} style={{ padding: "0.25rem 0", fontSize: "0.75rem", borderBottom: idx < selectedRequest.data.content.length - 1 ? "1px dashed var(--border)" : "none" }}>
                         <strong>{item.sno}. {item.description}</strong>
                         <br />
-                        <span style={{ color: "#6b7280" }}>
+                        <span style={{ color: "var(--text-secondary)" }}>
                           {item.unit} Unit @ {fmt(item.rate)} = {fmt(item.amount)}
                         </span>
                       </div>
-                    )) || <p style={{ margin: 0, color: "#9ca3af" }}>No items found</p>}
+                    )) || <p style={{ margin: 0, color: "var(--text-muted)" }}>No items found</p>}
                   </div>
                 </div>
               )}

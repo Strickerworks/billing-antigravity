@@ -108,11 +108,11 @@ export default function AddPaymentRequestPage() {
       <div className="card fade-in">
         <p className="card-title">Payment Details</p>
         {loading ? (
-          <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>Loading unpaid invoices...</p>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>Loading unpaid invoices...</p>
         ) : unpaidInvoices.length === 0 ? (
           <div style={{ padding: "1rem 0", textAlign: "center" }}>
             <p style={{ fontWeight: 600, color: "#1f2937", margin: "0 0 0.5rem" }}>All caught up!</p>
-            <p style={{ color: "#6b7280", fontSize: "0.8rem", margin: 0 }}>
+            <p style={{ color: "var(--text-secondary)", fontSize: "0.8rem", margin: 0 }}>
               There are no unpaid invoices pending payment request acknowledgements.
             </p>
             <button

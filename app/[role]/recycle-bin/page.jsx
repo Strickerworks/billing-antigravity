@@ -159,12 +159,12 @@ export default function RecycleBin() {
                 {filteredInvoices.map((inv) => (
                   <tr key={inv.invoice_no} className="fade-in">
                     <td>
-                      <span style={{ fontWeight: 600, color: "#1a1d23" }}>#{inv.invoice_no}</span>
+                      <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>#{inv.invoice_no}</span>
                     </td>
                     <td style={{ fontWeight: 500 }}>{inv.customer_name}</td>
-                    <td style={{ color: "#9ca3af", fontFamily: "monospace", fontSize: "0.8rem" }}>{inv.customer_gst}</td>
-                    <td style={{ color: "#6b7280" }}>{formatDate(inv.created_at)}</td>
-                    <td style={{ textAlign: "right", fontWeight: 600, color: "#1a1d23" }}>
+                    <td style={{ color: "var(--text-muted)", fontFamily: "monospace", fontSize: "0.8rem" }}>{inv.customer_gst}</td>
+                    <td style={{ color: "var(--text-secondary)" }}>{formatDate(inv.created_at)}</td>
+                    <td style={{ textAlign: "right", fontWeight: 600, color: "var(--text-primary)" }}>
                       {fmt(inv.grand_total)}
                     </td>
                     <td style={{ textAlign: "center" }}>

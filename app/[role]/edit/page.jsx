@@ -64,8 +64,8 @@ export default function EditInvoice() {
       {invoiceData && (
         <>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
-            <p style={{ fontSize: "0.875rem", color: "#6b7280", margin: 0 }}>
-              Editing Invoice <strong style={{ color: "#1a1d23" }}>#{invoiceData.invoice_no}</strong>
+            <p style={{ fontSize: "0.875rem", color: "var(--text-secondary)", margin: 0 }}>
+              Editing Invoice <strong style={{ color: "var(--text-primary)" }}>#{invoiceData.invoice_no}</strong>
             </p>
             <button
               onClick={() => setInvoiceData(null)}

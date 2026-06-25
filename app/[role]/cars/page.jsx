@@ -136,16 +136,16 @@ export default function CarsPage() {
   return (
     <div className="page-content" style={{ maxWidth: 960, paddingBottom: "3rem" }}>
       <div style={{ paddingTop: "1rem" }}>
-        <Link href={`/${role}`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+        <Link href={`/${role}`} style={{ textDecoration: "none", color: "var(--text-primary)", fontWeight: 600, fontSize: "0.9rem" }}>
           ← Back to Home
         </Link>
       </div>
       <div className="registry-header">
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
             Fleet Registry
           </h1>
-          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: "0.25rem 0 0" }}>
             {isAdmin ? "Admin Fleet Registry & Controls" : "Submit Vehicle Addition/Modification Requests"}
           </p>
         </div>
@@ -158,18 +158,18 @@ export default function CarsPage() {
 
       {/* Fleet list */}
       <div>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem", color: "#111827" }}>Registered Vehicles</h2>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem", color: "var(--text-primary)" }}>Registered Vehicles</h2>
 
         {loading ? (
-          <div style={{ color: "#6b7280" }}>Loading vehicles...</div>
+          <div style={{ color: "var(--text-secondary)" }}>Loading vehicles...</div>
         ) : cars.length === 0 ? (
           <div style={{
             padding: "3rem",
-            background: "#f9fafb",
+            background: "var(--bg-card)",
             borderRadius: "8px",
-            border: "1px dashed #e5e7eb",
+            border: "1px dashed var(--border)",
             textAlign: "center",
-            color: "#6b7280"
+            color: "var(--text-secondary)"
           }}>
             No vehicles registered in the fleet.
           </div>
@@ -181,20 +181,20 @@ export default function CarsPage() {
                 className="card"
                 style={{
                   padding: 0,
-                  background: "#ffffff",
-                  border: "1px solid #e5e7eb",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
                 }}
               >
                 <div className="fleet-card-row">
                   <div className="fleet-card-info">
                     <div style={{ fontSize: "1.5rem" }}>🚗</div>
                     <div>
-                      <div style={{ fontWeight: 700, color: "#111827", fontSize: "1.05rem" }}>{car.name}</div>
+                      <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "1.05rem" }}>{car.name}</div>
                       <span style={{
                         fontSize: "0.75rem",
-                        color: "#1e40af",
-                        background: "#eff6ff",
-                        border: "1px solid #bfdbfe",
+                        color: "var(--badge-blue-text)",
+                        background: "var(--badge-blue-bg)",
+                        border: "1px solid var(--badge-blue-border)",
                         borderRadius: "4px",
                         padding: "0.125rem 0.375rem",
                         display: "inline-block",
@@ -208,18 +208,18 @@ export default function CarsPage() {
 
                   <div className="fleet-card-actions">
                     <div className="fleet-stat">
-                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", fontWeight: 700 }}>Odometer</span>
-                      <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{parseFloat(car.currentKm).toLocaleString()} km</span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Odometer</span>
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: 700 }}>{parseFloat(car.currentKm).toLocaleString()} km</span>
                     </div>
 
                     <div className="fleet-stat">
-                      <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", fontWeight: 700 }}>Assigned Driver</span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 700 }}>Assigned Driver</span>
                       {car.currentDriverId ? (
                         <Link href={`/${role}/drivers/${car.currentDriverId}`} style={{ textDecoration: "none" }}>
-                          <span style={{ fontSize: "0.85rem", color: "#1e40af", fontWeight: 700, textDecoration: "underline" }}>{car.currentDriver}</span>
+                          <span style={{ fontSize: "0.85rem", color: "var(--badge-blue-text)", fontWeight: 700, textDecoration: "underline" }}>{car.currentDriver}</span>
                         </Link>
                       ) : (
-                        <span style={{ fontSize: "0.85rem", color: "#374151", fontWeight: 700 }}>{car.currentDriver}</span>
+                        <span style={{ fontSize: "0.85rem", color: "var(--text-primary)", fontWeight: 700 }}>{car.currentDriver}</span>
                       )}
                     </div>
 
@@ -273,7 +273,7 @@ export default function CarsPage() {
           justifyContent: "center",
           zIndex: 9999
         }}>
-          <div className="card" style={{ width: "90%", maxWidth: "500px", padding: "1.5rem", background: "#ffffff" }}>
+          <div className="card" style={{ width: "90%", maxWidth: "500px", padding: "1.5rem", background: "var(--bg-card)" }}>
             <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem" }}>
               {isAdmin ? "Modify Vehicle Profile" : "Request Vehicle Modification"}
             </h3>

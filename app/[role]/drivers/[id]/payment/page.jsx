@@ -113,15 +113,15 @@ export default function LogDriverPaymentPage() {
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
       <div style={{ paddingTop: "1rem" }}>
         <div style={{ marginBottom: "1rem" }}>
-          <Link href={`/${role}/drivers/${driverId}`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+          <Link href={`/${role}/drivers/${driverId}`} style={{ textDecoration: "none", color: "var(--text-primary)", fontWeight: 600, fontSize: "0.9rem" }}>
             ← Back to Profile
           </Link>
         </div>
         <div>
-          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "#111827" }}>
+          <h1 style={{ fontSize: "1.6rem", fontWeight: 800, margin: 0, color: "var(--text-primary)" }}>
             {driver?.name}
           </h1>
-          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: "0.25rem 0 0" }}>
             {isAdmin ? "Log Salary/Payment Activity Directly" : "Request Salary/Payment Activity"}
           </p>
         </div>
@@ -130,8 +130,8 @@ export default function LogDriverPaymentPage() {
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
       {/* Log Payment Form */}
-      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb", marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "#111827" }}>New Payment Form</h2>
+      <div className="card" style={{ padding: "1.5rem", background: "var(--bg-card)", border: "1px solid var(--border)", marginBottom: "2rem" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>New Payment Form</h2>
         <form onSubmit={handlePaymentSubmit} className="form-grid-2">
           <div className="form-group">
             <label className="form-label" style={{ fontWeight: 600 }}>Amount (₹) *</label>
@@ -162,7 +162,7 @@ export default function LogDriverPaymentPage() {
               type="submit"
               disabled={submitting}
               className="btn btn-primary"
-              style={{ fontSize: "0.85rem", padding: "0.6rem 2rem", background: "#111827", color: "#ffffff", borderColor: "#111827" }}
+              style={{ fontSize: "0.85rem", padding: "0.6rem 2rem", background: "var(--text-primary)", color: "var(--bg-card)", borderColor: "var(--text-primary)" }}
             >
               {submitting ? "Processing..." : isAdmin ? "Save Record" : "Submit Request"}
             </button>
@@ -171,10 +171,10 @@ export default function LogDriverPaymentPage() {
       </div>
 
       {/* Payment & Advances Ledger */}
-      <div className="card" style={{ padding: "1.5rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "#111827" }}>Payment & Advances History</h2>
+      <div className="card" style={{ padding: "1.5rem", background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "1.25rem", color: "var(--text-primary)" }}>Payment & Advances History</h2>
         {paymentsHistory.length === 0 ? (
-          <p style={{ color: "#6b7280", fontSize: "0.85rem" }}>No payments logs recorded.</p>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.85rem" }}>No payments logs recorded.</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {paymentsHistory.map((p) => {
@@ -183,8 +183,8 @@ export default function LogDriverPaymentPage() {
               let label = "Salary Paid";
 
               if (p.type === "advance") {
-                badgeColor = "#b45309";
-                bgBadge = "#fef3c7";
+                badgeColor = "var(--badge-warning-text)";
+                bgBadge = "var(--badge-warning-bg)";
                 label = "Advance Taken";
               } else if (p.type === "deduction") {
                 badgeColor = "#b91c1c";
@@ -196,7 +196,7 @@ export default function LogDriverPaymentPage() {
                 <div key={p.id} className="log-row" style={{ paddingBottom: "0.6rem" }}>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)" }}>
                         ₹{parseFloat(p.amount).toLocaleString()}
                       </span>
                       <span style={{
@@ -209,11 +209,11 @@ export default function LogDriverPaymentPage() {
                         textTransform: "uppercase"
                       }}>{label}</span>
                     </div>
-                    <div style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "0.15rem" }}>
+                    <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "0.15rem" }}>
                       {p.comment || "No comment"}
                     </div>
                   </div>
-                  <div style={{ fontSize: "0.8rem", color: "#9ca3af", textAlign: "right" }}>
+                  <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", textAlign: "right" }}>
                     <div>Log Date: {new Date(p.payment_date).toLocaleDateString()}</div>
                   </div>
                 </div>

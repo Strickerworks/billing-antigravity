@@ -75,16 +75,16 @@ export default function DriversPage() {
   return (
     <div className="page-content" style={{ maxWidth: 900, paddingBottom: "3rem" }}>
       <div style={{ paddingTop: "1rem" }}>
-        <Link href={`/${role}`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+        <Link href={`/${role}`} style={{ textDecoration: "none", color: "var(--text-primary)", fontWeight: 600, fontSize: "0.9rem" }}>
           ← Back to Home
         </Link>
       </div>
       <div className="registry-header">
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
             Drivers Portal
           </h1>
-          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: "0.25rem 0 0" }}>
             {isAdmin ? "Admin Registry & Controls" : "Submit Driver Registry/Edit Requests"}
           </p>
         </div>
@@ -97,18 +97,18 @@ export default function DriversPage() {
 
       {/* Drivers List */}
       <div>
-        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem", color: "#111827" }}>Registered Drivers Fleet</h2>
+        <h2 style={{ fontSize: "1.1rem", fontWeight: 600, marginBottom: "1rem", color: "var(--text-primary)" }}>Registered Drivers Fleet</h2>
 
         {loading ? (
-          <div style={{ color: "#6b7280" }}>Loading registry...</div>
+          <div style={{ color: "var(--text-secondary)" }}>Loading registry...</div>
         ) : drivers.length === 0 ? (
           <div style={{
             padding: "2rem",
-            background: "#f9fafb",
+            background: "var(--bg-card)",
             borderRadius: "8px",
-            border: "1px dashed #e5e7eb",
+            border: "1px dashed var(--border)",
             textAlign: "center",
-            color: "#6b7280"
+            color: "var(--text-secondary)"
           }}>
             No driver profiles registered in the system.
           </div>
@@ -123,8 +123,8 @@ export default function DriversPage() {
                   className="card"
                   style={{
                     padding: 0,
-                    background: "#ffffff",
-                    border: "1px solid #e5e7eb",
+                    background: "var(--bg-card)",
+                    border: "1px solid var(--border)",
                     borderRadius: "8px",
                     overflow: "hidden"
                   }}
@@ -134,9 +134,9 @@ export default function DriversPage() {
                     <div className="fleet-card-info">
                       <div style={{ fontSize: "1.5rem" }}>👤</div>
                       <div>
-                        <div style={{ fontWeight: 700, color: "#111827", fontSize: "1rem" }}>{driver.name}</div>
-                        <div style={{ fontSize: "0.85rem", color: "#374151" }}>💰 Salary: ₹{parseFloat(driver.salary || 0).toLocaleString()} / month</div>
-                        <div style={{ fontSize: "0.8rem", color: "#6b7280" }}>📞 {driver.phone}</div>
+                        <div style={{ fontWeight: 700, color: "var(--text-primary)", fontSize: "1rem" }}>{driver.name}</div>
+                        <div style={{ fontSize: "0.85rem", color: "var(--text-primary)" }}>💰 Salary: ₹{parseFloat(driver.salary || 0).toLocaleString()} / month</div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>📞 {driver.phone}</div>
                       </div>
                     </div>
 
@@ -154,7 +154,7 @@ export default function DriversPage() {
                           🚗 {currentCarReg}
                         </span>
                       ) : (
-                        <span style={{ fontSize: "0.75rem", color: "#9ca3af" }}>No vehicle assigned</span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>No vehicle assigned</span>
                       )}
 
                       <div className="fleet-btn-group">

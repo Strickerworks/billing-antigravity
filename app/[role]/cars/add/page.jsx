@@ -60,16 +60,16 @@ export default function AddCarPage() {
     <div className="page-content" style={{ maxWidth: 800, paddingBottom: "3rem" }}>
       <div style={{ paddingTop: "1rem" }}>
         <div style={{ marginBottom: "1rem" }}>
-          <Link href={`/${role}/cars`} style={{ textDecoration: "none", color: "#111827", fontWeight: 600, fontSize: "0.9rem" }}>
+          <Link href={`/${role}/cars`} style={{ textDecoration: "none", color: "var(--text-primary)", fontWeight: 600, fontSize: "0.9rem" }}>
             ← Back to Fleet Registry
           </Link>
         </div>
 
         <div>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "#1a1d23" }}>
+          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, margin: 0, color: "var(--text-primary)" }}>
             {isAdmin ? "Register New Vehicle" : "Request Vehicle Registration"}
           </h1>
-          <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: "0.25rem 0 0" }}>
+          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: "0.25rem 0 0" }}>
             Provide registration details to add a new car to the fleet.
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function AddCarPage() {
 
       <hr className="divider" style={{ margin: "0.5rem 0 1.5rem" }} />
 
-      <div className="card" style={{ padding: "2rem", background: "#ffffff", border: "1px solid #e5e7eb" }}>
+      <div className="card" style={{ padding: "2rem", background: "var(--bg-card)", border: "1px solid var(--border)" }}>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           <div className="form-group">
             <label className="form-label" style={{ fontWeight: 600, fontSize: "0.85rem" }}>Car Model / Name *</label>
