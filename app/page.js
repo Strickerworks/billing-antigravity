@@ -4,8 +4,10 @@ import Link from "next/link";
 import { 
   Car, Calendar, Shield, Clock, Briefcase, Award, 
   CheckCircle, Star, Phone, MessageSquare, Mail, 
-  MapPin, Menu, X, ArrowRight, Send, HelpCircle
+  MapPin, Menu, X, ArrowRight, Send, HelpCircle,
+  ChevronLeft, ChevronRight
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 
 export default function Homepage() {
   // Mobile drawer state
@@ -31,6 +33,29 @@ export default function Homepage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  
+  // Carousel State & Functions
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+  const galleryPhotos = [
+    { src: "/photos/merc/1.jpg", caption: "Mercedes-Benz Luxury Cabin (Comfort & Class)" },
+    { src: "/photos/merc/2.jpg", caption: "Mercedes-Benz Luxury Saloon" },
+    { src: "/photos/superb/1.jpg", caption: "Skoda Superb Premium Rear Seat Cabin" },
+    { src: "/photos/superb/2.jpg", caption: "Skoda Superb Executive Saloon" },
+    { src: "/photos/kodaiq/1.jpg", caption: "Skoda Kodiaq 4x4 Luxury Cockpit View" },
+    { src: "/photos/kodaiq/2.jpg", caption: "Skoda Kodiaq Premium 7-Seater SUV" },
+    { src: "/photos/innova/black.jpg", caption: "Toyota Innova Crysta (Sleek Black Edition)" },
+    { src: "/photos/innova/new_innova.jpg", caption: "Toyota Innova Crysta Airport Transfer Setup" },
+    { src: "/photos/seltos/1.jpg", caption: "Kia Seltos Sporty Urban Cabin Experience" },
+    { src: "/photos/ciaz/1.jpg", caption: "Maruti Suzuki Ciaz Luxury Interior Layout" }
+  ];
+
+  const handleNextPhoto = () => {
+    setActivePhotoIdx((prev) => (prev + 1) % galleryPhotos.length);
+  };
+
+  const handlePrevPhoto = () => {
+    setActivePhotoIdx((prev) => (prev - 1 + galleryPhotos.length) % galleryPhotos.length);
+  };
 
   // 1. Cursor Follower with Easing
   useEffect(() => {
@@ -389,7 +414,7 @@ export default function Homepage() {
                 <Phone size={14} style={{ color: "var(--accent)" }} /> Call +91 9755373084
               </a>
               <a href="https://wa.me/919755373084?text=Hi!%20I%20would%20like%20to%20inquire%20about%20a%20car%20rental." target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-secondary)", textDecoration: "none" }}>
-                <MessageSquare size={14} style={{ color: "#25D366" }} /> WhatsApp Booking
+                <FaWhatsapp size={16} style={{ color: "#25D366" }} /> WhatsApp Booking
               </a>
             </div>
           </div>
@@ -555,14 +580,46 @@ export default function Homepage() {
               <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>A curated range of cars optimized for safety, efficiency, and luxury.</p>
             </div>
 
-            <div className="grid-3" style={{ gap: "1.5rem" }}>
-              {/* Fleet Card 1 */}
+            <div className="grid-3" style={{ gap: "1.5rem", marginBottom: "4rem" }}>
+              {/* Fleet Card 1: Merc */}
               <div className="card fleet-card" style={{ padding: 0, overflow: "hidden" }}>
                 <div style={{ width: "100%", height: "200px", position: "relative", overflow: "hidden", background: "#111" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
-                    src="/fleet/suv_luxury.png" 
-                    alt="Premium SUV - Toyota Fortuner" 
+                    src="/photos/merc/1.jpg" 
+                    alt="Mercedes-Benz Luxury Saloon" 
+                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }} 
+                    onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                    onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  />
+                  <div style={{ position: "absolute", top: "12px", right: "12px" }}>
+                    <span className="badge badge-blue">LUXURY SALOON</span>
+                  </div>
+                </div>
+                <div style={{ padding: "1.5rem" }}>
+                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Mercedes-Benz Class</h4>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
+                    Top-tier premium German engineering, luxury cabin, automatic climate control, and unmatched prestige. Ideal for VIP receptions, weddings, and premium business travels.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <div>
+                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹45 / km</span>
+                    </div>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                      Book Luxury
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fleet Card 2: Skoda Kodiaq */}
+              <div className="card fleet-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div style={{ width: "100%", height: "200px", position: "relative", overflow: "hidden", background: "#111" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src="/photos/kodaiq/1.jpg" 
+                    alt="Skoda Kodiaq Premium SUV" 
                     style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }} 
                     onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
                     onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
@@ -572,14 +629,14 @@ export default function Homepage() {
                   </div>
                 </div>
                 <div style={{ padding: "1.5rem" }}>
-                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Toyota Fortuner / Innova Crysta</h4>
+                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Skoda Kodiaq 4x4</h4>
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
-                    Spacious 7-seater vehicles with robust engine capacities, high road clearances, and dual AC. Optimal for group tours and long-distance highways.
+                    Active 4x4 drive, luxurious panoramic sunroof, and generous 7-seat capability. Perfect for premium family travels, outstation road trips, and rugged terrains.
                   </p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
                     <div>
                       <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹18 / km</span>
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹28 / km</span>
                     </div>
                     <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
                       Book SUV
@@ -588,13 +645,109 @@ export default function Homepage() {
                 </div>
               </div>
 
-              {/* Fleet Card 2 */}
+              {/* Fleet Card 3: Skoda Superb */}
               <div className="card fleet-card" style={{ padding: 0, overflow: "hidden" }}>
                 <div style={{ width: "100%", height: "200px", position: "relative", overflow: "hidden", background: "#111" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
-                    src="/fleet/sedan_premium.png" 
-                    alt="Executive Sedan - Honda City" 
+                    src="/photos/superb/1.jpg" 
+                    alt="Skoda Superb Executive Sedan" 
+                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }} 
+                    onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                    onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  />
+                  <div style={{ position: "absolute", top: "12px", right: "12px" }}>
+                    <span className="badge badge-blue">PREMIUM SEDAN</span>
+                  </div>
+                </div>
+                <div style={{ padding: "1.5rem" }}>
+                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Skoda Superb</h4>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
+                    Executive comfort levels, state-of-the-art safety features, and expansive legroom. An excellent option for executive pick-ups, business transits, and airport runs.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <div>
+                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹24 / km</span>
+                    </div>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                      Book Sedan
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fleet Card 4: Innova Crysta */}
+              <div className="card fleet-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div style={{ width: "100%", height: "200px", position: "relative", overflow: "hidden", background: "#111" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src="/photos/innova/black.jpg" 
+                    alt="Toyota Innova Crysta" 
+                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }} 
+                    onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                    onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  />
+                  <div style={{ position: "absolute", top: "12px", right: "12px" }}>
+                    <span className="badge badge-blue">EXECUTIVE SUV</span>
+                  </div>
+                </div>
+                <div style={{ padding: "1.5rem" }}>
+                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Toyota Innova Crysta</h4>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
+                    The undisputed king of comfort. Powerful AC, spacious seating configuration, and smooth suspension. Bhopal's top choice for long-range family journeys.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <div>
+                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹20 / km</span>
+                    </div>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                      Book Crysta
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fleet Card 5: Kia Seltos */}
+              <div className="card fleet-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div style={{ width: "100%", height: "200px", position: "relative", overflow: "hidden", background: "#111" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src="/photos/seltos/1.jpg" 
+                    alt="Kia Seltos SUV" 
+                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }} 
+                    onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+                    onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  />
+                  <div style={{ position: "absolute", top: "12px", right: "12px" }}>
+                    <span className="badge badge-blue">COMPACT SUV</span>
+                  </div>
+                </div>
+                <div style={{ padding: "1.5rem" }}>
+                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Kia Seltos</h4>
+                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
+                    Modern sporty design, high ground clearance, and sleek digital cockpit. Ideal for urban commutes and family holiday outings in style.
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+                    <div>
+                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹16 / km</span>
+                    </div>
+                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
+                      Book Seltos
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fleet Card 6: Ciaz */}
+              <div className="card fleet-card" style={{ padding: 0, overflow: "hidden" }}>
+                <div style={{ width: "100%", height: "200px", position: "relative", overflow: "hidden", background: "#111" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src="/photos/ciaz/1.jpg" 
+                    alt="Maruti Suzuki Ciaz" 
                     style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }} 
                     onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
                     onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
@@ -604,54 +757,90 @@ export default function Homepage() {
                   </div>
                 </div>
                 <div style={{ padding: "1.5rem" }}>
-                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Honda City / Maruti Dzire</h4>
+                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Maruti Suzuki Ciaz</h4>
                   <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
-                    Premium sedans featuring executive legroom, noise isolation, and elegant cabin environments. A classic choice for corporate travelers and business commutes.
+                    Highly fuel-efficient, spacious boot capacity, and comfortable leather seating. An excellent budget sedan for local and inter-city commutes.
                   </p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
                     <div>
                       <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹13 / km</span>
+                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹14 / km</span>
                     </div>
                     <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
-                      Book Sedan
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fleet Card 3 */}
-              <div className="card fleet-card" style={{ padding: 0, overflow: "hidden" }}>
-                <div style={{ width: "100%", height: "200px", position: "relative", overflow: "hidden", background: "#111" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src="/fleet/hatchback_budget.png" 
-                    alt="Economy Hatchback - Maruti Swift" 
-                    style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }} 
-                    onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.05)"}
-                    onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}
-                  />
-                  <div style={{ position: "absolute", top: "12px", right: "12px" }}>
-                    <span className="badge badge-blue">ECONOMY HATCHBACK</span>
-                  </div>
-                </div>
-                <div style={{ padding: "1.5rem" }}>
-                  <h4 style={{ fontSize: "1.15rem", fontWeight: 700, color: "var(--text-primary)" }}>Maruti Swift / Hyundai i10</h4>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", margin: "0.5rem 0 1.25rem", lineHeight: 1.5 }}>
-                    Compact, nimble, and highly fuel-efficient hatchbacks. Great for city traffic navigation and tight parking spots, matching daily budgets.
-                  </p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
-                    <div>
-                      <span style={{ fontSize: "0.65rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Starting From</span>
-                      <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)" }}>₹10 / km</span>
-                    </div>
-                    <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} className="btn btn-secondary btn-sm" style={{ padding: "0.4rem 0.85rem" }}>
-                      Book Compact
+                      Book Ciaz
                     </a>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* SHOWROOM GALLERY CAROUSEL */}
+            <div className="card reveal-section" style={{ padding: "2rem", border: "1px solid var(--border)", background: "var(--bg-card)" }}>
+              <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+                <span className="badge badge-blue" style={{ marginBottom: "0.5rem" }}>FLEET SHOWROOM</span>
+                <h4 style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--text-primary)" }}>Our Actual Vehicle Gallery</h4>
+              </div>
+
+              {/* Slider View */}
+              <div style={{ position: "relative", width: "100%", height: "clamp(250px, 45vw, 480px)", borderRadius: "8px", overflow: "hidden", background: "#050505", border: "1px solid var(--border)" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={galleryPhotos[activePhotoIdx].src} 
+                  alt={galleryPhotos[activePhotoIdx].caption} 
+                  style={{ width: "100%", height: "100%", objectFit: "contain", transition: "opacity 0.3s ease-in-out" }}
+                />
+                
+                {/* Text Overlay */}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "1.25rem", background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: 600 }}>
+                    {galleryPhotos[activePhotoIdx].caption}
+                  </span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700 }}>
+                    {activePhotoIdx + 1} / {galleryPhotos.length}
+                  </span>
+                </div>
+
+                {/* Left/Right Buttons */}
+                <button 
+                  onClick={handlePrevPhoto} 
+                  style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(20,20,20,0.8)", border: "1px solid var(--border)", color: "#fff", display: "flex", alignItems: "center", justify: "center", cursor: "pointer", zIndex: 5, transition: "background 0.2s" }}
+                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(184, 134, 11, 0.4)"}
+                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(20,20,20,0.8)"}
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button 
+                  onClick={handleNextPhoto} 
+                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(20,20,20,0.8)", border: "1px solid var(--border)", color: "#fff", display: "flex", alignItems: "center", justify: "center", cursor: "pointer", zIndex: 5, transition: "background 0.2s" }}
+                  onMouseOver={(e) => e.currentTarget.style.background = "rgba(184, 134, 11, 0.4)"}
+                  onMouseOut={(e) => e.currentTarget.style.background = "rgba(20,20,20,0.8)"}
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
+              {/* Thumbnails indicator bar */}
+              <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.5rem", marginTop: "1.25rem" }}>
+                {galleryPhotos.map((photo, index) => (
+                  <button 
+                    key={index} 
+                    onClick={() => setActivePhotoIdx(index)}
+                    style={{ 
+                      width: "6px", 
+                      height: "6px", 
+                      borderRadius: "50%", 
+                      padding: 0,
+                      border: "none", 
+                      background: activePhotoIdx === index ? "var(--accent)" : "var(--border)", 
+                      cursor: "pointer",
+                      transition: "background 0.2s"
+                    }} 
+                    aria-label={`Show photo ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+
           </div>
         </section>
 
@@ -662,7 +851,7 @@ export default function Homepage() {
               <div>
                 <h2 className="section-title" style={{ textAlign: "left" }}>About The Heritage Travels</h2>
                 <h3 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0.25rem 0 1.25rem", color: "var(--text-primary)" }}>
-                  Crafting Reliable Passenger Journeys Since 2014
+                  Crafting Reliable Passenger Journeys Since 2017
                 </h3>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", lineHeight: 1.7, marginBottom: "1rem" }}>
                   The Heritage Travels is Bhopal's trusted car rental partner, dedicated to providing premium vehicles and exceptional service. We believe every journey deserves absolute comfort and uncompromised safety.
@@ -966,7 +1155,7 @@ export default function Homepage() {
 
               {/* Box 2: WhatsApp */}
               <div className="card" style={{ textAlign: "center", padding: "2rem 1.5rem" }}>
-                <div className="action-card-icon" style={{ margin: "0 auto 1.25rem", color: "#25D366", borderColor: "rgba(37, 211, 102, 0.25)" }}><MessageSquare size={16} /></div>
+                <div className="action-card-icon" style={{ margin: "0 auto 1.25rem", color: "#25D366", borderColor: "rgba(37, 211, 102, 0.25)" }}><FaWhatsapp size={18} style={{ color: "#25D366" }} /></div>
                 <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.5rem" }}>WhatsApp Us</h4>
                 <div style={{ fontSize: "0.85rem", color: "#25D366", fontWeight: 700, margin: "0.5rem 0 1rem" }}>+91 9755373084</div>
                 <a href="https://wa.me/919755373084?text=Hi!%20I%20would%20like%20to%20book%20a%20car." target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm btn-full" style={{ fontSize: "0.75rem" }}>
@@ -1003,39 +1192,17 @@ export default function Homepage() {
 
       {/* ================= FOOTER ================= */}
       <footer className="footer" style={{ marginTop: 0 }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "2.5rem", textAlign: "left", paddingBottom: "3rem" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "2.5rem", textAlign: "left", paddingBottom: "3rem" }}>
           
           {/* Col 1 */}
           <div>
             <h4 style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "1rem" }}>The Heritage Travels</h4>
             <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", lineHeight: 1.6, maxWidth: 220 }}>
-              Premium car rental services in Bhopal. Elevating commutes, executive travels, and tourism logs since 2014.
+              Premium car rental services in Bhopal. Elevating commutes, executive travels, and tourism logs since 2017.
             </p>
           </div>
 
-          {/* Col 2: Navigation */}
-          <div>
-            <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>Quick Links</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <a href="#services" onClick={(e) => scrollToSection(e, "services")} style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textDecoration: "none" }}>Our Services</a>
-              <a href="#why-choose-us" onClick={(e) => scrollToSection(e, "why-choose-us")} style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textDecoration: "none" }}>Why Us</a>
-              <a href="#fleet" onClick={(e) => scrollToSection(e, "fleet")} style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textDecoration: "none" }}>Our Fleet</a>
-              <a href="#about" onClick={(e) => scrollToSection(e, "about")} style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textDecoration: "none" }}>About Us</a>
-              <a href="#enquiry" onClick={(e) => scrollToSection(e, "enquiry")} style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textDecoration: "none" }}>Inquiry Form</a>
-            </div>
-          </div>
-
-          {/* Col 3: Portal Links */}
-          <div>
-            <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>Operations</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <Link href="/staff" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textDecoration: "none" }}>Staff Dashboard</Link>
-              <Link href="/admin" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textDecoration: "none" }}>Admin Dashboard</Link>
-              <Link href="/staff/add-invoice" style={{ fontSize: "0.8rem", color: "var(--text-secondary)", textDecoration: "none" }}>Invoice Operations</Link>
-            </div>
-          </div>
-
-          {/* Col 4: Contact */}
+          {/* Col 2: Contact Details Only */}
           <div>
             <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--accent)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>Contact Details</h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
@@ -1046,12 +1213,8 @@ export default function Homepage() {
           </div>
         </div>
 
-        <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1.5rem", display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: "1rem", maxWidth: 1000, margin: "0 auto", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1.5rem", textAlign: "center", maxWidth: 1000, margin: "0 auto", fontSize: "0.75rem", color: "var(--text-muted)" }}>
           <span>© 2026 The Heritage Travels. All rights reserved.</span>
-          <div>
-            <span style={{ marginRight: "1rem" }}>Developed by Strickerworks</span>
-            <Link href="/staff" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Staff Portal</Link>
-          </div>
         </div>
       </footer>
     </>
