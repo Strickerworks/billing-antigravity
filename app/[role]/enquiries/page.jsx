@@ -273,7 +273,7 @@ export default function EnquiriesPage() {
         </div>
       </div>
 
-      <div className={`enquiries-layout ${selectedEnquiry ? "has-sidebar" : ""}`}>
+      <div>
         {/* Main enquiries table */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -404,127 +404,147 @@ export default function EnquiriesPage() {
           )}
         </div>
 
-        {/* Sidebar details panel */}
+        {/* Modal details panel */}
         {selectedEnquiry && (
-          <div className="card fade-in" style={{ border: "1px solid var(--border)", padding: "1.25rem", background: "var(--bg-card)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.75rem" }}>
-              <div>
-                <h4 style={{ fontWeight: 700, margin: 0, fontSize: "1rem", color: "var(--text-primary)" }}>
-                  Enquiry Details
-                </h4>
-                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                  ID: #{selectedEnquiry.id} · Received {formatDateTime(selectedEnquiry.created_at)}
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedEnquiry(null)}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: "var(--text-muted)", padding: 0 }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.85rem" }}>
-              {/* Client Profile */}
-              <div>
-                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Customer Name</span>
-                <strong style={{ color: "var(--text-primary)", fontSize: "0.95rem" }}>{selectedEnquiry.full_name}</strong>
-              </div>
-
-              <div>
-                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Contact Info</span>
+          <div style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+            backdropFilter: "blur(4px)",
+            padding: "1rem"
+          }} onClick={() => setSelectedEnquiry(null)}>
+            <div 
+              className="card fade-in" 
+              style={{ 
+                width: "95%", 
+                maxWidth: "550px", 
+                maxHeight: "90vh",
+                overflowY: "auto",
+                border: "1px solid var(--border)", 
+                padding: "1.5rem", 
+                background: "var(--bg-card)",
+                position: "relative"
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.75rem" }}>
                 <div>
-                  <a href={`tel:${selectedEnquiry.phone_number}`} className="contact-link" style={{ fontSize: "0.85rem", display: "block", marginBottom: "0.15rem" }}>
-                    📞 {selectedEnquiry.phone_number}
-                  </a>
-                  {selectedEnquiry.email ? (
-                    <a href={`mailto:${selectedEnquiry.email}`} className="contact-link" style={{ fontSize: "0.85rem", display: "block" }}>
-                      ✉ {selectedEnquiry.email}
-                    </a>
-                  ) : (
-                    <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic", display: "block" }}>No Email Provided</span>
-                  )}
+                  <h4 style={{ fontWeight: 700, margin: 0, fontSize: "1.1rem", color: "var(--text-primary)" }}>
+                    Enquiry Details
+                  </h4>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    ID: #{selectedEnquiry.id} · Received {formatDateTime(selectedEnquiry.created_at)}
+                  </span>
                 </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
-                <div>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Service</span>
-                  <span style={{ fontWeight: 600 }}>{selectedEnquiry.service_interested}</span>
-                </div>
-                <div>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Vehicles Preferred</span>
-                  <span style={{ fontWeight: 600 }}>{selectedEnquiry.preferred_vehicle_type || "No preference"}</span>
-                </div>
-                <div>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Travel Date</span>
-                  <span>{formatDate(selectedEnquiry.travel_date)}</span>
-                </div>
-                <div>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Duration</span>
-                  <span>{selectedEnquiry.number_of_days ? `${selectedEnquiry.number_of_days} Day(s)` : "—"}</span>
-                </div>
-              </div>
-
-              {/* Message */}
-              <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
-                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "0.25rem" }}>Customer Message</span>
-                <div style={{
-                  padding: "0.75rem",
-                  background: "var(--bg-elevated)",
-                  borderRadius: "6px",
-                  fontSize: "0.825rem",
-                  lineHeight: 1.5,
-                  color: "var(--text-secondary)",
-                  maxHeight: "150px",
-                  overflowY: "auto",
-                  border: "1px solid var(--border)"
-                }}>
-                  {selectedEnquiry.message || <span style={{ fontStyle: "italic", color: "var(--text-muted)" }}>No message provided.</span>}
-                </div>
-              </div>
-
-              {/* Admin Notes */}
-              <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
-                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "0.25rem" }}>Internal Follow-up Notes</span>
-                <textarea
-                  value={editingNotes}
-                  onChange={(e) => setEditingNotes(e.target.value)}
-                  placeholder="Add notes about calls, client preferences, or pricing negotiation..."
-                  className="form-input"
-                  style={{
-                    width: "100%",
-                    height: "80px",
-                    resize: "none",
-                    fontSize: "0.8rem",
-                    padding: "0.5rem",
-                    marginBottom: "0.5rem"
-                  }}
-                />
                 <button
-                  type="button"
-                  onClick={handleSaveNotes}
-                  disabled={savingNotes}
-                  className="btn btn-primary btn-sm"
-                  style={{ width: "100%" }}
+                  onClick={() => setSelectedEnquiry(null)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: "var(--text-muted)", padding: 0 }}
                 >
-                  {savingNotes ? "Saving Notes..." : "Save Notes"}
+                  ✕
                 </button>
               </div>
 
-              {/* Inline Status Dropdown for Detail panel */}
-              <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 600 }}>Update Status:</span>
-                <select
-                  value={selectedEnquiry.status}
-                  onChange={(e) => handleStatusChange(selectedEnquiry.id, e.target.value)}
-                  style={getStatusSelectStyle(selectedEnquiry.status)}
-                >
-                  <option value="new">New</option>
-                  <option value="contacted">Contacted</option>
-                  <option value="done">Done</option>
-                  <option value="reject">Reject</option>
-                </select>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.85rem" }}>
+                {/* Client Profile */}
+                <div>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Customer Name</span>
+                  <strong style={{ color: "var(--text-primary)", fontSize: "0.95rem" }}>{selectedEnquiry.full_name}</strong>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Contact Info</span>
+                  <div>
+                    <a href={`tel:${selectedEnquiry.phone_number}`} className="contact-link" style={{ fontSize: "0.85rem", display: "block", marginBottom: "0.15rem" }}>
+                      📞 {selectedEnquiry.phone_number}
+                    </a>
+                    {selectedEnquiry.email ? (
+                      <a href={`mailto:${selectedEnquiry.email}`} className="contact-link" style={{ fontSize: "0.85rem", display: "block" }}>
+                        ✉ {selectedEnquiry.email}
+                      </a>
+                    ) : (
+                      <span style={{ fontSize: "0.85rem", color: "var(--text-muted)", fontStyle: "italic", display: "block" }}>No Email Provided</span>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Service</span>
+                    <span style={{ fontWeight: 600 }}>{selectedEnquiry.service_interested}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Vehicles Preferred</span>
+                    <span style={{ fontWeight: 600 }}>{selectedEnquiry.preferred_vehicle_type || "No preference"}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Travel Date</span>
+                    <span>{formatDate(selectedEnquiry.travel_date)}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block" }}>Duration</span>
+                    <span>{selectedEnquiry.number_of_days ? `${selectedEnquiry.number_of_days} Day(s)` : "—"}</span>
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "0.25rem" }}>Customer Message</span>
+                  <div style={{
+                    padding: "0.75rem",
+                    background: "var(--bg-elevated)",
+                    borderRadius: "6px",
+                    fontSize: "0.825rem",
+                    lineHeight: 1.5,
+                    color: "var(--text-secondary)",
+                    maxHeight: "150px",
+                    overflowY: "auto",
+                    border: "1px solid var(--border)"
+                  }}>
+                    {selectedEnquiry.message || <span style={{ fontStyle: "italic", color: "var(--text-muted)" }}>No message provided.</span>}
+                  </div>
+                </div>
+
+                {/* Admin Notes */}
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
+                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", textTransform: "uppercase", display: "block", marginBottom: "0.25rem" }}>Internal Follow-up Notes</span>
+                  <textarea
+                    value={editingNotes}
+                    onChange={(e) => setEditingNotes(e.target.value)}
+                    placeholder="Add notes about calls, client preferences, or pricing negotiation..."
+                    className="form-input"
+                    style={{
+                      width: "100%",
+                      height: "80px",
+                      resize: "none",
+                      fontSize: "0.8rem",
+                      padding: "0.5rem",
+                      marginBottom: "0.5rem"
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveNotes}
+                    disabled={savingNotes}
+                    className="btn btn-primary btn-sm"
+                    style={{ width: "100%" }}
+                  >
+                    {savingNotes ? "Saving Notes..." : "Save Notes"}
+                  </button>
+                </div>
+
+                {/* Inline Status Dropdown for Detail panel */}
+                <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "0.75rem", fontWeight: 600 }}>Update Status:</span>
+                  <select
+                    value={selectedEnquiry.status}
+                    onChange={(e) => handleStatusChange(selectedEnquiry.id, e.target.value)}
+                    style={getStatusSelectStyle(selectedEnquiry.status)}
+                  >
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="done">Done</option>
+                    <option value="reject">Reject</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>

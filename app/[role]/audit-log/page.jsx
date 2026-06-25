@@ -173,7 +173,7 @@ export default function AuditLogPage() {
         ))}
       </div>
 
-      <div className={`audit-grid ${selectedLog ? "has-sidebar" : ""}`}>
+      <div className="audit-grid">
         {/* Main Log Table */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -206,7 +206,7 @@ export default function AuditLogPage() {
                       <tr
                         key={log.id}
                         className="fade-in"
-                        style={selectedLog?.id === log.id ? { backgroundColor: "var(--bg-card)" } : {}}
+                        style={selectedLog?.id === log.id ? { backgroundColor: "var(--bg-elevated)" } : {}}
                       >
                         <td style={{ fontWeight: 600 }}>{getRequestTypeLabel(log.request_type)}</td>
                         <td>
@@ -274,26 +274,46 @@ export default function AuditLogPage() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Sidebar Details Panel */}
-        {selectedLog && (
-          <div className="card fade-in" style={{ border: "1px solid var(--border)", padding: "1.25rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+      {/* Modal details panel */}
+      {selectedLog && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+          backdropFilter: "blur(4px)",
+          padding: "1rem"
+        }} onClick={() => setSelectedLog(null)}>
+          <div 
+            className="card fade-in" 
+            style={{ 
+              width: "95%", 
+              maxWidth: "550px", 
+              maxHeight: "90vh",
+              overflowY: "auto",
+              border: "1px solid var(--border)", 
+              padding: "1.5rem", 
+              background: "var(--bg-card)",
+              position: "relative"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.75rem" }}>
               <div>
-                <p style={{ fontWeight: 700, margin: 0, fontSize: "0.95rem" }}>Log Payload Details</p>
+                <h4 style={{ fontWeight: 700, margin: 0, fontSize: "1.1rem", color: "var(--text-primary)" }}>Log Payload Details</h4>
                 <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
                   Log #{selectedLog.id} ({getRequestTypeLabel(selectedLog.request_type)})
                 </span>
               </div>
               <button
                 onClick={() => setSelectedLog(null)}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--text-muted)" }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--text-muted)", padding: 0 }}
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.825rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.85rem" }}>
               <div>
                 <p style={{ fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 0.25rem", fontSize: "0.75rem" }}>
                   Request Identifier
@@ -311,11 +331,11 @@ export default function AuditLogPage() {
               <hr className="divider" style={{ margin: "0.25rem 0" }} />
 
               <div>
-                <p style={{ fontWeight: 600, color: "#4b5563", margin: "0 0 0.5rem", fontSize: "0.78rem" }}>
+                <p style={{ fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 0.5rem", fontSize: "0.78rem" }}>
                   Payload Submitted Values:
                 </p>
                 <div style={{
-                  background: "var(--bg-card)", borderRadius: "6px", padding: "0.75rem", border: "1px solid var(--border)",
+                  background: "var(--bg-elevated)", borderRadius: "6px", padding: "0.75rem", border: "1px solid var(--border)",
                   maxHeight: "300px", overflowY: "auto", fontFamily: "monospace", fontSize: "0.78rem", whiteSpace: "pre-wrap"
                 }}>
                   {selectedLog.payload ? (
@@ -344,7 +364,7 @@ export default function AuditLogPage() {
                           <strong>Comment:</strong> {selectedLog.payload.comment || "—"}
                         </div>
                       )}
-                      <div style={{ marginTop: "1rem", borderTop: "1px dashed #d1d5db", paddingTop: "0.5rem", fontSize: "0.7rem", color: "var(--text-secondary)" }}>
+                      <div style={{ marginTop: "1rem", borderTop: "1px dashed var(--border)", paddingTop: "0.5rem", fontSize: "0.7rem", color: "var(--text-secondary)" }}>
                         Raw JSON:<br />
                         {JSON.stringify(selectedLog.payload, null, 2)}
                       </div>
@@ -356,8 +376,8 @@ export default function AuditLogPage() {
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

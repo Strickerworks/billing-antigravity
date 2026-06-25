@@ -443,7 +443,7 @@ export default function RequestsPage() {
         ))}
       </div>
 
-      <div className={`requests-grid ${selectedRequest ? "has-sidebar" : ""}`}>
+        <div className="requests-grid">
         {/* Main Requests Table */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -455,17 +455,21 @@ export default function RequestsPage() {
             ) : requests.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-state-icon">✉</div>
-                <div className="empty-state-text">No invoice requests found</div>
-                <div className="empty-state-sub">No invoice requests are currently pending.</div>
+                <div className="empty-state-text">No requests found</div>
+                <div className="empty-state-sub">History of requests will display here as they are processed.</div>
               </div>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table className="data-table">
                   <thead>
                     <tr>
+                      <th>ID</th>
+                      <th>Type</th>
+                      <th>Creator</th>
                       <th>Invoice No</th>
                       <th>Customer</th>
-                      <th>Type</th>
+                      <th style={{ textAlign: "right" }}>Amount</th>
+                      <th>GST Detail</th>
                       <th>Status</th>
                       <th>Submitted At</th>
                       <th style={{ textAlign: "center" }}>Actions</th>
@@ -476,14 +480,35 @@ export default function RequestsPage() {
                       <tr
                         key={req.id}
                         className="fade-in"
-                        style={selectedRequest?.id === req.id ? { backgroundColor: "var(--bg-card)" } : {}}
+                        style={selectedRequest?.id === req.id ? { backgroundColor: "var(--bg-elevated)" } : {}}
                       >
+                        <td style={{ fontWeight: 600 }}>#{req.id}</td>
+                        <td style={{ textTransform: "capitalize", fontWeight: 500 }}>
+                          <span
+                            className={
+                              req.request_type === "create"
+                                ? "badge badge-green"
+                                : req.request_type === "duplicate"
+                                ? "badge badge-blue"
+                                : "badge badge-orange"
+                            }
+                            style={{ fontSize: "0.72rem" }}
+                          >
+                            {req.request_type}
+                          </span>
+                        </td>
+                        <td style={{ fontSize: "0.85rem", textTransform: "capitalize" }}>{req.requested_by}</td>
                         <td>
                           <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>#{req.invoice_no}</span>
                         </td>
-                        <td style={{ fontWeight: 500 }}>{req.data?.customer_name || "—"}</td>
-                        <td>
-                          <span style={getTypeStyle(req.request_type)}>{req.request_type}</span>
+                        <td style={{ fontSize: "0.85rem" }}>
+                          {req.data?.customer_name || req.customer_name || "—"}
+                        </td>
+                        <td style={{ textAlign: "right", fontWeight: 600, fontSize: "0.85rem" }}>
+                          {fmt(req.data?.grand_total || req.grand_total)}
+                        </td>
+                        <td style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                          {req.data?.customer_gst || req.customer_gst || "—"}
                         </td>
                         <td>
                           <span style={getStatusStyle(req.status)}>{req.status}</span>
@@ -567,28 +592,48 @@ export default function RequestsPage() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Sidebar Details Panel */}
-        {selectedRequest && (
-          <div className="card fade-in" style={{ border: "1px solid var(--border)", padding: "1.25rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+      {/* Modal details panel */}
+      {selectedRequest && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+          backdropFilter: "blur(4px)",
+          padding: "1rem"
+        }} onClick={() => setSelectedRequest(null)}>
+          <div 
+            className="card fade-in" 
+            style={{ 
+              width: "95%", 
+              maxWidth: "550px", 
+              maxHeight: "90vh",
+              overflowY: "auto",
+              border: "1px solid var(--border)", 
+              padding: "1.5rem", 
+              background: "var(--bg-card)",
+              position: "relative"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.25rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.75rem" }}>
               <div>
-                <p style={{ fontWeight: 700, margin: 0, fontSize: "0.95rem" }}>
+                <h4 style={{ fontWeight: 700, margin: 0, fontSize: "1.1rem", color: "var(--text-primary)" }}>
                   {selectedRequest.request_type === "update" ? "Proposed Changes" : "New Invoice Preview"}
-                </p>
+                </h4>
                 <span style={{ fontSize: "0.72rem", color: "var(--text-secondary)" }}>
-                  Invoice #{selectedRequest.invoice_no} ({selectedRequest.request_type})
+                  Invoice #{selectedRequest.invoice_no} ({selectedRequest.request_type}) · Submitted {formatDate(selectedRequest.created_at)}
                 </span>
               </div>
               <button
                 onClick={() => setSelectedRequest(null)}
-                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--text-muted)" }}
+                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.2rem", color: "var(--text-muted)", padding: 0 }}
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.825rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem", fontSize: "0.85rem" }}>
               {diffs.length === 0 ? (
                 <p style={{ color: "var(--text-secondary)", textAlign: "center", margin: "1rem 0" }}>
                   No basic field differences detected.
@@ -597,7 +642,7 @@ export default function RequestsPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
                   {diffs.map((diff, idx) => (
                     <div key={idx} style={{ borderBottom: "1px solid var(--bg-elevated)", paddingBottom: "0.5rem" }}>
-                      <p style={{ fontWeight: 600, margin: "0 0 0.25rem", color: "#4b5563", fontSize: "0.78rem" }}>
+                      <p style={{ fontWeight: 600, margin: "0 0 0.25rem", color: "var(--text-secondary)", fontSize: "0.78rem" }}>
                         {diff.field}
                       </p>
                       {selectedRequest.request_type === "update" && diff.oldVal !== undefined ? (
@@ -622,7 +667,7 @@ export default function RequestsPage() {
                   <p style={{ fontWeight: 600, color: "var(--text-primary)", margin: "0.5rem 0 0.25rem", fontSize: "0.8rem" }}>
                     Content Summary:
                   </p>
-                  <div style={{ maxHeight: "150px", overflowY: "auto", background: "var(--bg-card)", borderRadius: "6px", padding: "0.5rem", border: "1px solid var(--bg-elevated)" }}>
+                  <div style={{ maxHeight: "180px", overflowY: "auto", background: "var(--bg-elevated)", borderRadius: "6px", padding: "0.5rem", border: "1px solid var(--border)" }}>
                     {selectedRequest.data?.content?.map((item, idx) => (
                       <div key={idx} style={{ padding: "0.25rem 0", fontSize: "0.75rem", borderBottom: idx < selectedRequest.data.content.length - 1 ? "1px dashed var(--border)" : "none" }}>
                         <strong>{item.sno}. {item.description}</strong>
@@ -637,7 +682,7 @@ export default function RequestsPage() {
               )}
 
               {isAdmin && selectedRequest.status === "pending" && (
-                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem" }}>
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem", borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
                   <button onClick={() => handleApprove(selectedRequest)} className="btn btn-primary" style={{ flex: 1, padding: "0.5rem" }}>
                     Approve
                   </button>
@@ -652,8 +697,8 @@ export default function RequestsPage() {
               )}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {isEditModalOpen && editingRequest && (

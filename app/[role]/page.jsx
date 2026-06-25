@@ -15,6 +15,7 @@ export default function AdminPage() {
     pendingExpensesCount: 0,
     pendingPaymentsCount: 0,
     pendingFleetCount: 0,
+    newEnquiriesCount: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -54,6 +55,12 @@ export default function AdminPage() {
         .from("fleet_requests")
         .select("*", { count: "exact", head: true })
         .eq("status", "pending");
+
+      // 6. New Enquiries Count
+      const { count: newEnquiries } = await supabase
+        .from("enquiries")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "new");
         
       setStats({
         approvedBillsCount: billsCount || 0,
@@ -61,6 +68,7 @@ export default function AdminPage() {
         pendingExpensesCount: pendingExpenses || 0,
         pendingPaymentsCount: pendingPayments || 0,
         pendingFleetCount: pendingFleet || 0,
+        newEnquiriesCount: newEnquiries || 0,
       });
     } catch (err) {
       console.error("Error loading dashboard stats:", err);
@@ -131,7 +139,7 @@ export default function AdminPage() {
 
       {loading ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="card" style={{ height: "100px", background: "var(--bg-card)", border: "1px dashed var(--border)" }} />
           ))}
         </div>
@@ -250,6 +258,29 @@ export default function AdminPage() {
               </span>
               <span style={{ fontSize: "0.7rem", color: stats.pendingFleetCount === 0 ? "var(--badge-success-text)" : "var(--badge-warning-text)", fontWeight: 500 }}>
                 {stats.pendingFleetCount === 0 ? "✓ Clear" : "Awaiting Approval ➔"}
+              </span>
+            </div>
+          </Link>
+
+          {/* Card 6: New Enquiries */}
+          <Link href={`${prefix}/enquiries`} style={{ textDecoration: "none" }}>
+            <div className="card fade-in" style={{
+              background: stats.newEnquiriesCount === 0 ? "linear-gradient(135deg, var(--badge-success-bg) 0%, var(--badge-success-bg) 100%)" : "linear-gradient(135deg, var(--badge-warning-bg) 0%, var(--badge-warning-bg) 100%)",
+              border: stats.newEnquiriesCount === 0 ? "1px solid var(--badge-success-border)" : "1px solid var(--badge-warning-border)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+              padding: "1.25rem",
+              cursor: "pointer"
+            }}>
+              <span style={{ fontSize: "0.75rem", fontWeight: 600, color: stats.newEnquiriesCount === 0 ? "var(--badge-success-text)" : "var(--badge-warning-text)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                New Enquiries
+              </span>
+              <span style={{ fontSize: "1.5rem", fontWeight: 800, color: stats.newEnquiriesCount === 0 ? "var(--badge-success-text)" : "var(--badge-warning-text)" }}>
+                {stats.newEnquiriesCount}
+              </span>
+              <span style={{ fontSize: "0.7rem", color: stats.newEnquiriesCount === 0 ? "var(--badge-success-text)" : "var(--badge-warning-text)", fontWeight: 500 }}>
+                {stats.newEnquiriesCount === 0 ? "✓ Clear" : "Pending Enquiries ➔"}
               </span>
             </div>
           </Link>
