@@ -57,6 +57,14 @@ export default function Homepage() {
     setActivePhotoIdx((prev) => (prev - 1 + galleryPhotos.length) % galleryPhotos.length);
   };
 
+  // Auto-play for Showroom Gallery Carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActivePhotoIdx((prev) => (prev + 1) % galleryPhotos.length);
+    }, 2500); // auto-slide every 2.5s
+    return () => clearInterval(timer);
+  }, [activePhotoIdx]);
+
   // 1. Cursor Follower with Easing
   useEffect(() => {
     let mouseX = 0;
@@ -312,12 +320,6 @@ export default function Homepage() {
 
         {/* Portal Shortcuts */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Link href="/staff" className="btn btn-secondary btn-sm" style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem" }}>
-            Staff Panel
-          </Link>
-          <Link href="/admin" className="btn btn-gold btn-sm" style={{ padding: "0.35rem 0.75rem", fontSize: "0.75rem" }}>
-            Admin
-          </Link>
           <button className="hamburger" onClick={() => setMobileMenuOpen(true)} aria-label="Open navigation menu">
             <Menu size={18} />
           </button>
@@ -787,7 +789,7 @@ export default function Homepage() {
                 <img 
                   src={galleryPhotos[activePhotoIdx].src} 
                   alt={galleryPhotos[activePhotoIdx].caption} 
-                  style={{ width: "100%", height: "100%", objectFit: "contain", transition: "opacity 0.3s ease-in-out" }}
+                  style={{ width: "100%", height: "100%", objectFit: "contain", transition: "opacity 0.15s ease-in-out" }}
                 />
                 
                 {/* Text Overlay */}
@@ -886,7 +888,7 @@ export default function Homepage() {
                     <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", textTransform: "uppercase" }}>Trained Drivers</div>
                   </div>
                   <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--border)", paddingTop: "1.5rem" }}>
-                    <div style={{ fontSize: "2.25rem", fontWeight: 800, color: "var(--accent)" }}>12+ Years</div>
+                    <div style={{ fontSize: "2.25rem", fontWeight: 800, color: "var(--accent)" }}>10+ Years</div>
                     <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.25rem", textTransform: "uppercase" }}>Combined Service Experience</div>
                   </div>
                 </div>
